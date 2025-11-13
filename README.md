@@ -510,6 +510,27 @@ const theme = getTheme('dark'); // or custom theme object
 const themeStyles = applyTheme(theme);
 ```
 
+## Changelog
+
+### Version 0.2.0
+- ✅ Added Loading States with skeleton loader
+- ✅ Added Empty States with custom messages
+- ✅ Added Sticky Header support
+- ✅ Added Keyboard Navigation (Arrow keys, Enter/Space, Escape)
+- ✅ Added Column Visibility Toggle
+- ✅ Added Column Reordering (drag & drop)
+- ✅ Fixed selection logic for grouped rows
+- ✅ Refactored code into modular hooks for better maintainability
+- ✅ Added comprehensive JSDoc comments
+- ✅ Improved code organization and documentation
+- ✅ Added chevron icon next to column header labels
+
+### Version 0.1.4
+- ✅ Added Column Pinning
+- ✅ Added Inline Editing
+- ✅ Added Tooltip support
+- ✅ Enhanced theme system
+
 ## License
 
 MIT
