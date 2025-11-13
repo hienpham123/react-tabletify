@@ -1,0 +1,52 @@
+# Source files
+src/
+public/
+*.config.js
+*.config.mjs
+*.config.ts
+tsconfig*.json
+
+# Development files
+.vscode/
+.idea/
+*.log
+.DS_Store
+
+# Build artifacts (keep dist/)
+build/
+coverage/
+.nyc_output/
+
+# Test files
+**/*.test.*
+**/*.spec.*
+**/__tests__/
+**/__mocks__/
+
+# Development dependencies
+node_modules/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.travis.yml
+.circleci/
+
+# Documentation (optional - you might want to include README)
+# README.md
+# LICENSE
+
+# Misc
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+

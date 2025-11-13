@@ -1,0 +1,88 @@
+.th-callout {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #ffffff;
+  border: 1px solid #e1dfdd;
+  box-shadow: 0 3.2px 7.2px rgba(0, 0, 0, 0.132), 0 0.6px 1.8px rgba(0, 0, 0, 0.108);
+  border-radius: 4px;
+  padding: 4px 0;
+  z-index: 1000;
+  width: 240px;
+  font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto", "Helvetica Neue", sans-serif;
+  font-size: 14px;
+  animation: th-fadeIn 0.167s cubic-bezier(0.1, 0.9, 0.2, 1);
+  pointer-events: auto;
+}
+
+@keyframes th-fadeIn {
+  from { 
+    opacity: 0; 
+    transform: translateY(-8px) scale(0.98);
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0) scale(1);
+  }
+}
+
+.th-callout-item {
+  width: 100%;
+  padding: 6px 12px;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  color: #323130;
+  transition: background-color 0.1s cubic-bezier(0.1, 0.9, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 32px;
+  box-sizing: border-box;
+}
+
+.th-callout-item:hover {
+  background-color: #f3f2f1;
+  color: #201f1e;
+}
+
+.th-callout-item:active {
+  background-color: #edebe9;
+}
+
+.th-callout-item:focus {
+  outline: 2px solid #6ABE28;
+  outline-offset: -2px;
+}
+
+.th-callout-item:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.th-callout-icon {
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #605e5c;
+  flex-shrink: 0;
+}
+
+.th-callout-text {
+  flex: 1;
+  line-height: 20px;
+  font-weight: 400;
+}
+
+.th-callout-divider {
+  margin: 4px 0;
+  border: none;
+  border-top: 1px solid #edebe9;
+  height: 0;
+  width: 100%;
+}

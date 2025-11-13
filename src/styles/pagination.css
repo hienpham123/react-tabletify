@@ -1,0 +1,36 @@
+.th-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+  border-top: 1px solid #eee;
+  background: #fafafa;
+}
+
+.th-pagination button {
+  background: white;
+  border: 1px solid #ccc;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.th-pagination button:hover {
+  background: #6ABE28;
+  color: white;
+  border-color: #6ABE28;
+}
+
+.th-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.th-pagination .th-page-active {
+  background: #6ABE28;
+  color: white;
+  border-color: #6ABE28;
+}

@@ -1,46 +1,203 @@
-# Getting Started with Create React App
+# ReactTabletify
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A powerful, customizable data table component for React with Fluent UI styling.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- ✅ **Sorting** - Ascending/descending column sorting
+- ✅ **Filtering** - Per-column filtering with search
+- ✅ **Pagination** - Built-in pagination controls
+- ✅ **Row Grouping** - Group rows by field with expand/collapse
+- ✅ **Row Selection** - Single or multiple row selection
+- ✅ **Custom Rendering** - Customize cells, rows, and headers
+- ✅ **TypeScript** - Full TypeScript support
+- ✅ **Fluent UI Styled** - Beautiful Fluent UI design
 
-### `npm start`
+## Installation
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+```bash
+npm install react-tabletify
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Usage
 
-### `npm test`
+**⚠️ Important: Don't forget to import the CSS file!**
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+```tsx
+import React from 'react';
+import { ReactTabletify, Column } from 'react-tabletify';
+// ⚠️ IMPORTANT: Import CSS styles
+import 'react-tabletify/dist/index.css';
 
-### `npm run build`
+interface User {
+  id: number;
+  name: string;
+  age: number;
+  role: string;
+  department: string;
+}
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+const data: User[] = [
+  { id: 1, name: "Alice", age: 25, role: "Dev", department: "Engineering" },
+  { id: 2, name: "Bob", age: 29, role: "PM", department: "Product" },
+  // ... more data
+];
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+const columns: Column<User>[] = [
+  { key: "id", label: "ID" },
+  { key: "name", label: "Name" },
+  { key: "age", label: "Age" },
+  { key: "role", label: "Role" },
+  { key: "department", label: "Department" },
+];
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+function App() {
+  return (
+    <ReactTabletify
+      data={data}
+      columns={columns}
+      itemsPerPage={10}
+      selectionMode="multiple"
+      onSelectionChanged={(selected) => console.log('Selected:', selected)}
+    />
+  );
+}
+```
 
-### `npm run eject`
+## Props
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### ReactTabletify
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `data` | `T[]` | **required** | Array of data items |
+| `columns` | `Column<T>[]` | **required** | Column definitions |
+| `itemsPerPage` | `number` | `10` | Items per page |
+| `groupBy` | `keyof T` | - | Group rows by this field |
+| `selectionMode` | `'none' \| 'single' \| 'multiple'` | `'none'` | Selection mode |
+| `showPagination` | `boolean` | `true` | Show pagination controls |
+| `onRenderCell` | `(item, key, index) => ReactNode` | - | Custom cell renderer |
+| `onRenderRow` | `(item, index, columns) => ReactNode` | - | Custom row renderer |
+| `onRenderHeader` | `(column, index) => ReactNode` | - | Custom header renderer |
+| `onItemInvoked` | `(item, index) => void` | - | Row click handler |
+| `onSelectionChanged` | `(selectedItems: T[]) => void` | - | Selection change handler |
+| `getKey` | `(item, index) => string \| number` | - | Custom key function |
+| `className` | `string` | - | Additional CSS class |
+| `styles` | `CSSProperties` | - | Inline styles |
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+## Examples
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### Basic Table
 
-## Learn More
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  itemsPerPage={10}
+/>
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### With Grouping
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  groupBy="department"
+  itemsPerPage={10}
+/>
+```
+
+### With Selection
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  selectionMode="multiple"
+  onSelectionChanged={(selected) => {
+    console.log('Selected items:', selected);
+  }}
+/>
+```
+
+### Custom Cell Rendering
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  onRenderCell={(item, key) => {
+    if (key === 'salary') {
+      return `$${item.salary.toLocaleString()}`;
+    }
+    return String(item[key]);
+  }}
+/>
+```
+
+## Hooks
+
+### useTable
+
+A custom hook for managing table state:
+
+```tsx
+import { useTable } from 'react-tabletify';
+
+const table = useTable(data, 10);
+
+// Access filtered data
+console.log(table.filtered);
+
+// Access current page
+console.log(table.paged);
+
+// Sort
+table.handleSort('name', 'asc');
+
+// Filter
+table.setFilter('department', ['Engineering', 'Product']);
+
+// Pagination
+table.setCurrentPage(2);
+```
+
+## Styling
+
+**⚠️ CSS Import Required**
+
+You must import the CSS file for the table to display correctly:
+
+```tsx
+import 'react-tabletify/dist/index.css';
+```
+
+The CSS file is located at `dist/index.css` in the package. Make sure to import it in your main entry file (e.g., `index.tsx` or `App.tsx`).
+
+### Custom Styling
+
+You can override the default styles by targeting the CSS classes:
+
+- `.th-table` - Main table container
+- `.th-header-cell` - Column headers
+- `.th-filter-panel` - Filter panel
+- `.th-callout` - Header callout menu
+- `.th-pagination` - Pagination controls
+
+## TypeScript
+
+Full TypeScript support with exported types:
+
+```tsx
+import type {
+  ReactTabletifyProps,
+  Column,
+  SelectionMode,
+  UseTableReturn,
+} from 'react-tabletify';
+```
+
+## License
+
+MIT
