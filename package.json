@@ -1,6 +1,6 @@
 {
   "name": "react-tabletify",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "type": "module",
   "exports": {
@@ -74,7 +74,7 @@
     "eject": "react-scripts eject",
     "prepublishOnly": "npm run build",
     "update-version": "node bump-version.js",
-    "publish:all": "rollup -c && npm run update-version && git add . && git commit -m 'feat: update version and README' && git push origin master && npm publish --access public"
+    "publish:all": "rollup -c && npm run update-version && git add . && git commit -m 'feat: update version and README' && git push origin main && npm publish --access public"
   },
   "eslintConfig": {
     "extends": [
