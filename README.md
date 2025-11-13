@@ -1,6 +1,6 @@
-# ReactTabletify
+# ReactTabletify made by **Hie Ho** ⚡
 
-A powerful, customizable data table component for React with Fluent UI styling.
+A fast, fully customizable React data table built purely with HTML and CSS.
 
 ## Features
 
