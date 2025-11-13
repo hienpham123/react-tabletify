@@ -44,5 +44,5 @@ import "./../styles/table.css";
  * />
  * ```
  */
-export declare function ReactTabletify<T extends Record<string, any>>({ columns, data, itemsPerPage, groupBy, onRenderCell, onRenderRow, onRenderHeader, onItemInvoked, onColumnHeaderClick, getKey, onActiveItemChanged, onItemContextMenu, className, styles, selectionMode, onSelectionChanged, showPagination, }: ReactTabletifyProps<T>): import("react/jsx-runtime").JSX.Element;
+export declare function ReactTabletify<T extends Record<string, any>>({ columns, data, itemsPerPage, groupBy, onRenderCell, onRenderRow, onRenderHeader, onItemInvoked, onColumnHeaderClick, getKey, onActiveItemChanged, onItemContextMenu, className, styles, selectionMode, onSelectionChanged, showPagination, theme, maxHeight, ...otherProps }: ReactTabletifyProps<T>): import("react/jsx-runtime").JSX.Element;
 //# sourceMappingURL=ReactTabletify.d.ts.map

@@ -8,7 +8,9 @@ interface HeaderCalloutProps {
     onDismiss: () => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
+    sortable?: boolean;
+    filterable?: boolean;
 }
-export declare function HeaderCallout({ anchorRef, onSortAsc, onSortDesc, onFilter, onDismiss, onMouseEnter, onMouseLeave, }: HeaderCalloutProps): import("react/jsx-runtime").JSX.Element | null;
+export declare function HeaderCallout({ anchorRef, onSortAsc, onSortDesc, onFilter, onDismiss, onMouseEnter, onMouseLeave, sortable, filterable, }: HeaderCalloutProps): import("react/jsx-runtime").JSX.Element | null;
 export {};
 //# sourceMappingURL=HeaderCallout.d.ts.map

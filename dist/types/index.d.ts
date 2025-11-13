@@ -16,6 +16,28 @@ export interface Column<T extends Record<string, any>> {
      * @returns React node to render in the cell
      */
     onRenderCell?: (item: T, columnKey: keyof T, index: number) => React.ReactNode;
+    /** Optional CSS class name for the column header */
+    className?: string;
+    /** Optional inline styles for the column header */
+    style?: React.CSSProperties;
+    /** Optional CSS class name for cells in this column */
+    cellClassName?: string;
+    /** Optional inline styles for cells in this column */
+    cellStyle?: React.CSSProperties;
+    /** Optional width for the column (e.g., "100px", "20%", "auto") */
+    width?: string | number;
+    /** Optional minimum width for the column */
+    minWidth?: string | number;
+    /** Optional maximum width for the column */
+    maxWidth?: string | number;
+    /** Whether the column is sortable */
+    sortable?: boolean;
+    /** Whether the column is filterable */
+    filterable?: boolean;
+    /** Whether the column is resizable */
+    resizable?: boolean;
+    /** Text alignment for the column ('left' | 'center' | 'right') */
+    align?: 'left' | 'center' | 'right';
 }
 /**
  * Selection mode for the table
@@ -24,6 +46,103 @@ export interface Column<T extends Record<string, any>> {
  * - 'multiple': Multiple items can be selected (checkboxes)
  */
 export type SelectionMode = 'none' | 'single' | 'multiple';
+/**
+ * Table density/layout mode
+ * - 'compact': Tighter spacing, smaller padding
+ * - 'normal': Standard spacing (default)
+ * - 'spacious': More spacing, larger padding
+ */
+export type DensityMode = 'compact' | 'normal' | 'spacious';
+/**
+ * Theme mode for the table
+ * - 'light': Light theme (default)
+ * - 'dark': Dark theme
+ */
+export type ThemeMode = 'light' | 'dark';
+/**
+ * Complete theme configuration for the table
+ * Similar to Fluent UI's applyTheme()
+ */
+export interface TableTheme {
+    /** Theme mode */
+    mode?: ThemeMode;
+    /** Color palette */
+    colors: {
+        /** Background colors */
+        background?: string;
+        surface?: string;
+        headerBackground?: string;
+        rowBackground?: string;
+        rowBackgroundAlternate?: string;
+        selectedRowBackground?: string;
+        hoverRowBackground?: string;
+        groupHeaderBackground?: string;
+        /** Text colors */
+        text?: string;
+        textSecondary?: string;
+        headerText?: string;
+        rowText?: string;
+        selectedRowText?: string;
+        /** Border colors */
+        border?: string;
+        borderLight?: string;
+        rowBorder?: string;
+        /** Interactive colors */
+        focus?: string;
+        focusBorder?: string;
+        hover?: string;
+        active?: string;
+        disabled?: string;
+        /** Status colors */
+        primary?: string;
+        success?: string;
+        warning?: string;
+        error?: string;
+    };
+    /** Spacing configuration */
+    spacing?: {
+        /** Padding for cells */
+        cellPadding?: string;
+        /** Padding for header cells */
+        headerPadding?: string;
+        /** Row height */
+        rowHeight?: string;
+        /** Compact row height */
+        rowHeightCompact?: string;
+        /** Spacious row height */
+        rowHeightSpacious?: string;
+        /** Gap between elements */
+        gap?: string;
+    };
+    /** Typography */
+    typography?: {
+        fontFamily?: string;
+        fontSize?: string;
+        fontSizeSmall?: string;
+        fontSizeLarge?: string;
+        fontWeight?: string;
+        fontWeightBold?: string;
+        lineHeight?: string;
+    };
+    /** Border radius */
+    borderRadius?: {
+        table?: string;
+        cell?: string;
+        button?: string;
+    };
+    /** Shadows */
+    shadows?: {
+        table?: string;
+        header?: string;
+        callout?: string;
+        panel?: string;
+    };
+    /** Transitions */
+    transitions?: {
+        duration?: string;
+        easing?: string;
+    };
+}
 /**
  * Props for the ReactTabletify component
  * @template T - The type of data items in the table (must be an object/record)
@@ -124,6 +243,158 @@ export interface ReactTabletifyProps<T extends Record<string, any>> {
      * @default true
      */
     showPagination?: boolean;
+    /**
+     * Table density/layout mode
+     * @default 'normal'
+     */
+    density?: DensityMode;
+    /**
+     * Theme mode (light/dark) or custom theme object
+     * @default 'light'
+     *
+     * @example
+     * // Simple mode
+     * theme="dark"
+     *
+     * @example
+     * // Custom theme
+     * theme={{
+     *   mode: 'light',
+     *   colors: {
+     *     background: '#ffffff',
+     *     headerBackground: '#fafafa',
+     *     primary: '#107c10',
+     *   },
+     *   spacing: {
+     *     cellPadding: '12px',
+     *     rowHeight: '48px',
+     *   }
+     * }}
+     */
+    theme?: ThemeMode | TableTheme;
+    /**
+     * Enable zebra striping (alternating row colors)
+     * @default false
+     */
+    zebraStripes?: boolean;
+    /**
+     * Make header sticky when scrolling
+     * @default false
+     */
+    stickyHeader?: boolean;
+    /**
+     * Custom row height (in pixels)
+     * @default undefined (auto)
+     */
+    rowHeight?: number;
+    /**
+     * Enable column visibility toggle
+     * @default false
+     */
+    enableColumnVisibility?: boolean;
+    /**
+     * Enable column reordering (drag & drop)
+     * @default false
+     */
+    enableColumnReorder?: boolean;
+    /**
+     * Show loading state
+     * @default false
+     */
+    loading?: boolean;
+    /**
+     * Custom loading component
+     */
+    onRenderLoading?: () => React.ReactNode;
+    /**
+     * Custom empty state message
+     */
+    emptyMessage?: string;
+    /**
+     * Custom empty state component
+     */
+    onRenderEmpty?: () => React.ReactNode;
+    /**
+     * Row actions menu items
+     * @param item - The data item
+     * @param index - The index of the row
+     * @returns Array of action items
+     */
+    rowActions?: (item: T, index: number) => Array<{
+        key: string;
+        label: string;
+        icon?: React.ReactNode;
+        onClick: (item: T, index: number) => void;
+        disabled?: boolean;
+    }>;
+    /**
+     * Custom row hover effect
+     * @default true
+     */
+    enableRowHover?: boolean;
+    /**
+     * Custom CSS class for table rows
+     */
+    rowClassName?: string | ((item: T, index: number) => string);
+    /**
+     * Custom styles for table rows
+     */
+    rowStyles?: React.CSSProperties | ((item: T, index: number) => React.CSSProperties);
+    /**
+     * Show borders around table
+     * @default false
+     */
+    bordered?: boolean;
+    /**
+     * Show row borders
+     * @default true
+     */
+    rowBorders?: boolean;
+    /**
+     * Header background color
+     */
+    headerBackgroundColor?: string;
+    /**
+     * Header text color
+     */
+    headerTextColor?: string;
+    /**
+     * Row background color (alternating if zebraStripes is true)
+     */
+    rowBackgroundColor?: string | [string, string];
+    /**
+     * Row text color
+     */
+    rowTextColor?: string;
+    /**
+     * Selected row background color
+     */
+    selectedRowBackgroundColor?: string;
+    /**
+     * Hover row background color
+     */
+    hoverRowBackgroundColor?: string;
+    /**
+     * Focus outline color
+     */
+    focusColor?: string;
+    /**
+     * Maximum table height (enables scrolling)
+     */
+    maxHeight?: string | number;
+    /**
+     * Enable keyboard navigation
+     * @default true
+     */
+    enableKeyboardNavigation?: boolean;
+    /**
+     * Callback when column visibility changes
+     */
+    onColumnVisibilityChange?: (visibleColumns: (keyof T)[]) => void;
+    /**
+     * Callback when column order changes
+     */
+    onColumnReorder?: (newOrder: (keyof T)[]) => void;
 }
 /**
  * Return type from the useTable hook
