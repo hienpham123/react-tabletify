@@ -2,16 +2,16 @@
   position: absolute;
   top: 100%;
   right: 0;
-  background: #ffffff;
-  border: 1px solid #e1dfdd;
-  box-shadow: 0 3.2px 7.2px rgba(0, 0, 0, 0.132), 0 0.6px 1.8px rgba(0, 0, 0, 0.108);
-  border-radius: 4px;
+  background: var(--th-color-surface, #ffffff);
+  border: 1px solid var(--th-color-border, #e1dfdd);
+  box-shadow: var(--th-shadow-callout, 0 3.2px 7.2px rgba(0, 0, 0, 0.132), 0 0.6px 1.8px rgba(0, 0, 0, 0.108));
+  border-radius: var(--th-border-radius-button, 4px);
   padding: 4px 0;
   z-index: 1000;
   width: 240px;
-  font-family: "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto", "Helvetica Neue", sans-serif;
-  font-size: 14px;
-  animation: th-fadeIn 0.167s cubic-bezier(0.1, 0.9, 0.2, 1);
+  font-family: var(--th-typography-font-family, "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto", "Helvetica Neue", sans-serif);
+  font-size: var(--th-typography-font-size, 14px);
+  animation: th-fadeIn var(--th-transition-duration, 0.167s) var(--th-transition-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
   pointer-events: auto;
 }
 
@@ -33,28 +33,28 @@
   background: transparent;
   text-align: left;
   cursor: pointer;
-  font-size: 14px;
+  font-size: var(--th-typography-font-size, 14px);
   font-family: inherit;
-  color: #323130;
-  transition: background-color 0.1s cubic-bezier(0.1, 0.9, 0.2, 1);
+  color: var(--th-color-text, #323130);
+  transition: background-color var(--th-transition-duration, 0.1s) var(--th-transition-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--th-spacing-gap, 12px);
   min-height: 32px;
   box-sizing: border-box;
 }
 
 .th-callout-item:hover {
-  background-color: #f3f2f1;
-  color: #201f1e;
+  background-color: var(--th-color-hover, #f3f2f1);
+  color: var(--th-color-text, #201f1e);
 }
 
 .th-callout-item:active {
-  background-color: #edebe9;
+  background-color: var(--th-color-active, #edebe9);
 }
 
 .th-callout-item:focus {
-  outline: 2px solid #6ABE28;
+  outline: 2px solid var(--th-color-focus, #107c10);
   outline-offset: -2px;
 }
 
@@ -82,7 +82,7 @@
 .th-callout-divider {
   margin: 4px 0;
   border: none;
-  border-top: 1px solid #edebe9;
+  border-top: 1px solid var(--th-color-border-light, #edebe9);
   height: 0;
   width: 100%;
 }

@@ -1,5 +1,5 @@
-import React from "react";
-import { ReactTabletify } from "./components/ReactTabletify";
+import React, { useState } from "react";
+import { ReactTabletify, getTheme, applyTheme, type TableTheme } from "./index";
 import "./styles/table.css";
 import "./styles/filter-panel.css";
 import "./styles/callout.css";
@@ -45,24 +45,144 @@ const generateMockData = () => {
 
 const data = generateMockData();
 
+// Custom theme example - Chỉ đổi màu primary sang vàng
+const yellowTheme: TableTheme = {
+  mode: 'light',
+  colors: {
+    primary: '#ffc107', // Màu vàng (Amber)
+    focus: '#ffc107', // Focus color cũng dùng vàng
+    focusBorder: '#ffc107',
+  },
+};
+
+// Custom theme example - Full custom theme
+const customTheme: TableTheme = {
+  mode: 'light',
+  colors: {
+    background: '#ffffff',
+    headerBackground: '#f0f4f8',
+    rowBackground: '#ffffff',
+    rowBackgroundAlternate: '#f8f9fa',
+    selectedRowBackground: '#e3f2fd',
+    hoverRowBackground: '#f5f5f5',
+    text: '#1a1a1a',
+    headerText: '#1a1a1a',
+    rowText: '#1a1a1a',
+    border: '#e0e0e0',
+    focus: '#1976d2',
+    primary: '#1976d2',
+  },
+  spacing: {
+    cellPadding: '12px 16px',
+    rowHeight: '48px',
+  },
+  typography: {
+    fontFamily: 'Roboto, sans-serif',
+    fontSize: '14px',
+  },
+};
+
 export default function App() {
+  const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'yellow' | 'custom'>('light');
+
+  const getCurrentTheme = (): 'light' | 'dark' | TableTheme => {
+    if (themeMode === 'yellow') {
+      return yellowTheme;
+    }
+    if (themeMode === 'custom') {
+      return customTheme;
+    }
+    return themeMode;
+  };
+
   return (
     <div style={{ padding: '20px' }}>
-      <h1>ReactTabletify Demo</h1>
+      <div style={{ marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <h1 style={{ margin: 0 }}>ReactTabletify Demo</h1>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <label>Theme: </label>
+          <select
+            value={themeMode}
+            onChange={(e) => setThemeMode(e.target.value as 'light' | 'dark' | 'yellow' | 'custom')}
+            style={{ padding: '6px 12px', borderRadius: '4px', border: '1px solid #ccc' }}
+          >
+            <option value="light">Light (Green)</option>
+            <option value="dark">Dark</option>
+            <option value="yellow">Yellow Theme</option>
+            <option value="custom">Custom (Blue)</option>
+          </select>
+        </div>
+      </div>
       <ReactTabletify
         data={data}
         columns={[
-          { key: "id", label: "ID" },
-          { key: "name", label: "Name" },
-          { key: "age", label: "Age" },
-          { key: "role", label: "Role" },
-          { key: "department", label: "Department" },
-          { key: "status", label: "Status" },
-          { key: "salary", label: "Salary" },
+          {
+            key: "id",
+            label: "ID",
+            width: "80px",
+            align: "center",
+            sortable: true,
+            filterable: false,
+            resizable: true
+          },
+          {
+            key: "name",
+            label: "Name",
+            width: "200px",
+            minWidth: "150px",
+            sortable: true,
+            filterable: true,
+            resizable: true
+          },
+          {
+            key: "age",
+            label: "Age",
+            width: "100px",
+            align: "center",
+            sortable: true,
+            filterable: true,
+            resizable: true
+          },
+          {
+            key: "role",
+            label: "Role",
+            width: "120px",
+            sortable: true,
+            filterable: true,
+            resizable: true
+          },
+          {
+            key: "department",
+            label: "Department",
+            width: "150px",
+            sortable: true,
+            filterable: true,
+            resizable: true
+          },
+          {
+            key: "status",
+            label: "Status",
+            width: "120px",
+            cellClassName: "status-cell",
+            sortable: false,
+            filterable: true,
+            resizable: true
+          },
+          {
+            key: "salary",
+            label: "Salary",
+            width: "150px",
+            align: "right",
+            cellStyle: { fontWeight: "600" },
+            sortable: true,
+            filterable: false,
+            resizable: true
+          },
         ]}
         itemsPerPage={10}
         // groupBy="department"
         // selectionMode="multiple"
+        theme={getCurrentTheme()}
         onSelectionChanged={(selected) => console.log('Selected items:', selected)}
         onItemInvoked={(item) => console.log('Item invoked:', item)}
         onColumnHeaderClick={(column) => console.log('Column header clicked:', column.label)}

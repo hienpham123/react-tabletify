@@ -2,35 +2,60 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 6px;
+  gap: var(--th-spacing-gap, 6px);
   padding: 12px;
-  border-top: 1px solid #eee;
-  background: #fafafa;
+  border-top: 1px solid var(--th-color-border-light, #eee);
+  background: var(--th-color-surface, #fafafa);
 }
 
-.th-pagination button {
-  background: white;
-  border: 1px solid #ccc;
+.th-pagination-btn {
+  background: var(--th-color-surface, white);
+  border: 1px solid var(--th-color-border, #ccc);
   padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 13px;
+  border-radius: var(--th-border-radius-button, 4px);
+  font-size: var(--th-typography-font-size-small, 13px);
+  font-family: var(--th-typography-font-family, inherit);
+  color: var(--th-color-text, #323130);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--th-transition-duration, 0.2s) var(--th-transition-easing, ease);
+  min-width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.th-pagination button:hover {
-  background: #6ABE28;
-  color: white;
-  border-color: #6ABE28;
+.th-pagination-btn:hover:not(:disabled) {
+  background: var(--th-color-primary, #107c10);
+  color: var(--th-color-surface, white);
+  border-color: var(--th-color-primary, #107c10);
 }
 
-.th-pagination button:disabled {
+.th-pagination-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  background: var(--th-color-disabled, #f3f2f1);
+  border-color: var(--th-color-border, #edebe9);
+  color: var(--th-color-text-secondary, #a19f9d);
+}
+
+.th-pagination-btn:focus {
+  outline: 2px solid var(--th-color-focus, #107c10);
+  outline-offset: 2px;
+}
+
+.th-pagination-btn:focus:not(:focus-visible) {
+  outline: none;
 }
 
 .th-pagination .th-page-active {
-  background: #6ABE28;
-  color: white;
-  border-color: #6ABE28;
+  background: var(--th-color-primary, #107c10);
+  color: var(--th-color-surface, white);
+  border-color: var(--th-color-primary, #107c10);
+  font-weight: var(--th-typography-font-weight-bold, 600);
+}
+
+.th-pagination-ellipsis {
+  color: var(--th-color-text-secondary, #999);
+  padding: 0 4px;
 }

@@ -32,30 +32,21 @@ export const Pagination: React.FC<PaginationProps> = ({
   };
 
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: "0.5rem",
-        marginTop: "1rem",
-        flexWrap: "wrap",
-      }}
-    >
+    <div className="th-pagination">
       <button
         onClick={() => goToPage(currentPage - 1)}
         disabled={currentPage === 1}
-        style={btnStyle}
+        className="th-pagination-btn"
       >
-         Prev
+        Prev
       </button>
 
       {start > 1 && (
         <>
-          <button style={btnStyle} onClick={() => goToPage(1)}>
+          <button className="th-pagination-btn" onClick={() => goToPage(1)}>
             1
           </button>
-          {start > 2 && <span style={{ color: "#999" }}>...</span>}
+          {start > 2 && <span className="th-pagination-ellipsis">...</span>}
         </>
       )}
 
@@ -63,17 +54,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           key={p}
           onClick={() => goToPage(p)}
-          style={{
-            ...btnStyle,
-            ...(p === currentPage
-              ? {
-                  background: "#6ABE28",
-                  color: "#fff",
-                  fontWeight: 600,
-                  borderColor: "#6ABE28",
-                }
-              : {}),
-          }}
+          className={`th-pagination-btn ${p === currentPage ? 'th-page-active' : ''}`}
         >
           {p}
         </button>
@@ -81,8 +62,8 @@ export const Pagination: React.FC<PaginationProps> = ({
 
       {end < totalPages && (
         <>
-          {end < totalPages - 1 && <span style={{ color: "#999" }}>...</span>}
-          <button style={btnStyle} onClick={() => goToPage(totalPages)}>
+          {end < totalPages - 1 && <span className="th-pagination-ellipsis">...</span>}
+          <button className="th-pagination-btn" onClick={() => goToPage(totalPages)}>
             {totalPages}
           </button>
         </>
@@ -91,20 +72,10 @@ export const Pagination: React.FC<PaginationProps> = ({
       <button
         onClick={() => goToPage(currentPage + 1)}
         disabled={currentPage === totalPages}
-        style={btnStyle}
+        className="th-pagination-btn"
       >
         Next
       </button>
     </div>
   );
-};
-
-const btnStyle: React.CSSProperties = {
-  border: "1px solid #ccc",
-  borderRadius: 4,
-  padding: "4px 10px",
-  cursor: "pointer",
-  background: "#fff",
-  transition: "0.2s",
-  fontSize: 14,
 };

@@ -9,6 +9,8 @@ interface HeaderCalloutProps {
     onDismiss: () => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
+    sortable?: boolean;
+    filterable?: boolean;
 }
 
 export function HeaderCallout({
@@ -19,6 +21,8 @@ export function HeaderCallout({
     onDismiss,
     onMouseEnter,
     onMouseLeave,
+    sortable = true,
+    filterable = true,
 }: HeaderCalloutProps) {
     const calloutRef = React.useRef<HTMLDivElement>(null);
 
@@ -37,18 +41,24 @@ export function HeaderCallout({
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
         >
-            <button onClick={onSortAsc} className="th-callout-item">
-                <span className="th-callout-icon">↑</span>
-                <span className="th-callout-text">A to Z</span>
-            </button>
-            <button onClick={onSortDesc} className="th-callout-item">
-                <span className="th-callout-icon">↓</span>
-                <span className="th-callout-text">Z to A</span>
-            </button>
-            <hr className="th-callout-divider" />
-            <button onClick={onFilter} className="th-callout-item">
-                <span className="th-callout-text">Filter by</span>
-            </button>
+            {sortable && (
+                <>
+                    <button onClick={onSortAsc} className="th-callout-item">
+                        <span className="th-callout-icon">↑</span>
+                        <span className="th-callout-text">A to Z</span>
+                    </button>
+                    <button onClick={onSortDesc} className="th-callout-item">
+                        <span className="th-callout-icon">↓</span>
+                        <span className="th-callout-text">Z to A</span>
+                    </button>
+                </>
+            )}
+            {sortable && filterable && <hr className="th-callout-divider" />}
+            {filterable && (
+                <button onClick={onFilter} className="th-callout-item">
+                    <span className="th-callout-text">Filter by</span>
+                </button>
+            )}
         </div>
     );
 }
