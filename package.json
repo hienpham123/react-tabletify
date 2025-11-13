@@ -15,7 +15,9 @@
   "types": "dist/index.d.ts",
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "package.json",
+    "src"
   ],
   "style": "dist/index.css",
   "keywords": [

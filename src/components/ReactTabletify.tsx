@@ -445,9 +445,9 @@ export function ReactTabletify<T extends Record<string, any>>({
             paginatedGroups.map(([groupKey, rows]) => {
               const isExpanded = expandedGroups.has(groupKey);
               return (
-                <React.Fragment key={groupKey}>
-                  <tr className="th-group-header">
-                    <td colSpan={columns.length} className="th-group-header-cell">
+                            <React.Fragment key={groupKey}>
+                              <tr className="th-group-header">
+                                <td colSpan={columns.length + (selectionMode !== 'none' ? 1 : 0)} className="th-group-header-cell">
                       <button
                         className="th-group-toggle"
                         onClick={() => toggleGroup(groupKey)}
