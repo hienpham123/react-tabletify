@@ -39,6 +39,10 @@ export interface Column<T extends Record<string, any>> {
   resizable?: boolean;
   /** Text alignment for the column ('left' | 'center' | 'right') */
   align?: 'left' | 'center' | 'right';
+  /** Whether the column is editable */
+  editable?: boolean;
+  /** Pin position for the column ('left' | 'right' | null) */
+  pinned?: 'left' | 'right' | null;
 }
 
 /**
@@ -455,6 +459,34 @@ export interface ReactTabletifyProps<T extends Record<string, any>> {
    * Callback when column order changes
    */
   onColumnReorder?: (newOrder: (keyof T)[]) => void;
+
+  /** 
+   * Callback when a cell is edited
+   * @param item - The data item being edited
+   * @param columnKey - The key of the column being edited
+   * @param newValue - The new value
+   * @param index - The index of the row
+   */
+  onCellEdit?: (item: T, columnKey: keyof T, newValue: any, index: number) => void;
+
+  /** 
+   * Pinned columns configuration
+   * @default {}
+   */
+  pinnedColumns?: Record<keyof T, 'left' | 'right'>;
+
+  /** 
+   * Callback when column pin status changes
+   * @param columnKey - The key of the column
+   * @param pinPosition - The new pin position ('left' | 'right' | null)
+   */
+  onColumnPin?: (columnKey: keyof T, pinPosition: 'left' | 'right' | null) => void;
+
+  /** 
+   * Whether to show tooltip on cells when content is truncated
+   * @default true
+   */
+  showTooltip?: boolean;
 }
 
 /**

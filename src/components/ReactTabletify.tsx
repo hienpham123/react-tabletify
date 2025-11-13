@@ -1,8 +1,16 @@
 import * as React from "react";
 import { useTable } from "../hooks/useTable";
+import { useColumnManagement } from "../hooks/useColumnManagement";
+import { useRowSelection } from "../hooks/useRowSelection";
+import { useColumnResize } from "../hooks/useColumnResize";
+import { useInlineEditing } from "../hooks/useInlineEditing";
+import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
+import { useHeaderCallout } from "../hooks/useHeaderCallout";
 import { Pagination } from "./Pagination";
 import { HeaderCallout } from "./HeaderCallout";
 import { FilterPanel } from "./FilterPanel";
+import { TableSkeleton } from "./TableSkeleton";
+import { TableEmptyState } from "./TableEmptyState";
 import type { ReactTabletifyProps, Column } from "../types";
 import { getTheme, applyTheme } from "../utils/theme";
 import "./../styles/table.css";
@@ -71,192 +79,123 @@ export function ReactTabletify<T extends Record<string, any>>({
   showPagination = true,
   theme,
   maxHeight,
+  onCellEdit,
+  pinnedColumns,
+  onColumnPin,
+  showTooltip = true,
+  loading = false,
+  onRenderLoading,
+  emptyMessage,
+  onRenderEmpty,
+  stickyHeader = false,
+  enableColumnVisibility,
+  onColumnVisibilityChange,
+  enableColumnReorder,
+  onColumnReorder,
+  enableKeyboardNavigation = true,
   ...otherProps
 }: ReactTabletifyProps<T>) {
+  // Core table hook for sorting, filtering, pagination
   const table = useTable<T>(data, itemsPerPage);
-  const [calloutKey, setCalloutKey] = React.useState<keyof T | null>(null);
-  const [filterField, setFilterField] = React.useState<string | null>(null);
-  const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
-  const [selectedItems, setSelectedItems] = React.useState<Set<string | number>>(new Set());
-  const [activeItemIndex, setActiveItemIndex] = React.useState<number | undefined>(undefined);
-  const [columnWidths, setColumnWidths] = React.useState<Record<string, number>>({});
-  const [resizingColumn, setResizingColumn] = React.useState<string | null>(null);
-  const [resizeStartX, setResizeStartX] = React.useState<number>(0);
-  const [resizeStartWidth, setResizeStartWidth] = React.useState<number>(0);
+
+  // Refs
   const anchorRefs = React.useRef<Record<string, HTMLDivElement>>({});
-  const hoverTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+  const tableRef = React.useRef<HTMLDivElement>(null);
 
-  // Get unique key for item
-  const getItemKey = React.useCallback((item: T, index: number): string | number => {
-    if (getKey) return getKey(item, index);
-    return item.id !== undefined ? item.id : index;
-  }, [getKey]);
+  // Filter panel state
+  const [filterField, setFilterField] = React.useState<string | null>(null);
 
-  // Handle checkbox selection
-  const handleCheckboxChange = React.useCallback((item: T, index: number, checked: boolean) => {
-    const key = getItemKey(item, index);
-    setSelectedItems((prev) => {
-      const newSet = new Set(prev);
-      if (selectionMode === 'single') {
-        newSet.clear();
-        if (checked) {
-          newSet.add(key);
-        }
-      } else if (selectionMode === 'multiple') {
-        if (checked) {
-          newSet.add(key);
-        } else {
-          newSet.delete(key);
-        }
-      }
+  // Grouping state
+  const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
 
-      if (onSelectionChanged) {
-        const selected = data.filter((d, i) => newSet.has(getItemKey(d, i)));
-        onSelectionChanged(selected);
-      }
+  // Column management hook (visibility, reordering, pinning)
+  const {
+    internalPinnedColumns,
+    visibleColumns,
+    columnOrder,
+    draggedColumn,
+    dragOverColumn,
+    sortedColumns,
+    handleToggleColumnVisibility,
+    handleColumnPin,
+    handleColumnDragStart,
+    handleColumnDragOver,
+    handleColumnDrop,
+  } = useColumnManagement(
+    columns,
+    pinnedColumns,
+    enableColumnVisibility,
+    onColumnVisibilityChange,
+    enableColumnReorder,
+    onColumnReorder,
+    onColumnPin
+  );
 
-      return newSet;
-    });
+  // Row selection hook
+  const {
+    selectedItems,
+    activeItemIndex,
+    isAllSelected,
+    isIndeterminate,
+    getItemKey,
+    handleCheckboxChange,
+    handleItemClick,
+    handleSelectAll,
+    isItemSelected,
+    setSelectedItems,
+  } = useRowSelection(
+    data,
+    selectionMode,
+    onSelectionChanged,
+    onActiveItemChanged,
+    getKey
+  );
 
-    setActiveItemIndex(index);
-    if (onActiveItemChanged) {
-      onActiveItemChanged(item, index);
-    }
-  }, [selectionMode, getItemKey, onSelectionChanged, onActiveItemChanged, data]);
+  // Column resize hook
+  const {
+    columnWidths,
+    resizingColumn,
+    handleResizeStart,
+  } = useColumnResize(anchorRefs);
 
-  // Handle selection
-  const handleItemClick = React.useCallback((item: T, index: number, ev: React.MouseEvent) => {
-    // Don't trigger if clicking on checkbox
-    if ((ev.target as HTMLElement).closest('.th-selection-checkbox')) {
-      return;
-    }
+  // Header callout hook (after resize to get resizingColumn state)
+  const callout = useHeaderCallout(resizingColumn);
 
-    if (onItemInvoked) {
-      onItemInvoked(item, index);
-    }
-
-    if (selectionMode !== 'none') {
-      const key = getItemKey(item, index);
-      setSelectedItems((prev) => {
-        const newSet = new Set(prev);
-        if (selectionMode === 'single') {
-          newSet.clear();
-          newSet.add(key);
-        } else if (selectionMode === 'multiple') {
-          if (ev.ctrlKey || ev.metaKey) {
-            if (newSet.has(key)) {
-              newSet.delete(key);
-            } else {
-              newSet.add(key);
-            }
-          } else {
-            newSet.clear();
-            newSet.add(key);
-          }
-        }
-
-        if (onSelectionChanged) {
-          const selected = data.filter((d, i) => newSet.has(getItemKey(d, i)));
-          onSelectionChanged(selected);
-        }
-
-        return newSet;
-      });
-    }
-
-    setActiveItemIndex(index);
-    if (onActiveItemChanged) {
-      onActiveItemChanged(item, index);
-    }
-  }, [onItemInvoked, selectionMode, getItemKey, onSelectionChanged, onActiveItemChanged, data]);
+  // Inline editing hook
+  const {
+    editingCell,
+    editValue,
+    editInputRef,
+    setEditValue,
+    handleCellEditStart,
+    handleCellEditSave,
+    handleCellEditCancel,
+  } = useInlineEditing(onCellEdit);
 
 
+  /**
+   * Open filter panel for a column
+   */
   const handleOpenFilter = (key: keyof T) => {
     setFilterField(String(key));
-    setCalloutKey(null);
+    callout.dismissCallout();
   };
 
+  /**
+   * Apply filter values to a column
+   */
   const handleApplyFilter = (values: string[]) => {
     table.setFilter(filterField!, values);
     setFilterField(null);
   };
 
+  /**
+   * Get unique values for filter field
+   */
   const uniqueValues = React.useMemo(() => {
     if (!filterField) return [];
     return Array.from(new Set(data.map((d) => String(d[filterField as keyof T]))));
   }, [filterField, data]);
-
-  const handleHeaderMouseEnter = (key: keyof T) => {
-    // Don't show callout when resizing
-    if (resizingColumn) return;
-
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-    hoverTimeoutRef.current = setTimeout(() => {
-      setCalloutKey(key);
-    }, 150);
-  };
-
-  const handleHeaderMouseLeave = () => {
-    if (hoverTimeoutRef.current) {
-      clearTimeout(hoverTimeoutRef.current);
-    }
-    hoverTimeoutRef.current = setTimeout(() => {
-      setCalloutKey(null);
-    }, 200);
-  };
-
-  // Resize handlers
-  const handleResizeStart = React.useCallback((colKey: keyof T, e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const colKeyStr = String(colKey);
-    const th = anchorRefs.current[colKeyStr]?.parentElement as HTMLTableCellElement;
-    if (!th) return;
-
-    // Close callout when starting to resize
-    setCalloutKey(null);
-
-    const startWidth = th.offsetWidth;
-    const startX = e.clientX;
-
-    setResizingColumn(colKeyStr);
-
-    // Set cursor on document body to maintain resize cursor
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-
-    const handleMouseMove = (e: MouseEvent) => {
-      // Keep cursor as col-resize during resize
-      document.body.style.cursor = 'col-resize';
-      e.preventDefault();
-      
-      const diff = e.clientX - startX;
-      const newWidth = Math.max(50, startWidth + diff); // Min width 50px
-      setColumnWidths(prev => ({ ...prev, [colKeyStr]: newWidth }));
-    };
-
-    const handleMouseUp = () => {
-      setResizingColumn(null);
-      // Reset cursor and user-select
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-  }, []);
-
-  React.useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) {
-        clearTimeout(hoverTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Reset page when groupBy changes
   React.useEffect(() => {
@@ -321,6 +260,97 @@ export function ReactTabletify<T extends Record<string, any>>({
     return groupEntries.slice(start, end);
   }, [groupedData, table.currentPage, table.itemsPerPage, groupBy]);
 
+
+  // Get cell text content for tooltip
+  const getCellText = React.useCallback((item: T, column: Column<T>) => {
+    if (column.onRenderCell) {
+      const rendered = column.onRenderCell(item, column.key, 0);
+      if (typeof rendered === 'string' || typeof rendered === 'number') {
+        return String(rendered);
+      }
+      // For React nodes, try to extract text
+      return String(item[column.key] ?? '');
+    }
+    if (onRenderCell) {
+      const rendered = onRenderCell(item, column.key, 0);
+      if (typeof rendered === 'string' || typeof rendered === 'number') {
+        return String(rendered);
+      }
+      return String(item[column.key] ?? '');
+    }
+    return String(item[column.key] ?? '');
+  }, [onRenderCell]);
+
+  // Render cell content
+  const renderCell = React.useCallback((item: T, column: Column<T>, index: number) => {
+    const isEditing = editingCell?.rowIndex === index && editingCell?.columnKey === column.key;
+
+    // If editing, show input
+    if (isEditing && column.editable && onCellEdit) {
+      return (
+        <input
+          ref={editInputRef}
+          type="text"
+          className="th-cell-edit-input"
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onBlur={() => handleCellEditSave(item, column.key, index)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleCellEditSave(item, column.key, index);
+            } else if (e.key === 'Escape') {
+              handleCellEditCancel();
+            }
+          }}
+          onClick={(e) => e.stopPropagation()}
+        />
+      );
+    }
+
+    // Column-specific render
+    if (column.onRenderCell) {
+      return column.onRenderCell(item, column.key, index);
+    }
+    // Global onRenderCell
+    if (onRenderCell) {
+      return onRenderCell(item, column.key, index);
+    }
+    // Default render
+    return String(item[column.key] ?? '');
+  }, [onRenderCell, editingCell, editValue, handleCellEditSave, handleCellEditCancel]);
+
+  /**
+   * Get and apply theme
+   */
+  const tableTheme = React.useMemo(() => getTheme(theme), [theme]);
+  const themeStyles = React.useMemo(() => applyTheme(tableTheme), [tableTheme]);
+
+  /**
+   * Get current items for keyboard navigation (grouped or paginated)
+   */
+  const currentItemsForKeyboard = React.useMemo(() => {
+    if (groupBy && paginatedGroups) {
+      return paginatedGroups.flatMap(([_, rows]) => rows);
+    }
+    return table.paged;
+  }, [groupBy, paginatedGroups, table.paged]);
+
+  /**
+   * Keyboard navigation hook
+   */
+  const { focusedRowIndex, setFocusedRowIndex } = useKeyboardNavigation(
+    tableRef as React.RefObject<HTMLDivElement>,
+    enableKeyboardNavigation,
+    loading,
+    currentItemsForKeyboard,
+    selectionMode,
+    getItemKey,
+    (selectedKeys) => setSelectedItems(selectedKeys)
+  );
+
+  /**
+   * Toggle group expand/collapse
+   */
   const toggleGroup = (groupKey: string) => {
     setExpandedGroups((prev) => {
       const newSet = new Set(prev);
@@ -333,467 +363,481 @@ export function ReactTabletify<T extends Record<string, any>>({
     });
   };
 
-  // Get all items on current page (for selection state checking)
-  const currentPageItemsForSelection = React.useMemo(() => {
-    if (groupBy && paginatedGroups) {
-      // When grouped, get all items from all groups on current page
-      const items: T[] = [];
-      paginatedGroups.forEach(([groupKey, rows]) => {
-        rows.forEach((row) => {
-          items.push(row);
-        });
-      });
-      return items;
-    } else {
-      // When not grouped, use table.paged
-      return table.paged;
+  /**
+   * Determine display state
+   */
+  const hasData = data.length > 0;
+  const showEmpty = !loading && !hasData;
+  const showTable = !loading && hasData;
+
+  // Calculate left offset for pinned columns
+  const getLeftOffset = React.useCallback((col: Column<T>, colIndex: number) => {
+    const colKeyStr = String(col.key);
+    const pinPosition = internalPinnedColumns[colKeyStr] || col.pinned || null;
+    if (pinPosition !== 'left') return 0;
+
+    let offset = 0;
+    if (selectionMode !== 'none') {
+      offset += 48; // Selection column width
     }
-  }, [groupBy, paginatedGroups, table.paged]);
 
-  // Handle select all/none
-  const handleSelectAll = React.useCallback((checked: boolean) => {
-    if (selectionMode === 'multiple') {
-      // Get all items on current page
-      let currentPageItems: T[] = [];
-
-      if (groupBy && paginatedGroups) {
-        // When grouped, get all items from all groups on current page (not just expanded ones)
-        paginatedGroups.forEach(([groupKey, rows]) => {
-          rows.forEach((row) => {
-            currentPageItems.push(row);
-          });
-        });
-      } else {
-        // When not grouped, use table.paged
-        currentPageItems = table.paged;
+    // Only calculate offset for columns BEFORE this one in sortedColumns
+    for (let i = 0; i < colIndex; i++) {
+      const c = sortedColumns[i];
+      const pos = internalPinnedColumns[String(c.key)] || c.pinned || null;
+      if (pos === 'left') {
+        const width = columnWidths[String(c.key)] ||
+          (typeof c.width === 'number' ? c.width : parseFloat(c.width || '0')) ||
+          (typeof c.width === 'string' && c.width.includes('px') ? parseFloat(c.width) : 100);
+        offset += width;
       }
-
-      setSelectedItems((prev) => {
-        const newSet = new Set(prev);
-        if (checked) {
-          currentPageItems.forEach((item) => {
-            // Find actual index in filtered data to get correct key
-            const actualIndex = table.filtered.findIndex((d) => {
-              const dKey = getItemKey(d, table.filtered.indexOf(d));
-              const itemKey = getItemKey(item, currentPageItems.indexOf(item));
-              return dKey === itemKey || d === item;
-            });
-            const finalIndex = actualIndex >= 0 ? actualIndex : table.filtered.indexOf(item);
-            newSet.add(getItemKey(item, finalIndex));
-          });
-        } else {
-          currentPageItems.forEach((item) => {
-            // Find actual index in filtered data to get correct key
-            const actualIndex = table.filtered.findIndex((d) => {
-              const dKey = getItemKey(d, table.filtered.indexOf(d));
-              const itemKey = getItemKey(item, currentPageItems.indexOf(item));
-              return dKey === itemKey || d === item;
-            });
-            const finalIndex = actualIndex >= 0 ? actualIndex : table.filtered.indexOf(item);
-            newSet.delete(getItemKey(item, finalIndex));
-          });
-        }
-
-        if (onSelectionChanged) {
-          const selected = data.filter((d, i) => newSet.has(getItemKey(d, i)));
-          onSelectionChanged(selected);
-        }
-
-        return newSet;
-      });
     }
-  }, [selectionMode, table.paged, table.filtered, getItemKey, onSelectionChanged, data, groupBy, paginatedGroups]);
 
-  // Check if all items on current page are selected
-  const isAllSelected = React.useMemo(() => {
-    if (selectionMode !== 'multiple') return false;
-    if (currentPageItemsForSelection.length === 0) return false;
-    return currentPageItemsForSelection.every((item) => {
-      // Find actual index in filtered data to get correct key
-      const actualIndex = table.filtered.findIndex((d) => {
-        const dKey = getItemKey(d, table.filtered.indexOf(d));
-        const itemKey = getItemKey(item, currentPageItemsForSelection.indexOf(item));
-        return dKey === itemKey || d === item;
-      });
-      const finalIndex = actualIndex >= 0 ? actualIndex : table.filtered.indexOf(item);
-      return selectedItems.has(getItemKey(item, finalIndex));
-    });
-  }, [selectionMode, currentPageItemsForSelection, selectedItems, getItemKey, table.filtered]);
+    return offset;
+  }, [sortedColumns, internalPinnedColumns, columnWidths, selectionMode]);
 
-  // Check if some items are selected (indeterminate state)
-  const isIndeterminate = React.useMemo(() => {
-    if (selectionMode !== 'multiple') return false;
-    if (currentPageItemsForSelection.length === 0) return false;
-    const selectedCount = currentPageItemsForSelection.filter((item) => {
-      // Find actual index in filtered data to get correct key
-      const actualIndex = table.filtered.findIndex((d) => {
-        const dKey = getItemKey(d, table.filtered.indexOf(d));
-        const itemKey = getItemKey(item, currentPageItemsForSelection.indexOf(item));
-        return dKey === itemKey || d === item;
-      });
-      const finalIndex = actualIndex >= 0 ? actualIndex : table.filtered.indexOf(item);
-      return selectedItems.has(getItemKey(item, finalIndex));
-    }).length;
-    return selectedCount > 0 && selectedCount < currentPageItemsForSelection.length;
-  }, [selectionMode, currentPageItemsForSelection, selectedItems, getItemKey, table.filtered]);
+  // Calculate right offset for pinned columns
+  const getRightOffset = React.useCallback((col: Column<T>, colIndex: number) => {
+    const colKeyStr = String(col.key);
+    const pinPosition = internalPinnedColumns[colKeyStr] || col.pinned || null;
+    if (pinPosition !== 'right') return 0;
 
-  // Render cell content
-  const renderCell = React.useCallback((item: T, column: Column<T>, index: number) => {
-    // Column-specific render
-    if (column.onRenderCell) {
-      return column.onRenderCell(item, column.key, index);
+    let offset = 0;
+
+    // Only calculate offset for columns AFTER this one in sortedColumns
+    for (let i = colIndex + 1; i < sortedColumns.length; i++) {
+      const c = sortedColumns[i];
+      const pos = internalPinnedColumns[String(c.key)] || c.pinned || null;
+      if (pos === 'right') {
+        const width = columnWidths[String(c.key)] ||
+          (typeof c.width === 'number' ? c.width : parseFloat(c.width || '0')) ||
+          (typeof c.width === 'string' && c.width.includes('px') ? parseFloat(c.width) : 100);
+        offset += width;
+      }
     }
-    // Global onRenderCell
-    if (onRenderCell) {
-      return onRenderCell(item, column.key, index);
-    }
-    // Default render
-    return String(item[column.key] ?? '');
-  }, [onRenderCell]);
 
-  // Get and apply theme
-  const tableTheme = React.useMemo(() => getTheme(theme), [theme]);
-  const themeStyles = React.useMemo(() => applyTheme(tableTheme), [tableTheme]);
+    return offset;
+  }, [sortedColumns, internalPinnedColumns, columnWidths]);
 
   return (
     <div
-      className={`th-table ${className || ''} th-theme-${tableTheme.mode || 'light'} ${resizingColumn ? 'resizing' : ''}`}
+      ref={tableRef}
+      className={`th-table ${className || ''} th-theme-${tableTheme.mode || 'light'} ${resizingColumn ? 'resizing' : ''} ${stickyHeader ? 'th-sticky-header' : ''}`}
       style={{
         ...themeStyles,
         ...styles,
         ...(maxHeight ? { maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight, overflow: 'auto' } : {}),
         ...(resizingColumn ? { cursor: 'col-resize' } : {}),
       }}
+      tabIndex={enableKeyboardNavigation ? 0 : undefined}
     >
-      <table>
-        <thead>
-          <tr>
-            {selectionMode !== 'none' && (
-              <th className="th-selection-column">
-                {selectionMode === 'multiple' ? (
-                  <div className="th-selection-checkbox-wrapper">
-                    <input
-                      type="checkbox"
-                      className="th-selection-checkbox"
-                      checked={isAllSelected}
-                      ref={(input) => {
-                        if (input) input.indeterminate = isIndeterminate;
-                      }}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  </div>
-                ) : (
-                  <div className="th-selection-checkbox-wrapper"></div>
-                )}
-              </th>
-            )}
-            {columns.map((col, colIndex) => {
-              const colKeyStr = String(col.key);
-              const resizedWidth = columnWidths[colKeyStr];
-              const headerStyle: React.CSSProperties = {
-                ...col.style,
-                width: resizedWidth ? `${resizedWidth}px` : col.width,
-                minWidth: col.minWidth,
-                maxWidth: col.maxWidth,
-                textAlign: col.align,
-                position: 'relative',
-              };
-              const headerClassName = col.className
-                ? `th-header-cell ${col.className}`
-                : 'th-header-cell';
-
-              return (
-                <th
-                  key={colKeyStr}
-                  style={headerStyle}
-                >
-                  {onRenderHeader ? (
-                    onRenderHeader(col, colIndex)
-                  ) : (
-                    <div
-                      className={headerClassName}
-                  ref={(el) => {
-                    if (el) anchorRefs.current[String(col.key)] = el;
-                  }}
-                      onMouseEnter={() => handleHeaderMouseEnter(col.key)}
-                      onMouseLeave={handleHeaderMouseLeave}
-                      onClick={(ev) => onColumnHeaderClick?.(col, ev)}
-                    >
-                      <span className="th-header-label">{col.label}</span>
-                      <div className="th-header-icons">
-                        {table.filters[String(col.key)] && table.filters[String(col.key)].length > 0 && (
-                          <span className="th-header-filter-icon" title="Filtered">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              width="16"
-                              height="16"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.8"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            >
-                              <path d="M3 5h18M6 12h12M10 19h4" />
-                              <circle cx="18" cy="18" r="3.5" fill="currentColor" />
-                              <path
-                                d="M16.5 18l1 1 2-2.2"
-                                stroke="#fff"
-                                strokeWidth="1.6"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                              />
-                            </svg>
-
-                          </span>
-                        )}
-                        {table.sortKey === col.key && (
-                          <span className="th-header-sort-icon">
-                            {table.sortDir === "asc" ? (
-                              <span className="th-sort-arrow">↑</span>
-                            ) : (
-                              <span className="th-sort-arrow">↓</span>
-                            )}
-                  </span>
-                        )}
-                      </div>
-                      <span className="th-header-action">⋮</span>
-                </div>
-                  )}
-                  {col.resizable !== false && (
-                    <div
-                      className="th-resize-handle"
-                      onMouseDown={(e) => handleResizeStart(col.key, e)}
-                      style={{
-                        cursor: 'col-resize',
-                        position: 'absolute',
-                        right: 0,
-                        top: 0,
-                        bottom: 0,
-                        width: '4px',
-                        zIndex: 10,
-                        userSelect: 'none',
-                      }}
-                    />
-                  )}
-                  {calloutKey === col.key && !resizingColumn && (
-                  <HeaderCallout
-                    anchorRef={{ current: anchorRefs.current[String(col.key)] }}
-                    onSortAsc={() => {
-                        if (col.sortable !== false) {
-                      table.handleSort(col.key, "asc");
-                      setCalloutKey(null);
-                        }
-                    }}
-                    onSortDesc={() => {
-                        if (col.sortable !== false) {
-                      table.handleSort(col.key, "desc");
-                      setCalloutKey(null);
-                        }
-                      }}
-                      onFilter={() => {
-                        if (col.filterable !== false) {
-                          handleOpenFilter(col.key);
-                        }
-                      }}
-                      onClearFilter={() => {
-                        if (col.filterable !== false) {
-                          table.setFilter(String(col.key), []);
-                          setCalloutKey(null);
-                        }
-                      }}
-                    onDismiss={() => setCalloutKey(null)}
-                      onMouseEnter={() => {
-                        if (hoverTimeoutRef.current) {
-                          clearTimeout(hoverTimeoutRef.current);
-                        }
-                      }}
-                      onMouseLeave={handleHeaderMouseLeave}
-                      sortable={col.sortable !== false}
-                      filterable={col.filterable !== false}
-                      hasFilter={table.filters[String(col.key)] && table.filters[String(col.key)].length > 0}
-                  />
-                )}
-              </th>
-              );
-            })}
-          </tr>
-        </thead>
-        <tbody>
-          {groupBy && paginatedGroups ? (
-            paginatedGroups.map(([groupKey, rows]) => {
-              const isExpanded = expandedGroups.has(groupKey);
-              return (
-                <React.Fragment key={groupKey}>
-                  <tr className="th-group-header">
-                    <td colSpan={columns.length + (selectionMode !== 'none' ? 1 : 0)} className="th-group-header-cell">
-                      <button
-                        className="th-group-toggle"
-                        onClick={() => toggleGroup(groupKey)}
-                        aria-expanded={isExpanded}
-                      >
-                        <svg
-                          width="16"
-                          height="16"
-                          viewBox="0 0 16 16"
-                          fill="none"
-                          xmlns="http://www.w3.org/2000/svg"
-                          className={isExpanded ? "expanded" : ""}
-                        >
-                          <path
-                            d="M6 4L10 8L6 12"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            fill="none"
-                          />
-                        </svg>
-                        <span className="th-group-label">
-                          {String(groupBy)}: {groupKey}
-                        </span>
-                        <span className="th-group-count">({rows.length})</span>
-                      </button>
-                    </td>
-                  </tr>
-                  {isExpanded &&
-                    rows.map((row, i) => {
-                      // Find actual index in filtered data
-                      const actualIndex = table.filtered.findIndex((d) => {
-                        const dKey = getItemKey(d, table.filtered.indexOf(d));
-                        const rowKey = getItemKey(row, i);
-                        return dKey === rowKey || d === row;
-                      });
-                      const finalIndex = actualIndex >= 0 ? actualIndex : i;
-                      const itemKey = getItemKey(row, finalIndex);
-                      const isSelected = selectedItems.has(itemKey);
-                      const isActive = activeItemIndex === finalIndex;
-
-                      if (onRenderRow) {
-                        return (
-                          <React.Fragment key={itemKey}>
-                            {onRenderRow(row, finalIndex, columns)}
-                          </React.Fragment>
-                        );
-                      }
-
-                      return (
-                        <tr
-                          key={itemKey}
-                          className={`th-group-row ${isSelected ? 'th-row-selected' : ''} ${isActive ? 'th-row-active' : ''}`}
-                          onClick={(ev) => handleItemClick(row, finalIndex, ev)}
-                          onContextMenu={(ev) => onItemContextMenu?.(row, finalIndex, ev)}
-                        >
-                          {selectionMode !== 'none' && (
-                            <td className="th-selection-column">
-                              <div className="th-selection-checkbox-wrapper">
-                                <input
-                                  type={selectionMode === 'single' ? 'radio' : 'checkbox'}
-                                  className="th-selection-checkbox"
-                                  checked={isSelected}
-                                  onChange={(e) => handleCheckboxChange(row, finalIndex, e.target.checked)}
-                                  onClick={(e) => e.stopPropagation()}
-                                />
-                              </div>
-                            </td>
-                          )}
-                          {columns.map((col) => {
-                            const colKeyStr = String(col.key);
-                            const resizedWidth = columnWidths[colKeyStr];
-                            const cellStyle: React.CSSProperties = {
-                              ...col.cellStyle,
-                              textAlign: col.align,
-                              width: resizedWidth ? `${resizedWidth}px` : col.width,
-                            };
-                            const cellClassName = col.cellClassName
-                              ? col.cellClassName
-                              : '';
-                            return (
-                              <td
-                                key={colKeyStr}
-                                style={cellStyle}
-                                className={cellClassName}
-                              >
-                                {renderCell(row, col, finalIndex)}
-                              </td>
-                            );
-                          })}
-                        </tr>
-                      );
-                    })}
-                </React.Fragment>
-              );
-            })
-          ) : (
-            table.paged.map((row, i) => {
-              const itemKey = getItemKey(row, i);
-              const isSelected = selectedItems.has(itemKey);
-              const isActive = activeItemIndex === i;
-
-              if (onRenderRow) {
-                return (
-                  <React.Fragment key={itemKey}>
-                    {onRenderRow(row, i, columns)}
-                  </React.Fragment>
-                );
-              }
-
-              return (
-                <tr
-                  key={itemKey}
-                  className={`${isSelected ? 'th-row-selected' : ''} ${isActive ? 'th-row-active' : ''}`}
-                  onClick={(ev) => handleItemClick(row, i, ev)}
-                  onContextMenu={(ev) => onItemContextMenu?.(row, i, ev)}
-                >
-                  {selectionMode !== 'none' && (
-                    <td className="th-selection-column">
+      {loading && (
+        <TableSkeleton
+          columns={sortedColumns}
+          itemsPerPage={itemsPerPage}
+          selectionMode={selectionMode}
+          onRenderLoading={onRenderLoading}
+        />
+      )}
+      {showEmpty && (
+        <TableEmptyState
+          emptyMessage={emptyMessage}
+          onRenderEmpty={onRenderEmpty}
+        />
+      )}
+      {showTable && (
+        <div style={{ overflowX: 'auto', width: '100%' }}>
+          <table>
+            <thead>
+              <tr>
+                {selectionMode !== 'none' && (
+                  <th className="th-selection-column">
+                    {selectionMode === 'multiple' ? (
                       <div className="th-selection-checkbox-wrapper">
                         <input
-                          type={selectionMode === 'single' ? 'radio' : 'checkbox'}
+                          type="checkbox"
                           className="th-selection-checkbox"
-                          checked={isSelected}
-                          onChange={(e) => handleCheckboxChange(row, i, e.target.checked)}
+                          checked={isAllSelected}
+                          ref={(input) => {
+                            if (input) input.indeterminate = isIndeterminate;
+                          }}
+                          onChange={(e) => handleSelectAll(e.target.checked)}
                           onClick={(e) => e.stopPropagation()}
                         />
                       </div>
-                    </td>
-                  )}
-                  {columns.map((col) => {
-                    const colKeyStr = String(col.key);
-                    const resizedWidth = columnWidths[colKeyStr];
-                    const cellStyle: React.CSSProperties = {
-                      ...col.cellStyle,
-                      textAlign: col.align,
-                      width: resizedWidth ? `${resizedWidth}px` : col.width,
-                    };
-                    const cellClassName = col.cellClassName
-                      ? col.cellClassName
-                      : '';
-                    return (
-                      <td
-                        key={colKeyStr}
-                        style={cellStyle}
-                        className={cellClassName}
-                      >
-                        {renderCell(row, col, i)}
-                      </td>
-                    );
-                  })}
-            </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
+                    ) : (
+                      <div className="th-selection-checkbox-wrapper"></div>
+                    )}
+                  </th>
+                )}
+                {sortedColumns.map((col, colIndex) => {
+                  const colKeyStr = String(col.key);
+                  const resizedWidth = columnWidths[colKeyStr];
+                  const pinPosition = internalPinnedColumns[String(col.key)] || col.pinned || null;
+                  const leftOffset = pinPosition === 'left' ? getLeftOffset(col, colIndex) : 0;
+                  const rightOffset = pinPosition === 'right' ? getRightOffset(col, colIndex) : 0;
+                  const headerStyle: React.CSSProperties = {
+                    ...col.style,
+                    width: resizedWidth ? `${resizedWidth}px` : col.width,
+                    minWidth: col.minWidth,
+                    maxWidth: col.maxWidth,
+                    textAlign: col.align,
+                    position: pinPosition ? 'sticky' : 'relative',
+                    ...(pinPosition === 'left' ? { left: `${leftOffset}px`, zIndex: 5 } : {}),
+                    ...(pinPosition === 'right' ? { right: `${rightOffset}px`, zIndex: 5 } : {}),
+                  };
+                  const headerClassName = col.className
+                    ? `th-header-cell ${pinPosition ? 'th-header-pinned' : ''} ${col.className}`
+                    : pinPosition ? `th-header-cell th-header-pinned` : 'th-header-cell';
 
-      {showPagination && (
-      <Pagination
+                  return (
+                    <th
+                      key={colKeyStr}
+                      style={headerStyle}
+                      draggable={enableColumnReorder}
+                      onDragStart={() => handleColumnDragStart(col.key)}
+                      onDragOver={(e) => handleColumnDragOver(e, col.key)}
+                      onDrop={() => handleColumnDrop(col.key)}
+                      onDragLeave={() => {
+                        // dragOverColumn is managed by useColumnManagement hook
+                      }}
+                      className={dragOverColumn === col.key ? 'th-drag-over' : ''}
+                    >
+                      {onRenderHeader ? (
+                        onRenderHeader(col, colIndex)
+                      ) : (
+                        <div
+                          className={headerClassName}
+                          ref={(el) => {
+                            if (el) anchorRefs.current[String(col.key)] = el;
+                          }}
+                          onMouseEnter={() => callout.handleHeaderMouseEnter(String(col.key))}
+                          onMouseLeave={callout.handleHeaderMouseLeave}
+                          onClick={(ev) => onColumnHeaderClick?.(col, ev)}
+                        >
+                          <span className="th-header-label">
+                            {col.label}
+                            <span className="th-header-chevron-icon" role="presentation" aria-hidden="true">
+                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" fill="currentColor">
+                                <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z" />
+                              </svg>
+                            </span>
+                          </span>
+                          <div className="th-header-icons">
+                            {pinPosition && (
+                              <span className="th-header-pin-icon" title={`Pinned ${pinPosition}`}>
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 2048 2048"
+                                  fill="currentColor"
+                                >
+                                  <path d="M1990 748q-33 33-64 60t-66 47-73 29-89 11q-34 0-65-6l-379 379q13 38 19 78t6 80q0 65-13 118t-37 100-60 89-79 87l-386-386-568 569-136 45 45-136 569-568-386-386q44-44 86-79t89-59 100-38 119-13q40 0 80 6t78 19l379-379q-6-31-6-65 0-49 10-88t30-74 46-65 61-65l690 690z" />
+                                </svg>
+                              </span>
+                            )}
+                            {table.filters[String(col.key)] && table.filters[String(col.key)].length > 0 && (
+                              <span className="th-header-filter-icon" title="Filtered" role="presentation" aria-hidden="true">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 2048 2048"
+                                  fill="currentColor"
+                                >
+                                  <path d="M2048 128v219l-768 768v805H768v-805L0 347V128h2048z" />
+                                </svg>
+                              </span>
+                            )}
+                            {table.sortKey === col.key && (
+                              <span className="th-header-sort-icon">
+                                {table.sortDir === "asc" ? (
+                                  <span className="th-sort-arrow">↑</span>
+                                ) : (
+                                  <span className="th-sort-arrow">↓</span>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                          <span className="th-header-action">⋮</span>
+                        </div>
+                      )}
+                      {col.resizable !== false && (
+                        <div
+                          className="th-resize-handle"
+                          onMouseDown={(e) => handleResizeStart(String(col.key), e)}
+                          style={{
+                            cursor: 'col-resize',
+                            position: 'absolute',
+                            right: 0,
+                            top: 0,
+                            bottom: 0,
+                            width: '4px',
+                            zIndex: 10,
+                            userSelect: 'none',
+                          }}
+                        />
+                      )}
+                      {callout.calloutKey === col.key && !resizingColumn && (
+                        <HeaderCallout
+                          anchorRef={{ current: anchorRefs.current[String(col.key)] }}
+                          onSortAsc={() => {
+                            if (col.sortable !== false) {
+                              table.handleSort(col.key, "asc");
+                              callout.dismissCallout();
+                            }
+                          }}
+                          onSortDesc={() => {
+                            if (col.sortable !== false) {
+                              table.handleSort(col.key, "desc");
+                              callout.dismissCallout();
+                            }
+                          }}
+                          onFilter={() => {
+                            if (col.filterable !== false) {
+                              handleOpenFilter(col.key);
+                            }
+                          }}
+                          onClearFilter={() => {
+                            if (col.filterable !== false) {
+                              table.setFilter(String(col.key), []);
+                              callout.dismissCallout();
+                            }
+                          }}
+                          onPinLeft={() => {
+                            handleColumnPin(col.key, 'left');
+                            callout.dismissCallout();
+                          }}
+                          onPinRight={() => {
+                            handleColumnPin(col.key, 'right');
+                            callout.dismissCallout();
+                          }}
+                          onUnpin={() => {
+                            handleColumnPin(col.key, null);
+                            callout.dismissCallout();
+                          }}
+                          onToggleVisibility={() => {
+                            if (enableColumnVisibility) {
+                              handleToggleColumnVisibility(col.key);
+                              callout.dismissCallout();
+                            }
+                          }}
+                          onDismiss={() => callout.dismissCallout()}
+                          onMouseEnter={() => callout.handleHeaderMouseEnter(String(col.key))}
+                          onMouseLeave={callout.handleHeaderMouseLeave}
+                          sortable={col.sortable !== false}
+                          filterable={col.filterable !== false}
+                          hasFilter={table.filters[String(col.key)] && table.filters[String(col.key)].length > 0}
+                          pinned={internalPinnedColumns[String(col.key)] || col.pinned || null}
+                          visible={visibleColumns.has(col.key)}
+                          enableColumnVisibility={enableColumnVisibility}
+                          enableColumnReorder={enableColumnReorder}
+                        />
+                      )}
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            <tbody>
+              {groupBy && paginatedGroups ? (
+                paginatedGroups.map(([groupKey, rows]) => {
+                  const isExpanded = expandedGroups.has(groupKey);
+                  return (
+                    <React.Fragment key={groupKey}>
+                      <tr className="th-group-header">
+                        <td colSpan={sortedColumns.length + (selectionMode !== 'none' ? 1 : 0)} className="th-group-header-cell">
+                          <button
+                            className="th-group-toggle"
+                            onClick={() => toggleGroup(groupKey)}
+                            aria-expanded={isExpanded}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 16 16"
+                              fill="none"
+                              xmlns="http://www.w3.org/2000/svg"
+                              className={isExpanded ? "expanded" : ""}
+                            >
+                              <path
+                                d="M6 4L10 8L6 12"
+                                stroke="currentColor"
+                                strokeWidth="1.5"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                fill="none"
+                              />
+                            </svg>
+                            <span className="th-group-label">
+                              {String(groupBy)}: {groupKey}
+                            </span>
+                            <span className="th-group-count">({rows.length})</span>
+                          </button>
+                        </td>
+                      </tr>
+                      {isExpanded &&
+                        rows.map((row, i) => {
+                          // Find actual index in original data array (not filtered) for correct key calculation
+                          const dataIndex = data.findIndex(d => d === row);
+                          // Use dataIndex for key calculation to ensure consistency
+                          const rowIndexForKey = dataIndex >= 0 ? dataIndex : table.filtered.findIndex(d => d === row);
+                          // Use dataIndex for selection operations to ensure correct key calculation
+                          const rowIndexForSelection = dataIndex >= 0 ? dataIndex : (rowIndexForKey >= 0 ? rowIndexForKey : i);
+                          const itemKey = getItemKey(row, rowIndexForSelection);
+                          const isSelected = selectedItems.has(itemKey);
+                          // Use dataIndex for activeItemIndex comparison
+                          const isActive = dataIndex >= 0 && activeItemIndex === dataIndex;
+
+                          if (onRenderRow) {
+                            return (
+                              <React.Fragment key={itemKey}>
+                                {onRenderRow(row, rowIndexForSelection, columns)}
+                              </React.Fragment>
+                            );
+                          }
+                          
+                          return (
+                            <tr
+                              key={itemKey}
+                              className={`th-group-row ${isSelected ? 'th-row-selected' : ''} ${isActive ? 'th-row-active' : ''}`}
+                              onClick={(ev) => handleItemClick(row, rowIndexForSelection, ev)}
+                              onContextMenu={(ev) => onItemContextMenu?.(row, rowIndexForSelection, ev)}
+                            >
+                              {selectionMode !== 'none' && (
+                                <td className="th-selection-column">
+                                  <div className="th-selection-checkbox-wrapper">
+                                    <input
+                                      type={selectionMode === 'single' ? 'radio' : 'checkbox'}
+                                      className="th-selection-checkbox"
+                                      checked={isSelected}
+                                      onChange={(e) => handleCheckboxChange(row, rowIndexForSelection, e.target.checked)}
+                                      onClick={(e) => e.stopPropagation()}
+                                    />
+                                  </div>
+                                </td>
+                              )}
+                              {sortedColumns.map((col) => {
+                                const colKeyStr = String(col.key);
+                                const resizedWidth = columnWidths[colKeyStr];
+                                const pinPosition = internalPinnedColumns[String(col.key)] || col.pinned || null;
+                                // Find the index of this column in sortedColumns
+                                const sortedIndex = sortedColumns.findIndex(c => String(c.key) === colKeyStr);
+                                const leftOffset = pinPosition === 'left' ? getLeftOffset(col, sortedIndex) : 0;
+                                const rightOffset = pinPosition === 'right' ? getRightOffset(col, sortedIndex) : 0;
+                                const cellStyle: React.CSSProperties = {
+                                  ...col.cellStyle,
+                                  textAlign: col.align,
+                                  width: resizedWidth ? `${resizedWidth}px` : col.width,
+                                  position: pinPosition ? 'sticky' : 'relative',
+                                  ...(pinPosition === 'left' ? { left: `${leftOffset}px`, zIndex: 3 } : {}),
+                                  ...(pinPosition === 'right' ? { right: `${rightOffset}px`, zIndex: 3 } : {}),
+                                };
+                                const cellClassName = col.cellClassName
+                                  ? `${col.cellClassName} ${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? 'th-cell-pinned' : ''}`
+                                  : `${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? 'th-cell-pinned' : ''}`.trim();
+                                const cellText = showTooltip ? getCellText(row, col) : undefined;
+                                return (
+                                  <td
+                                    key={colKeyStr}
+                                    style={cellStyle}
+                                    className={cellClassName}
+                                    onDoubleClick={() => handleCellEditStart(row, col, rowIndexForSelection)}
+                                    title={cellText || undefined}
+                                  >
+                                    {renderCell(row, col, rowIndexForSelection)}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          );
+                        })}
+                    </React.Fragment>
+                  );
+                })
+              ) : (
+                table.paged.map((row, i) => {
+                  const itemKey = getItemKey(row, i);
+                  const isSelected = selectedItems.has(itemKey);
+                  const isActive = activeItemIndex === i;
+
+                  if (onRenderRow) {
+                    return (
+                      <React.Fragment key={itemKey}>
+                        {onRenderRow(row, i, columns)}
+                      </React.Fragment>
+                    );
+                  }
+
+                  return (
+                    <tr
+                      key={itemKey}
+                      className={`${isSelected ? 'th-row-selected' : ''} ${isActive ? 'th-row-active' : ''} ${focusedRowIndex === i ? 'th-row-focused' : ''}`}
+                      onClick={(ev) => handleItemClick(row, i, ev)}
+                      onContextMenu={(ev) => onItemContextMenu?.(row, i, ev)}
+                    >
+                      {selectionMode !== 'none' && (
+                        <td className="th-selection-column">
+                          <div className="th-selection-checkbox-wrapper">
+                            <input
+                              type={selectionMode === 'single' ? 'radio' : 'checkbox'}
+                              className="th-selection-checkbox"
+                              checked={isSelected}
+                              onChange={(e) => handleCheckboxChange(row, i, e.target.checked)}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </div>
+                        </td>
+                      )}
+                      {sortedColumns.map((col) => {
+                        const colKeyStr = String(col.key);
+                        const resizedWidth = columnWidths[colKeyStr];
+                        const pinPosition = internalPinnedColumns[String(col.key)] || col.pinned || null;
+                        // Find the index of this column in sortedColumns
+                        const sortedIndex = sortedColumns.findIndex(c => String(c.key) === colKeyStr);
+                        const leftOffset = pinPosition === 'left' ? getLeftOffset(col, sortedIndex) : 0;
+                        const rightOffset = pinPosition === 'right' ? getRightOffset(col, sortedIndex) : 0;
+                        const cellStyle: React.CSSProperties = {
+                          ...col.cellStyle,
+                          textAlign: col.align,
+                          width: resizedWidth ? `${resizedWidth}px` : col.width,
+                          position: pinPosition ? 'sticky' : 'relative',
+                          ...(pinPosition === 'left' ? { left: `${leftOffset}px`, zIndex: 3 } : {}),
+                          ...(pinPosition === 'right' ? { right: `${rightOffset}px`, zIndex: 3 } : {}),
+                        };
+                        const cellClassName = col.cellClassName
+                          ? `${col.cellClassName} ${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? 'th-cell-pinned' : ''}`
+                          : `${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? 'th-cell-pinned' : ''}`.trim();
+                        const cellText = showTooltip ? getCellText(row, col) : undefined;
+                        return (
+                          <td
+                            key={colKeyStr}
+                            style={cellStyle}
+                            className={cellClassName}
+                            onDoubleClick={() => handleCellEditStart(row, col, i)}
+                            title={cellText || undefined}
+                          >
+                            {renderCell(row, col, i)}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {showTable && showPagination && (
+        <Pagination
           totalItems={groupBy && groupedData ? Object.keys(groupedData).length : table.filtered.length}
-        itemsPerPage={table.itemsPerPage}
-        currentPage={table.currentPage}
-        onPageChange={table.setCurrentPage}
-      />
+          itemsPerPage={table.itemsPerPage}
+          currentPage={table.currentPage}
+          onPageChange={table.setCurrentPage}
+        />
       )}
 
       {filterField && (

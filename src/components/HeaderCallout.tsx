@@ -7,12 +7,20 @@ interface HeaderCalloutProps {
     onSortDesc: () => void;
     onFilter: () => void;
     onClearFilter?: () => void;
+    onPinLeft?: () => void;
+    onPinRight?: () => void;
+    onUnpin?: () => void;
+    onToggleVisibility?: () => void;
     onDismiss: () => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
     sortable?: boolean;
     filterable?: boolean;
     hasFilter?: boolean;
+    pinned?: 'left' | 'right' | null;
+    visible?: boolean;
+    enableColumnVisibility?: boolean;
+    enableColumnReorder?: boolean;
 }
 
 export function HeaderCallout({
@@ -21,12 +29,20 @@ export function HeaderCallout({
     onSortDesc,
     onFilter,
     onClearFilter,
+    onPinLeft,
+    onPinRight,
+    onUnpin,
+    onToggleVisibility,
     onDismiss,
     onMouseEnter,
     onMouseLeave,
     sortable = true,
     filterable = true,
     hasFilter = false,
+    pinned = null,
+    visible = true,
+    enableColumnVisibility = false,
+    enableColumnReorder = false,
 }: HeaderCalloutProps) {
     const calloutRef = React.useRef<HTMLDivElement>(null);
 
@@ -68,6 +84,30 @@ export function HeaderCallout({
                 <button onClick={onFilter} className="th-callout-item">
                     <span className="th-callout-text">Filter by</span>
                 </button>
+            )}
+            {(onPinLeft || onPinRight || onUnpin) && <hr className="th-callout-divider" />}
+            {pinned === null && onPinLeft && (
+                <button onClick={onPinLeft} className="th-callout-item">
+                    <span className="th-callout-text">Pin left</span>
+                </button>
+            )}
+            {pinned === null && onPinRight && (
+                <button onClick={onPinRight} className="th-callout-item">
+                    <span className="th-callout-text">Pin right</span>
+                </button>
+            )}
+            {pinned !== null && onUnpin && (
+                <button onClick={onUnpin} className="th-callout-item">
+                    <span className="th-callout-text">Unpin</span>
+                </button>
+            )}
+            {enableColumnVisibility && onToggleVisibility && (
+                <>
+                    <hr className="th-callout-divider" />
+                    <button onClick={onToggleVisibility} className="th-callout-item">
+                        <span className="th-callout-text">{visible ? 'Hide column' : 'Show column'}</span>
+                    </button>
+                </>
             )}
         </div>
     );

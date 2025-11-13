@@ -9,6 +9,9 @@ import "./styles/pagination.css";
 const roles = ["Dev", "PM", "Tester", "Designer", "Manager", "Analyst", "QA", "DevOps"];
 const departments = ["Engineering", "Product", "Design", "Marketing", "Sales", "Support"];
 const statuses = ["Active", "Inactive", "Pending", "On Leave"];
+const locations = ["New York", "San Francisco", "London", "Tokyo", "Sydney", "Berlin", "Paris", "Toronto"];
+const projects = ["Project Alpha", "Project Beta", "Project Gamma", "Project Delta", "Project Echo"];
+const skills = ["React", "TypeScript", "Node.js", "Python", "Java", "C++", "Go", "Rust"];
 
 const generateMockData = () => {
   const data = [];
@@ -37,13 +40,20 @@ const generateMockData = () => {
       department: departments[Math.floor(Math.random() * departments.length)],
       status: statuses[Math.floor(Math.random() * statuses.length)],
       salary: 3000 + Math.floor(Math.random() * 7000),
+      location: locations[Math.floor(Math.random() * locations.length)],
+      project: projects[Math.floor(Math.random() * projects.length)],
+      skill: skills[Math.floor(Math.random() * skills.length)],
+      experience: Math.floor(Math.random() * 15) + 1,
+      joinDate: `202${Math.floor(Math.random() * 4)}-${String(Math.floor(Math.random() * 12) + 1).padStart(2, '0')}-${String(Math.floor(Math.random() * 28) + 1).padStart(2, '0')}`,
+      email: `user${i}@company.com`,
+      phone: `+1-555-${String(Math.floor(Math.random() * 10000)).padStart(4, '0')}`,
     });
   }
 
   return data;
 };
 
-const data = generateMockData();
+const initialData = generateMockData();
 
 // Custom theme example - Chỉ đổi màu primary sang vàng
 const yellowTheme: TableTheme = {
@@ -84,6 +94,19 @@ const customTheme: TableTheme = {
 
 export default function App() {
   const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'yellow' | 'custom'>('light');
+  const [data, setData] = useState<typeof initialData>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Simulate loading data
+  React.useEffect(() => {
+    setLoading(true);
+    const timer = setTimeout(() => {
+      setData(initialData);
+      setLoading(false);
+    }, 2000); // 2 seconds delay
+
+    return () => clearTimeout(timer);
+  }, []);
 
   const getCurrentTheme = (): 'light' | 'dark' | TableTheme => {
     if (themeMode === 'yellow') {
@@ -115,52 +138,57 @@ export default function App() {
       </div>
       <ReactTabletify
         data={data}
+        loading={loading}
         columns={[
-          {
-            key: "id",
+          { 
+            key: "id", 
             label: "ID",
             width: "80px",
             align: "center",
             sortable: true,
             filterable: false,
-            resizable: true
+            resizable: true,
+            editable: false
           },
-          {
-            key: "name",
+          { 
+            key: "name", 
             label: "Name",
             width: "200px",
             minWidth: "150px",
             sortable: true,
             filterable: true,
-            resizable: true
+            resizable: true,
+            editable: true
           },
-          {
-            key: "age",
+          { 
+            key: "age", 
             label: "Age",
             width: "100px",
             align: "center",
             sortable: true,
             filterable: true,
-            resizable: true
+            resizable: true,
+            editable: true
           },
-          {
-            key: "role",
+          { 
+            key: "role", 
             label: "Role",
             width: "120px",
             sortable: true,
             filterable: true,
-            resizable: true
+            resizable: true,
+            editable: true
           },
-          {
-            key: "department",
+          { 
+            key: "department", 
             label: "Department",
             width: "150px",
             sortable: true,
             filterable: true,
             resizable: true
           },
-          {
-            key: "status",
+          { 
+            key: "status", 
             label: "Status",
             width: "120px",
             cellClassName: "status-cell",
@@ -168,14 +196,72 @@ export default function App() {
             filterable: true,
             resizable: true
           },
-          {
-            key: "salary",
+          { 
+            key: "salary", 
             label: "Salary",
             width: "150px",
             align: "right",
             cellStyle: { fontWeight: "600" },
             sortable: true,
             filterable: false,
+            resizable: true,
+            editable: true
+          },
+          { 
+            key: "location", 
+            label: "Location",
+            width: "150px",
+            sortable: true,
+            filterable: true,
+            resizable: true
+          },
+          { 
+            key: "project", 
+            label: "Project",
+            width: "180px",
+            sortable: true,
+            filterable: true,
+            resizable: true
+          },
+          { 
+            key: "skill", 
+            label: "Primary Skill",
+            width: "140px",
+            sortable: true,
+            filterable: true,
+            resizable: true
+          },
+          { 
+            key: "experience", 
+            label: "Experience (years)",
+            width: "160px",
+            align: "center",
+            sortable: true,
+            filterable: true,
+            resizable: true
+          },
+          { 
+            key: "joinDate", 
+            label: "Join Date",
+            width: "130px",
+            sortable: true,
+            filterable: true,
+            resizable: true
+          },
+          { 
+            key: "email", 
+            label: "Email",
+            width: "220px",
+            sortable: true,
+            filterable: true,
+            resizable: true
+          },
+          { 
+            key: "phone", 
+            label: "Phone",
+            width: "140px",
+            sortable: true,
+            filterable: true,
             resizable: true
           },
         ]}
@@ -183,9 +269,26 @@ export default function App() {
         // groupBy="department"
         // selectionMode="multiple"
         theme={getCurrentTheme()}
+        showTooltip={false}
         onSelectionChanged={(selected) => console.log('Selected items:', selected)}
         onItemInvoked={(item) => console.log('Item invoked:', item)}
         onColumnHeaderClick={(column) => console.log('Column header clicked:', column.label)}
+        onCellEdit={(item, columnKey, newValue, index) => {
+          console.log('Cell edited:', { item, columnKey, newValue, index });
+          // Update the data
+          setData(prev => {
+            const newData = [...prev];
+            // Find the item in the data array
+            const itemIndex = newData.findIndex(d => d.id === item.id || d === item);
+            if (itemIndex >= 0) {
+              newData[itemIndex] = { ...newData[itemIndex], [columnKey]: newValue };
+            }
+            return newData;
+          });
+        }}
+        onColumnPin={(columnKey, pinPosition) => {
+          console.log('Column pinned:', { columnKey, pinPosition });
+        }}
         onRenderCell={(item, key) => {
           if (key === 'salary') {
             return `$${item.salary.toLocaleString()}`;

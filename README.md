@@ -13,6 +13,15 @@ A powerful, customizable data table component for React with Fluent UI styling.
 - ✅ **Theme System** - Comprehensive theming (light/dark/custom) like Fluent UI
 - ✅ **TypeScript** - Full TypeScript support
 - ✅ **Fluent UI Styled** - Beautiful Fluent UI design
+- ✅ **Column Pinning** - Pin columns left/right when scrolling
+- ✅ **Inline Editing** - Edit cells directly (double-click to edit)
+- ✅ **Loading States** - Skeleton loader when fetching data
+- ✅ **Empty States** - Custom message when no data available
+- ✅ **Sticky Header** - Header fixed when scrolling
+- ✅ **Keyboard Navigation** - Arrow keys, Enter/Space for selection
+- ✅ **Column Visibility** - Show/hide columns
+- ✅ **Column Reordering** - Drag & drop to reorder columns
+- ✅ **Tooltip** - Show tooltip for truncated content
 
 ## Installation
 
@@ -86,6 +95,21 @@ function App() {
 | `onSelectionChanged` | `(selectedItems: T[]) => void` | - | Selection change handler |
 | `getKey` | `(item, index) => string \| number` | - | Custom key function |
 | `theme` | `'light' \| 'dark' \| TableTheme` | `'light'` | Theme mode or custom theme object |
+| `loading` | `boolean` | `false` | Show loading state with skeleton |
+| `onRenderLoading` | `() => ReactNode` | - | Custom loading component |
+| `emptyMessage` | `string` | - | Custom empty state message |
+| `onRenderEmpty` | `() => ReactNode` | - | Custom empty state component |
+| `stickyHeader` | `boolean` | `false` | Fix header when scrolling |
+| `enableKeyboardNavigation` | `boolean` | `true` | Enable keyboard navigation |
+| `enableColumnVisibility` | `boolean` | - | Enable column visibility toggle |
+| `onColumnVisibilityChange` | `(visible: (keyof T)[]) => void` | - | Callback when column visibility changes |
+| `enableColumnReorder` | `boolean` | - | Enable column drag & drop reordering |
+| `onColumnReorder` | `(order: (keyof T)[]) => void` | - | Callback when column order changes |
+| `showTooltip` | `boolean` | `true` | Show tooltip for truncated content |
+| `onCellEdit` | `(item, columnKey, newValue, index) => void` | - | Callback when cell is edited |
+| `pinnedColumns` | `Record<string, 'left' \| 'right'>` | - | Initial pinned columns |
+| `onColumnPin` | `(columnKey, pinPosition) => void` | - | Callback when column is pinned/unpinned |
+| `maxHeight` | `string \| number` | - | Maximum height of table |
 | `className` | `string` | - | Additional CSS class |
 | `styles` | `CSSProperties` | - | Inline styles |
 
@@ -167,6 +191,130 @@ const yellowTheme: TableTheme = {
   theme="dark"
 />
 ```
+
+### With Loading State
+
+```tsx
+const [loading, setLoading] = useState(true);
+
+useEffect(() => {
+  fetchData().then(() => setLoading(false));
+}, []);
+
+<ReactTabletify
+  data={users}
+  columns={columns}
+  loading={loading}
+  onRenderLoading={() => <CustomSpinner />} // Optional custom loader
+/>
+```
+
+### With Empty State
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  emptyMessage="No users found"
+  onRenderEmpty={() => <CustomEmptyState />} // Optional custom empty state
+/>
+```
+
+### With Sticky Header
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  stickyHeader={true}
+  maxHeight="600px"
+/>
+```
+
+### With Keyboard Navigation
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  enableKeyboardNavigation={true}
+  selectionMode="multiple"
+/>
+// Use Arrow Up/Down to navigate, Enter/Space to select, Escape to deselect
+```
+
+### With Column Visibility
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  enableColumnVisibility={true}
+  onColumnVisibilityChange={(visible) => {
+    console.log('Visible columns:', visible);
+  }}
+/>
+// Right-click header or use callout menu to show/hide columns
+```
+
+### With Column Reordering
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  enableColumnReorder={true}
+  onColumnReorder={(order) => {
+    console.log('Column order:', order);
+  }}
+/>
+// Drag column headers to reorder
+```
+
+### With Inline Editing
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns.map(col => ({
+    ...col,
+    editable: col.key === 'name' || col.key === 'age' // Enable editing for specific columns
+  }))}
+  onCellEdit={(item, columnKey, newValue, index) => {
+    // Update your data
+    updateUser(index, columnKey, newValue);
+  }}
+/>
+// Double-click a cell to edit
+```
+
+### With Column Pinning
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  pinnedColumns={{ name: 'left' }} // Pin 'name' column to left
+  onColumnPin={(columnKey, pinPosition) => {
+    console.log(`Column ${columnKey} pinned ${pinPosition}`);
+  }}
+/>
+// Use header callout menu to pin/unpin columns
+```
+
+## Architecture
+
+ReactTabletify is built with a modular architecture using custom hooks for better code organization and maintainability:
+
+- **`useTable`** - Core table logic (sorting, filtering, pagination)
+- **`useRowSelection`** - Row selection management (single/multiple)
+- **`useColumnManagement`** - Column visibility, reordering, pinning
+- **`useColumnResize`** - Column resizing functionality
+- **`useInlineEditing`** - Inline cell editing
+- **`useKeyboardNavigation`** - Keyboard navigation support
+- **`useHeaderCallout`** - Header callout menu management
+
+This modular approach makes the codebase easier to maintain, test, and extend.
 
 ## Hooks
 
