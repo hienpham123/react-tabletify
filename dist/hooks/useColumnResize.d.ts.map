@@ -1,0 +1,1 @@
+{"version":3,"file":"useColumnResize.d.ts","sourceRoot":"","sources":["../../src/hooks/useColumnResize.tsx"],"names":[],"mappings":"AAAA,OAAO,KAAK,KAAK,MAAM,OAAO,CAAC;AAE/B;;;;;;;GAOG;AACH,wBAAgB,eAAe,CAAC,CAAC,SAAS,MAAM,CAAC,MAAM,EAAE,GAAG,CAAC,EAC3D,UAAU,EAAE,KAAK,CAAC,SAAS,CAAC,MAAM,CAAC,MAAM,EAAE,cAAc,CAAC,CAAC,EAC3D,aAAa,CAAC,EAAE,MAAM,IAAI;;;gCAU2B,MAAM,KAAK,gBAAgB;EAqDjF"}
