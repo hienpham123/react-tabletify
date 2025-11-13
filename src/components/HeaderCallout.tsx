@@ -6,11 +6,13 @@ interface HeaderCalloutProps {
     onSortAsc: () => void;
     onSortDesc: () => void;
     onFilter: () => void;
+    onClearFilter?: () => void;
     onDismiss: () => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
     sortable?: boolean;
     filterable?: boolean;
+    hasFilter?: boolean;
 }
 
 export function HeaderCallout({
@@ -18,11 +20,13 @@ export function HeaderCallout({
     onSortAsc,
     onSortDesc,
     onFilter,
+    onClearFilter,
     onDismiss,
     onMouseEnter,
     onMouseLeave,
     sortable = true,
     filterable = true,
+    hasFilter = false,
 }: HeaderCalloutProps) {
     const calloutRef = React.useRef<HTMLDivElement>(null);
 
@@ -54,6 +58,12 @@ export function HeaderCallout({
                 </>
             )}
             {sortable && filterable && <hr className="th-callout-divider" />}
+            {filterable && hasFilter && onClearFilter && (
+                <button onClick={onClearFilter} className="th-callout-item">
+                    <span className="th-callout-text">Clear filter</span>
+                </button>
+            )}
+            {filterable && hasFilter && onClearFilter && <hr className="th-callout-divider" />}
             {filterable && (
                 <button onClick={onFilter} className="th-callout-item">
                     <span className="th-callout-text">Filter by</span>

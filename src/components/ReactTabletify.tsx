@@ -187,6 +187,9 @@ export function ReactTabletify<T extends Record<string, any>>({
   }, [filterField, data]);
 
   const handleHeaderMouseEnter = (key: keyof T) => {
+    // Don't show callout when resizing
+    if (resizingColumn) return;
+
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
     }
@@ -212,12 +215,23 @@ export function ReactTabletify<T extends Record<string, any>>({
     const th = anchorRefs.current[colKeyStr]?.parentElement as HTMLTableCellElement;
     if (!th) return;
 
+    // Close callout when starting to resize
+    setCalloutKey(null);
+
     const startWidth = th.offsetWidth;
     const startX = e.clientX;
 
     setResizingColumn(colKeyStr);
 
+    // Set cursor on document body to maintain resize cursor
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+
     const handleMouseMove = (e: MouseEvent) => {
+      // Keep cursor as col-resize during resize
+      document.body.style.cursor = 'col-resize';
+      e.preventDefault();
+      
       const diff = e.clientX - startX;
       const newWidth = Math.max(50, startWidth + diff); // Min width 50px
       setColumnWidths(prev => ({ ...prev, [colKeyStr]: newWidth }));
@@ -225,6 +239,9 @@ export function ReactTabletify<T extends Record<string, any>>({
 
     const handleMouseUp = () => {
       setResizingColumn(null);
+      // Reset cursor and user-select
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
@@ -439,12 +456,13 @@ export function ReactTabletify<T extends Record<string, any>>({
   const themeStyles = React.useMemo(() => applyTheme(tableTheme), [tableTheme]);
 
   return (
-    <div 
-      className={`th-table ${className || ''} th-theme-${tableTheme.mode || 'light'}`} 
+    <div
+      className={`th-table ${className || ''} th-theme-${tableTheme.mode || 'light'} ${resizingColumn ? 'resizing' : ''}`}
       style={{
         ...themeStyles,
         ...styles,
         ...(maxHeight ? { maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight, overflow: 'auto' } : {}),
+        ...(resizingColumn ? { cursor: 'col-resize' } : {}),
       }}
     >
       <table>
@@ -495,9 +513,9 @@ export function ReactTabletify<T extends Record<string, any>>({
                   ) : (
                     <div
                       className={headerClassName}
-                      ref={(el) => {
-                        if (el) anchorRefs.current[String(col.key)] = el;
-                      }}
+                  ref={(el) => {
+                    if (el) anchorRefs.current[String(col.key)] = el;
+                  }}
                       onMouseEnter={() => handleHeaderMouseEnter(col.key)}
                       onMouseLeave={handleHeaderMouseLeave}
                       onClick={(ev) => onColumnHeaderClick?.(col, ev)}
@@ -537,11 +555,11 @@ export function ReactTabletify<T extends Record<string, any>>({
                             ) : (
                               <span className="th-sort-arrow">↓</span>
                             )}
-                          </span>
+                  </span>
                         )}
                       </div>
                       <span className="th-header-action">⋮</span>
-                    </div>
+                </div>
                   )}
                   {col.resizable !== false && (
                     <div
@@ -554,23 +572,24 @@ export function ReactTabletify<T extends Record<string, any>>({
                         top: 0,
                         bottom: 0,
                         width: '4px',
-                        zIndex: 1,
+                        zIndex: 10,
+                        userSelect: 'none',
                       }}
                     />
                   )}
-                  {calloutKey === col.key && (
-                    <HeaderCallout
-                      anchorRef={{ current: anchorRefs.current[String(col.key)] }}
-                      onSortAsc={() => {
+                  {calloutKey === col.key && !resizingColumn && (
+                  <HeaderCallout
+                    anchorRef={{ current: anchorRefs.current[String(col.key)] }}
+                    onSortAsc={() => {
                         if (col.sortable !== false) {
-                          table.handleSort(col.key, "asc");
-                          setCalloutKey(null);
+                      table.handleSort(col.key, "asc");
+                      setCalloutKey(null);
                         }
-                      }}
-                      onSortDesc={() => {
+                    }}
+                    onSortDesc={() => {
                         if (col.sortable !== false) {
-                          table.handleSort(col.key, "desc");
-                          setCalloutKey(null);
+                      table.handleSort(col.key, "desc");
+                      setCalloutKey(null);
                         }
                       }}
                       onFilter={() => {
@@ -578,7 +597,13 @@ export function ReactTabletify<T extends Record<string, any>>({
                           handleOpenFilter(col.key);
                         }
                       }}
-                      onDismiss={() => setCalloutKey(null)}
+                      onClearFilter={() => {
+                        if (col.filterable !== false) {
+                          table.setFilter(String(col.key), []);
+                          setCalloutKey(null);
+                        }
+                      }}
+                    onDismiss={() => setCalloutKey(null)}
                       onMouseEnter={() => {
                         if (hoverTimeoutRef.current) {
                           clearTimeout(hoverTimeoutRef.current);
@@ -587,9 +612,10 @@ export function ReactTabletify<T extends Record<string, any>>({
                       onMouseLeave={handleHeaderMouseLeave}
                       sortable={col.sortable !== false}
                       filterable={col.filterable !== false}
-                    />
-                  )}
-                </th>
+                      hasFilter={table.filters[String(col.key)] && table.filters[String(col.key)].length > 0}
+                  />
+                )}
+              </th>
               );
             })}
           </tr>
@@ -754,7 +780,7 @@ export function ReactTabletify<T extends Record<string, any>>({
                       </td>
                     );
                   })}
-                </tr>
+            </tr>
               );
             })
           )}
@@ -762,12 +788,12 @@ export function ReactTabletify<T extends Record<string, any>>({
       </table>
 
       {showPagination && (
-        <Pagination
+      <Pagination
           totalItems={groupBy && groupedData ? Object.keys(groupedData).length : table.filtered.length}
-          itemsPerPage={table.itemsPerPage}
-          currentPage={table.currentPage}
-          onPageChange={table.setCurrentPage}
-        />
+        itemsPerPage={table.itemsPerPage}
+        currentPage={table.currentPage}
+        onPageChange={table.setCurrentPage}
+      />
       )}
 
       {filterField && (

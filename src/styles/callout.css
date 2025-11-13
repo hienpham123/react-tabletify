@@ -8,7 +8,7 @@
   border-radius: var(--th-border-radius-button, 4px);
   padding: 4px 0;
   z-index: 1000;
-  width: 240px;
+  width: 200px;
   font-family: var(--th-typography-font-family, "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto", "Helvetica Neue", sans-serif);
   font-size: var(--th-typography-font-size, 14px);
   animation: th-fadeIn var(--th-transition-duration, 0.167s) var(--th-transition-easing, cubic-bezier(0.1, 0.9, 0.2, 1));

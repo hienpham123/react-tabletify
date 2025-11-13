@@ -2,7 +2,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  width: 360px;
+  width: 320px;
   height: 100%;
   background: var(--th-color-surface, #ffffff);
   box-shadow: var(--th-shadow-panel, -2px 0 8px rgba(0, 0, 0, 0.15), -1px 0 2px rgba(0, 0, 0, 0.1));
@@ -19,13 +19,13 @@
 }
 
 .th-filter-header {
-  padding: 0px 20px;
+  padding: 10px 20px;
   background: var(--th-color-surface, #ffffff);
   border-bottom: 1px solid var(--th-color-border, #edebe9);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  min-height: 56px;
+  font-size: var(--th-typography-font-size, 16px);
 }
 
 .th-filter-header strong {

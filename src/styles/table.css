@@ -8,6 +8,15 @@
   color: var(--th-color-text, #323130);
 }
 
+/* Keep col-resize cursor when resizing */
+.th-table.resizing {
+  cursor: col-resize !important;
+}
+
+.th-table.resizing * {
+  cursor: col-resize !important;
+}
+
 .th-table-header {
   display: flex;
   justify-content: space-between;
