@@ -29,6 +29,8 @@ import React from 'react';
 import { ReactTabletify, Column } from 'react-tabletify';
 // ⚠️ IMPORTANT: Import CSS styles
 import 'react-tabletify/dist/index.css';
+// Or use the shorter path:
+// import 'react-tabletify/index.css';
 
 interface User {
   id: number;
@@ -201,6 +203,8 @@ You must import the CSS file for the table to display correctly:
 
 ```tsx
 import 'react-tabletify/dist/index.css';
+// Or use the shorter path:
+// import 'react-tabletify/index.css';
 ```
 
 The CSS file is located at `dist/index.css` in the package. Make sure to import it in your main entry file (e.g., `index.tsx` or `App.tsx`).

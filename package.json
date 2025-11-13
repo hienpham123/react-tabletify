@@ -1,13 +1,16 @@
 {
   "name": "react-tabletify",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": false,
   "type": "module",
   "exports": {
     ".": {
       "import": "./dist/index.esm.js",
       "require": "./dist/index.js"
-    }
+    },
+    "./dist/index.css": "./dist/index.css",
+    "./dist/index.esm.css": "./dist/index.esm.css",
+    "./index.css": "./dist/index.css"
   },
   "description": "A powerful, customizable data table component for React with Fluent UI styling",
   "main": "dist/index.js",
