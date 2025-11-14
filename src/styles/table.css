@@ -156,7 +156,7 @@
 }
 
 .th-header-filter-icon {
-  color: #6ABE28;
+  color: var(--th-color-primary, #107c10);
 }
 
 .th-header-pin-icon {
@@ -553,6 +553,41 @@
 
 .th-table:focus .th-row-focused {
   background: var(--th-color-hover-row-background, #f9f9f9) !important;
+}
+
+/* --- Row Drag & Drop --- */
+.th-table tbody tr.th-row-draggable {
+  cursor: move;
+  user-select: none;
+}
+
+.th-table tbody tr.th-row-draggable:hover {
+  cursor: grab;
+}
+
+.th-table tbody tr.th-row-draggable:active {
+  cursor: grabbing;
+}
+
+.th-table tbody tr.th-row-dragging {
+  opacity: 0.5;
+  background: var(--th-color-row-background, #ffffff) !important;
+}
+
+.th-table tbody tr.th-row-drag-over {
+  border-top: 2px solid var(--th-color-primary, #107c10);
+  position: relative;
+}
+
+.th-table tbody tr.th-row-drag-over::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--th-color-primary, #107c10);
+  z-index: 10;
 }
 
 /* --- Totals Row --- */

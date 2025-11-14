@@ -6,6 +6,7 @@ import { useColumnResize } from "../hooks/useColumnResize";
 import { useInlineEditing } from "../hooks/useInlineEditing";
 import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
 import { useHeaderCallout } from "../hooks/useHeaderCallout";
+import { useRowReorder } from "../hooks/useRowReorder";
 import { Pagination } from "./Pagination";
 import { HeaderCallout } from "./HeaderCallout";
 import { FilterPanel } from "./FilterPanel";
@@ -95,6 +96,8 @@ export function ReactTabletify<T extends Record<string, any>>({
   enableColumnReorder,
   onColumnReorder,
   enableKeyboardNavigation = true,
+  enableRowReorder = false,
+  onRowReorder,
   ...otherProps
 }: ReactTabletifyProps<T>) {
   // Core table hook for sorting, filtering, pagination
@@ -106,7 +109,23 @@ export function ReactTabletify<T extends Record<string, any>>({
     setInternalItemsPerPage(itemsPerPage);
   }, [itemsPerPage]);
 
-  const table = useTable<T>(data, internalItemsPerPage);
+  // Auto-set default itemsPerPageOptions when showPagination is true
+  const defaultItemsPerPageOptions = [10, 25, 50, 100];
+  const effectiveItemsPerPageOptions = showPagination 
+    ? (itemsPerPageOptions || defaultItemsPerPageOptions)
+    : itemsPerPageOptions;
+
+  // Auto-create handler for itemsPerPageChange if not provided and showPagination is true
+  const handleItemsPerPageChange = React.useCallback((newItemsPerPage: number) => {
+    setInternalItemsPerPage(newItemsPerPage);
+    onItemsPerPageChange?.(newItemsPerPage);
+  }, [onItemsPerPageChange]);
+
+  // When showPagination is false, show all items (set itemsPerPage to a very large number)
+  const effectiveItemsPerPage = showPagination ? internalItemsPerPage : Number.MAX_SAFE_INTEGER;
+
+  // Temporary: use data for initial table setup, will be updated after useRowReorder
+  const table = useTable<T>(data, effectiveItemsPerPage);
 
   // Refs
   const anchorRefs = React.useRef<Record<string, HTMLDivElement>>({});
@@ -198,6 +217,24 @@ export function ReactTabletify<T extends Record<string, any>>({
     handleCellEditCancel,
   } = useInlineEditing(onCellEdit);
 
+  // Row drag & drop hook
+  const {
+    draggedRowIndex,
+    dragOverRowIndex,
+    isDragging,
+    effectiveData,
+    handleRowDragStart,
+    handleRowDragOver,
+    handleRowDragLeave,
+    handleRowDrop,
+    handleRowDragEnd,
+  } = useRowReorder(
+    enableRowReorder,
+    data,
+    table.filtered,
+    currentGroupBy,
+    onRowReorder
+  );
 
   /**
    * Open filter panel for a column
@@ -790,11 +827,26 @@ export function ReactTabletify<T extends Record<string, any>>({
                             );
                           }
 
+                          // Get actual index in filtered data for drag & drop
+                          const actualIndex = table.filtered.findIndex(item => item === row);
+                          const dragIndex = actualIndex >= 0 ? actualIndex : rowIndexForSelection;
+                          const canDrag = enableRowReorder && !currentGroupBy;
+                          
                           return (
                             <tr
                               key={itemKey}
-                              className={`th-group-row ${isSelected ? 'th-row-selected' : ''} ${isActive ? 'th-row-active' : ''}`}
-                              onClick={(ev) => handleItemClick(row, rowIndexForSelection, ev)}
+                              className={`th-group-row ${isSelected ? 'th-row-selected' : ''} ${isActive ? 'th-row-active' : ''} ${canDrag ? 'th-row-draggable' : ''} ${draggedRowIndex === dragIndex ? 'th-row-dragging' : ''} ${dragOverRowIndex === dragIndex ? 'th-row-drag-over' : ''}`}
+                              draggable={canDrag}
+                              onDragStart={(e) => handleRowDragStart(e, dragIndex)}
+                              onDragOver={(e) => handleRowDragOver(e, dragIndex)}
+                              onDragLeave={handleRowDragLeave}
+                              onDrop={(e) => handleRowDrop(e, dragIndex)}
+                              onDragEnd={handleRowDragEnd}
+                              onClick={(ev) => {
+                                if (!isDragging) {
+                                  handleItemClick(row, rowIndexForSelection, ev);
+                                }
+                              }}
                               onContextMenu={(ev) => onItemContextMenu?.(row, rowIndexForSelection, ev)}
                             >
                               {selectionMode !== 'none' && (
@@ -862,11 +914,26 @@ export function ReactTabletify<T extends Record<string, any>>({
                     );
                   }
 
+                  // Get actual index in filtered data for drag & drop
+                  const actualIndex = table.filtered.findIndex(item => item === row);
+                  const dragIndex = actualIndex >= 0 ? actualIndex : i;
+                  const canDrag = enableRowReorder && !currentGroupBy;
+                  
                   return (
                     <tr
                       key={itemKey}
-                      className={`${isSelected ? 'th-row-selected' : ''} ${isActive ? 'th-row-active' : ''} ${focusedRowIndex === i ? 'th-row-focused' : ''}`}
-                      onClick={(ev) => handleItemClick(row, i, ev)}
+                      className={`${isSelected ? 'th-row-selected' : ''} ${isActive ? 'th-row-active' : ''} ${focusedRowIndex === i ? 'th-row-focused' : ''} ${canDrag ? 'th-row-draggable' : ''} ${draggedRowIndex === dragIndex ? 'th-row-dragging' : ''} ${dragOverRowIndex === dragIndex ? 'th-row-drag-over' : ''}`}
+                      draggable={canDrag}
+                      onDragStart={(e) => handleRowDragStart(e, dragIndex)}
+                      onDragOver={(e) => handleRowDragOver(e, dragIndex)}
+                      onDragLeave={handleRowDragLeave}
+                      onDrop={(e) => handleRowDrop(e, dragIndex)}
+                      onDragEnd={handleRowDragEnd}
+                      onClick={(ev) => {
+                        if (!isDragging) {
+                          handleItemClick(row, i, ev);
+                        }
+                      }}
                       onContextMenu={(ev) => onItemContextMenu?.(row, i, ev)}
                     >
                       {selectionMode !== 'none' && (
@@ -972,11 +1039,10 @@ export function ReactTabletify<T extends Record<string, any>>({
           itemsPerPage={table.itemsPerPage}
           currentPage={table.currentPage}
           onPageChange={table.setCurrentPage}
-          itemsPerPageOptions={itemsPerPageOptions}
+          itemsPerPageOptions={effectiveItemsPerPageOptions}
           onItemsPerPageChange={(newItemsPerPage) => {
-            setInternalItemsPerPage(newItemsPerPage);
+            handleItemsPerPageChange(newItemsPerPage);
             table.setCurrentPage(1); // Reset to page 1 when changing items per page
-            onItemsPerPageChange?.(newItemsPerPage);
           }}
         />
       )}

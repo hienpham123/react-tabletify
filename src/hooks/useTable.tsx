@@ -110,6 +110,48 @@ export function useTable<T extends Record<string, any>>(
         setCurrentPage(1);
     }, [search, sortKey, sortDir, filters]);
 
+    /** --- 6️⃣ Action helpers --- */
+    const clearSearch = React.useCallback(() => {
+        setSearch("");
+    }, []);
+
+    const clearFilters = React.useCallback(() => {
+        setFilters({});
+    }, []);
+
+    const clearFilter = React.useCallback((field: string) => {
+        setFilter(field, []);
+    }, [setFilter]);
+
+    const resetSort = React.useCallback(() => {
+        setSortKey(null);
+        setSortDir("asc");
+    }, []);
+
+    const resetAll = React.useCallback(() => {
+        setSearch("");
+        setFilters({});
+        setSortKey(null);
+        setSortDir("asc");
+        setCurrentPage(1);
+    }, []);
+
+    const goToFirstPage = React.useCallback(() => {
+        setCurrentPage(1);
+    }, []);
+
+    const goToLastPage = React.useCallback(() => {
+        setCurrentPage(totalPages);
+    }, [totalPages]);
+
+    const goToNextPage = React.useCallback(() => {
+        setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+    }, [totalPages]);
+
+    const goToPrevPage = React.useCallback(() => {
+        setCurrentPage((prev) => Math.max(prev - 1, 1));
+    }, []);
+
     return {
         // data
         filtered,
@@ -120,18 +162,29 @@ export function useTable<T extends Record<string, any>>(
         setCurrentPage,
         totalPages,
         itemsPerPage,
+        goToFirstPage,
+        goToLastPage,
+        goToNextPage,
+        goToPrevPage,
 
         // search
         search,
         setSearch,
+        clearSearch,
 
         // sort
         sortKey,
         sortDir,
         handleSort,
+        resetSort,
 
         // filter
         filters,
         setFilter,
+        clearFilter,
+        clearFilters,
+
+        // reset all
+        resetAll,
     };
 }

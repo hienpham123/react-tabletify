@@ -266,14 +266,14 @@ export default function App() {
           },
         ]}
         stickyHeader
-        itemsPerPage={10}
-        showPagination={true}
-        itemsPerPageOptions={[10, 25, 50, 100]}
-        onItemsPerPageChange={(newItemsPerPage) => {
-          console.log('Items per page changed to:', newItemsPerPage);
-        }}
+        // showPagination={false}
         // groupBy="department"
         // selectionMode="multiple"
+        enableRowReorder={true}
+        onRowReorder={(newData, draggedItem, fromIndex, toIndex) => {
+          console.log('Row reordered:', { draggedItem, fromIndex, toIndex });
+          setData(newData);
+        }}
         theme={getCurrentTheme()}
         showTooltip={false}
         onSelectionChanged={(selected) => console.log('Selected items:', selected)}

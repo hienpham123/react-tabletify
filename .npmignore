@@ -17,6 +17,11 @@ build/
 coverage/
 .nyc_output/
 
+# Source maps and declaration maps (should not be published)
+*.map
+**/*.d.ts.map
+**/*.js.map
+
 # Test files
 **/*.test.*
 **/*.spec.*

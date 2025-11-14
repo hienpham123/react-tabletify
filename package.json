@@ -23,8 +23,7 @@
     "CUSTOMIZATION_OPTIONS.md",
     "FEATURES_ROADMAP.md",
     "THEME_CUSTOMIZATION.md",
-    "THEME_EXAMPLES.md",
-    "src"
+    "THEME_EXAMPLES.md"
   ],
   "style": "dist/index.css",
   "keywords": [

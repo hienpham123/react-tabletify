@@ -27,6 +27,7 @@ A fast, fully customizable React data table built purely with HTML and CSS.
 - ✅ **Nested Menus** - Column settings and totals submenus in header callout
 - ✅ **Totals Row** - Display count/aggregations in footer row
 - ✅ **Group By with Visual Indicator** - Group by column with checkmark in menu
+- ✅ **Row Drag & Drop** - Drag and drop rows to reorder them
 
 ## Installation
 
@@ -117,6 +118,8 @@ function App() {
 | `maxHeight` | `string \| number` | - | Maximum height of table |
 | `itemsPerPageOptions` | `number[]` | - | Options for items per page dropdown (e.g., [10, 25, 50, 100]) |
 | `onItemsPerPageChange` | `(itemsPerPage: number) => void` | - | Callback when items per page changes |
+| `enableRowReorder` | `boolean` | `false` | Enable row drag & drop to reorder rows |
+| `onRowReorder` | `(newData, draggedItem, fromIndex, toIndex) => void` | - | Callback when row order changes after drag & drop |
 | `className` | `string` | - | Additional CSS class |
 | `styles` | `CSSProperties` | - | Inline styles |
 
@@ -336,6 +339,25 @@ useEffect(() => {
 // Totals row will display count and stick to bottom when scrolling
 ```
 
+### With Row Drag & Drop
+
+```tsx
+const [data, setData] = useState(users);
+
+<ReactTabletify
+  data={data}
+  columns={columns}
+  enableRowReorder={true}
+  onRowReorder={(newData, draggedItem, fromIndex, toIndex) => {
+    console.log('Row moved from', fromIndex, 'to', toIndex);
+    // Update your data state
+    setData(newData);
+  }}
+/>
+// Drag and drop rows to reorder them
+// Note: Row reordering is disabled when grouping is enabled
+```
+
 ## Architecture
 
 ReactTabletify is built with a modular architecture using custom hooks for better code organization and maintainability:
@@ -347,6 +369,7 @@ ReactTabletify is built with a modular architecture using custom hooks for bette
 - **`useInlineEditing`** - Inline cell editing
 - **`useKeyboardNavigation`** - Keyboard navigation support
 - **`useHeaderCallout`** - Header callout menu management
+- **`useRowReorder`** - Row drag & drop reordering
 
 This modular approach makes the codebase easier to maintain, test, and extend.
 
