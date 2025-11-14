@@ -21,6 +21,11 @@
 17. ✅ **Column Visibility Toggle** - Show/hide columns
 18. ✅ **Column Reordering** - Drag & drop to reorder columns
 19. ✅ **Tooltip** - Show tooltip for truncated content
+20. ✅ **Items Per Page Options** - Customizable items per page dropdown
+21. ✅ **Nested Menus** - Column settings and totals submenus in header callout
+22. ✅ **Totals Row** - Display count/aggregations in footer row
+23. ✅ **Sticky Totals Row** - Totals row fixed at bottom when scrolling
+24. ✅ **Group By Visual Indicator** - Checkmark in menu when column is grouped
 
 ## 🔴 Quan trọng - Nên có (High Priority)
 
@@ -97,9 +102,11 @@
 - Props: `editable`, `onCellEdit`
 - **Status**: ✅ Đã implement
 
-### 15. **Column Aggregation**
-- Sum, Average, Count, Min, Max
-- Hiển thị ở footer row
+### 15. ✅ **Column Aggregation (Totals Row)**
+- Count aggregation (✅ implemented)
+- Sum, Average, Min, Max (🔄 planned)
+- Hiển thị ở footer row với sticky khi scroll
+- **Status**: ✅ Count đã implement, các aggregation khác đang planned
 
 ### 16. **Multi-column Sorting**
 - Sort theo nhiều columns cùng lúc
@@ -154,6 +161,12 @@
 ### ✅ Phase 2 (Column Management) - ĐÃ HOÀN THÀNH
 5. ✅ **Column Visibility** - Users thường cần hide/show columns
 6. ✅ **Column Reordering** - Useful cho customization
+
+### ✅ Phase 2.5 (Enhanced UX) - ĐÃ HOÀN THÀNH
+7. ✅ **Items Per Page Options** - Better pagination control
+8. ✅ **Nested Menus** - Better organization of column actions
+9. ✅ **Totals Row** - Display aggregations (count implemented)
+10. ✅ **Sticky Totals Row** - Better UX for large tables
 
 ### Phase 3 (Polish & Advanced)
 7. **Density Modes** - Better UX

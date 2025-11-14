@@ -18,10 +18,15 @@ A fast, fully customizable React data table built purely with HTML and CSS.
 - ✅ **Loading States** - Skeleton loader when fetching data
 - ✅ **Empty States** - Custom message when no data available
 - ✅ **Sticky Header** - Header fixed when scrolling
+- ✅ **Sticky Totals Row** - Totals row fixed at bottom when scrolling
 - ✅ **Keyboard Navigation** - Arrow keys, Enter/Space for selection
 - ✅ **Column Visibility** - Show/hide columns
 - ✅ **Column Reordering** - Drag & drop to reorder columns
 - ✅ **Tooltip** - Show tooltip for truncated content
+- ✅ **Items Per Page Options** - Customizable items per page dropdown
+- ✅ **Nested Menus** - Column settings and totals submenus in header callout
+- ✅ **Totals Row** - Display count/aggregations in footer row
+- ✅ **Group By with Visual Indicator** - Group by column with checkmark in menu
 
 ## Installation
 
@@ -110,6 +115,8 @@ function App() {
 | `pinnedColumns` | `Record<string, 'left' \| 'right'>` | - | Initial pinned columns |
 | `onColumnPin` | `(columnKey, pinPosition) => void` | - | Callback when column is pinned/unpinned |
 | `maxHeight` | `string \| number` | - | Maximum height of table |
+| `itemsPerPageOptions` | `number[]` | - | Options for items per page dropdown (e.g., [10, 25, 50, 100]) |
+| `onItemsPerPageChange` | `(itemsPerPage: number) => void` | - | Callback when items per page changes |
 | `className` | `string` | - | Additional CSS class |
 | `styles` | `CSSProperties` | - | Inline styles |
 
@@ -300,6 +307,33 @@ useEffect(() => {
   }}
 />
 // Use header callout menu to pin/unpin columns
+```
+
+### With Items Per Page Options
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  itemsPerPage={10}
+  itemsPerPageOptions={[10, 25, 50, 100]}
+  onItemsPerPageChange={(newItemsPerPage) => {
+    console.log('Items per page changed to:', newItemsPerPage);
+  }}
+/>
+// Dropdown to select items per page will appear in pagination
+```
+
+### With Totals Row
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  // Totals row can be configured via header callout menu
+  // Right-click column header > Totals > Count
+/>
+// Totals row will display count and stick to bottom when scrolling
 ```
 
 ## Architecture
@@ -511,6 +545,16 @@ const themeStyles = applyTheme(theme);
 ```
 
 ## Changelog
+
+### Version 0.3.0
+- ✅ Added Items Per Page Options dropdown in pagination
+- ✅ Added Nested Menus in header callout (Column settings, Totals)
+- ✅ Added Totals Row with count aggregation
+- ✅ Added Sticky Totals Row (stays at bottom when scrolling)
+- ✅ Added Group By with visual indicator (checkmark in menu)
+- ✅ Improved header callout UI with submenus
+- ✅ Enhanced pinned columns with box shadow on scroll
+- ✅ Updated pagination UI design
 
 ### Version 0.2.0
 - ✅ Added Loading States with skeleton loader

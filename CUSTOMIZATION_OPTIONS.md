@@ -131,6 +131,28 @@
 />
 ```
 
+### 14. **Items Per Page Options**
+```tsx
+<ReactTabletify
+  itemsPerPage={10}
+  itemsPerPageOptions={[10, 25, 50, 100]}
+  onItemsPerPageChange={(newItemsPerPage) => {
+    console.log('Items per page changed to:', newItemsPerPage);
+  }}
+/>
+```
+
+### 15. **Totals Row**
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  // Configure totals via header callout menu:
+  // Right-click column header > Totals > Count
+/>
+// Totals row will display count and stick to bottom when scrolling
+```
+
 ### 14. **Complete Example**
 ```tsx
 <ReactTabletify
@@ -177,6 +199,10 @@
 ✅ **Column reordering** - drag & drop columns  
 ✅ **Keyboard navigation** - arrow keys, enter, space  
 ✅ **Focus color** - custom focus outline  
+✅ **Items per page options** - customizable pagination dropdown  
+✅ **Totals row** - display count/aggregations in footer  
+✅ **Sticky totals row** - totals row fixed at bottom  
+✅ **Nested menus** - organized column actions in submenus  
 
 Tất cả các options này cho phép bạn customize UI giống như Fluent UI DetailList!
 
