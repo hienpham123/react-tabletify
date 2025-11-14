@@ -100,7 +100,7 @@ export function ReactTabletify<T extends Record<string, any>>({
   // Core table hook for sorting, filtering, pagination
   // Manage itemsPerPage state internally if onItemsPerPageChange is provided
   const [internalItemsPerPage, setInternalItemsPerPage] = React.useState(itemsPerPage);
-  
+
   // Update internalItemsPerPage when itemsPerPage prop changes
   React.useEffect(() => {
     setInternalItemsPerPage(itemsPerPage);
@@ -112,8 +112,24 @@ export function ReactTabletify<T extends Record<string, any>>({
   const anchorRefs = React.useRef<Record<string, HTMLDivElement>>({});
   const tableRef = React.useRef<HTMLDivElement>(null);
 
+  // Track totals configuration for each column
+  const [columnTotals, setColumnTotals] = React.useState<Record<string, 'none' | 'count'>>({});
+
   // Filter panel state
   const [filterField, setFilterField] = React.useState<string | null>(null);
+
+  // Internal groupBy state (use prop if provided, otherwise use internal state)
+  const [internalGroupBy, setInternalGroupBy] = React.useState<keyof T | undefined>(groupBy);
+  
+  // Sync internalGroupBy when prop changes
+  React.useEffect(() => {
+    if (groupBy !== undefined) {
+      setInternalGroupBy(groupBy);
+    }
+  }, [groupBy]);
+  
+  // Use prop if provided, otherwise use internal state
+  const currentGroupBy = groupBy !== undefined ? groupBy : internalGroupBy;
 
   // Grouping state
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
@@ -209,14 +225,14 @@ export function ReactTabletify<T extends Record<string, any>>({
 
   // Reset page when groupBy changes
   React.useEffect(() => {
-    if (groupBy) {
+    if (currentGroupBy) {
       table.setCurrentPage(1);
     }
-  }, [groupBy]);
+  }, [currentGroupBy]);
 
   // Group rows logic - group sorted data, then paginate groups
   const groupedData = React.useMemo(() => {
-    if (!groupBy) return null;
+    if (!currentGroupBy) return null;
 
     const groups: Record<string, T[]> = {};
     const sortedData = table.sortKey
@@ -235,7 +251,7 @@ export function ReactTabletify<T extends Record<string, any>>({
       : table.filtered;
 
     sortedData.forEach((row) => {
-      const groupKey = String(row[groupBy]);
+      const groupKey = String(row[currentGroupBy]);
       if (!groups[groupKey]) {
         groups[groupKey] = [];
       }
@@ -243,22 +259,22 @@ export function ReactTabletify<T extends Record<string, any>>({
     });
 
     return groups;
-  }, [table.filtered, table.sortKey, table.sortDir, groupBy]);
+  }, [table.filtered, table.sortKey, table.sortDir, currentGroupBy]);
 
   // Reset page when number of groups changes (due to filter)
   React.useEffect(() => {
-    if (groupBy && groupedData) {
+    if (currentGroupBy && groupedData) {
       const totalGroups = Object.keys(groupedData).length;
       const totalPages = Math.ceil(totalGroups / table.itemsPerPage);
       if (table.currentPage > totalPages && totalPages > 0) {
         table.setCurrentPage(1);
       }
     }
-  }, [groupedData, groupBy, table.itemsPerPage, table.currentPage, table.setCurrentPage]);
+  }, [groupedData, currentGroupBy, table.itemsPerPage, table.currentPage, table.setCurrentPage]);
 
   // Paginate groups - sort groups by key first
   const paginatedGroups = React.useMemo(() => {
-    if (!groupBy || !groupedData) return null;
+    if (!currentGroupBy || !groupedData) return null;
 
     const groupEntries = Object.entries(groupedData);
     // Sort groups by key for consistent ordering
@@ -268,8 +284,16 @@ export function ReactTabletify<T extends Record<string, any>>({
     const end = start + table.itemsPerPage;
 
     return groupEntries.slice(start, end);
-  }, [groupedData, table.currentPage, table.itemsPerPage, groupBy]);
+  }, [groupedData, table.currentPage, table.itemsPerPage, currentGroupBy]);
 
+  // Expand all groups by default when groupBy changes
+  React.useEffect(() => {
+    if (currentGroupBy && groupedData) {
+      setExpandedGroups(new Set(Object.keys(groupedData)));
+    } else if (!currentGroupBy) {
+      setExpandedGroups(new Set());
+    }
+  }, [currentGroupBy, groupedData]);
 
   // Get cell text content for tooltip
   const getCellText = React.useCallback((item: T, column: Column<T>) => {
@@ -339,11 +363,11 @@ export function ReactTabletify<T extends Record<string, any>>({
    * Get current items for keyboard navigation (grouped or paginated)
    */
   const currentItemsForKeyboard = React.useMemo(() => {
-    if (groupBy && paginatedGroups) {
+    if (currentGroupBy && paginatedGroups) {
       return paginatedGroups.flatMap(([_, rows]) => rows);
     }
     return table.paged;
-  }, [groupBy, paginatedGroups, table.paged]);
+  }, [currentGroupBy, paginatedGroups, table.paged]);
 
   /**
    * Keyboard navigation hook
@@ -484,8 +508,8 @@ export function ReactTabletify<T extends Record<string, any>>({
         />
       )}
       {showTable && (
-        <div style={{ 
-          overflowX: 'auto', 
+        <div style={{
+          overflowX: 'auto',
           overflowY: stickyHeader && !maxHeight ? 'auto' : 'visible',
           width: '100%',
           ...(stickyHeader && !maxHeight ? { maxHeight: 'calc(100vh - 200px)' } : {})
@@ -666,6 +690,26 @@ export function ReactTabletify<T extends Record<string, any>>({
                               callout.dismissCallout();
                             }
                           }}
+                          onGroupBy={() => {
+                            // Toggle groupBy: if already grouped by this column, ungroup; otherwise group by it
+                            if (currentGroupBy === col.key) {
+                              setInternalGroupBy(undefined);
+                            } else {
+                              setInternalGroupBy(col.key);
+                            }
+                            callout.dismissCallout();
+                          }}
+                          isGrouped={currentGroupBy === col.key}
+                          onColumnSettings={(onColumnPin || enableColumnVisibility) ? true : undefined}
+                          onTotalsChange={(value) => {
+                            setColumnTotals(prev => ({
+                              ...prev,
+                              [String(col.key)]: value
+                            }));
+                            callout.dismissCallout();
+                          }}
+                          totalsValue={columnTotals[String(col.key)] || 'none'}
+                          columnLabel={col.label}
                           onDismiss={() => callout.dismissCallout()}
                           onMouseEnter={() => callout.handleHeaderMouseEnter(String(col.key))}
                           onMouseLeave={callout.handleHeaderMouseLeave}
@@ -676,6 +720,8 @@ export function ReactTabletify<T extends Record<string, any>>({
                           visible={visibleColumns.has(col.key)}
                           enableColumnVisibility={enableColumnVisibility}
                           enableColumnReorder={enableColumnReorder}
+                          enableGroupBy={true}
+                          enableTotals={true}
                         />
                       )}
                     </th>
@@ -684,9 +730,12 @@ export function ReactTabletify<T extends Record<string, any>>({
               </tr>
             </thead>
             <tbody>
-              {groupBy && paginatedGroups ? (
+              {currentGroupBy && paginatedGroups ? (
                 paginatedGroups.map(([groupKey, rows]) => {
                   const isExpanded = expandedGroups.has(groupKey);
+                  // Find the column label for the groupBy column
+                  const groupByColumn = columns.find(c => c.key === currentGroupBy);
+                  const groupByLabel = groupByColumn?.label || String(currentGroupBy);
                   return (
                     <React.Fragment key={groupKey}>
                       <tr className="th-group-header">
@@ -714,7 +763,7 @@ export function ReactTabletify<T extends Record<string, any>>({
                               />
                             </svg>
                             <span className="th-group-label">
-                              {String(groupBy)}: {groupKey}
+                              {groupByLabel}: {groupKey}
                             </span>
                             <span className="th-group-count">({rows.length})</span>
                           </button>
@@ -740,7 +789,7 @@ export function ReactTabletify<T extends Record<string, any>>({
                               </React.Fragment>
                             );
                           }
-                          
+
                           return (
                             <tr
                               key={itemKey}
@@ -870,13 +919,56 @@ export function ReactTabletify<T extends Record<string, any>>({
                 })
               )}
             </tbody>
+            {Object.values(columnTotals).some(v => v === 'count') && (
+              <tfoot className="th-totals-sticky">
+                <tr className="th-totals-row">
+                  {selectionMode !== 'none' && (
+                    <td className="th-selection-column"></td>
+                  )}
+                  {sortedColumns.map((col) => {
+                    const colKeyStr = String(col.key);
+                    const totalsValue = columnTotals[colKeyStr] || 'none';
+                    const pinPosition = internalPinnedColumns[colKeyStr] || col.pinned || null;
+                    const sortedIndex = sortedColumns.findIndex(c => String(c.key) === colKeyStr);
+                    const leftOffset = pinPosition === 'left' ? getLeftOffset(col, sortedIndex) : 0;
+                    const rightOffset = pinPosition === 'right' ? getRightOffset(col, sortedIndex) : 0;
+                    const resizedWidth = columnWidths[colKeyStr];
+                    const cellStyle: React.CSSProperties = {
+                      textAlign: col.align,
+                      width: resizedWidth ? `${resizedWidth}px` : col.width,
+                      position: pinPosition ? 'sticky' : 'relative',
+                      ...(pinPosition === 'left' ? { left: `${leftOffset}px`, zIndex: 11 } : {}),
+                      ...(pinPosition === 'right' ? { right: `${rightOffset}px`, zIndex: 11 } : {}),
+                    };
+                    const cellClassName = `${pinPosition ? `th-cell-pinned th-pinned-${pinPosition}` : ''} ${pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : ''} ${pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : ''}`.trim();
+
+                    let cellContent: React.ReactNode = '';
+                    if (totalsValue === 'count') {
+                      // Calculate count for this column
+                      const count = table.filtered.length;
+                      cellContent = count.toLocaleString();
+                    }
+
+                    return (
+                      <td
+                        key={colKeyStr}
+                        style={cellStyle}
+                        className={cellClassName}
+                      >
+                        {cellContent ? `Count: ${cellContent}` : ''}
+                      </td>
+                    );
+                  })}
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       )}
 
       {showTable && showPagination && (
         <Pagination
-          totalItems={groupBy && groupedData ? Object.keys(groupedData).length : table.filtered.length}
+          totalItems={currentGroupBy && groupedData ? Object.keys(groupedData).length : table.filtered.length}
           itemsPerPage={table.itemsPerPage}
           currentPage={table.currentPage}
           onPageChange={table.setCurrentPage}

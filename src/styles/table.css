@@ -380,7 +380,6 @@
 }
 
 .th-group-label {
-  flex: 1;
   font-weight: 600;
 }
 
@@ -554,6 +553,44 @@
 
 .th-table:focus .th-row-focused {
   background: var(--th-color-hover-row-background, #f9f9f9) !important;
+}
+
+/* --- Totals Row --- */
+.th-table tfoot {
+  border-top: 2px solid var(--th-color-border, #e1dfdd);
+}
+
+.th-table .th-totals-row {
+  background: var(--th-color-header-background, #faf9f8);
+}
+
+.th-table .th-totals-row td {
+  padding: var(--th-spacing-cell-padding, 10px 12px);
+  font-weight: 600;
+  border-top: 2px solid var(--th-color-border, #e1dfdd);
+  background: var(--th-color-header-background, #faf9f8);
+}
+
+/* Sticky Totals Row */
+.th-table tfoot.th-totals-sticky {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+}
+
+.th-table tfoot.th-totals-sticky .th-totals-row {
+  background: var(--th-color-header-background, #faf9f8);
+}
+
+.th-table tfoot.th-totals-sticky .th-totals-row td {
+  background: var(--th-color-header-background, #faf9f8);
+  position: relative;
+}
+
+/* Pinned columns in sticky totals need higher z-index */
+.th-table tfoot.th-totals-sticky .th-totals-row td.th-pinned-left,
+.th-table tfoot.th-totals-sticky .th-totals-row td.th-pinned-right {
+  z-index: 11;
 }
 
 /* --- Column Reordering --- */
