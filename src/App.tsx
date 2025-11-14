@@ -140,8 +140,8 @@ export default function App() {
         data={data}
         loading={loading}
         columns={[
-          { 
-            key: "id", 
+          {
+            key: "id",
             label: "ID",
             width: "80px",
             align: "center",
@@ -150,8 +150,8 @@ export default function App() {
             resizable: true,
             editable: false
           },
-          { 
-            key: "name", 
+          {
+            key: "name",
             label: "Name",
             width: "200px",
             minWidth: "150px",
@@ -160,8 +160,8 @@ export default function App() {
             resizable: true,
             editable: true
           },
-          { 
-            key: "age", 
+          {
+            key: "age",
             label: "Age",
             width: "100px",
             align: "center",
@@ -170,8 +170,8 @@ export default function App() {
             resizable: true,
             editable: true
           },
-          { 
-            key: "role", 
+          {
+            key: "role",
             label: "Role",
             width: "120px",
             sortable: true,
@@ -179,16 +179,16 @@ export default function App() {
             resizable: true,
             editable: true
           },
-          { 
-            key: "department", 
+          {
+            key: "department",
             label: "Department",
             width: "150px",
             sortable: true,
             filterable: true,
             resizable: true
           },
-          { 
-            key: "status", 
+          {
+            key: "status",
             label: "Status",
             width: "120px",
             cellClassName: "status-cell",
@@ -196,8 +196,8 @@ export default function App() {
             filterable: true,
             resizable: true
           },
-          { 
-            key: "salary", 
+          {
+            key: "salary",
             label: "Salary",
             width: "150px",
             align: "right",
@@ -207,32 +207,32 @@ export default function App() {
             resizable: true,
             editable: true
           },
-          { 
-            key: "location", 
+          {
+            key: "location",
             label: "Location",
             width: "150px",
             sortable: true,
             filterable: true,
             resizable: true
           },
-          { 
-            key: "project", 
+          {
+            key: "project",
             label: "Project",
             width: "180px",
             sortable: true,
             filterable: true,
             resizable: true
           },
-          { 
-            key: "skill", 
+          {
+            key: "skill",
             label: "Primary Skill",
             width: "140px",
             sortable: true,
             filterable: true,
             resizable: true
           },
-          { 
-            key: "experience", 
+          {
+            key: "experience",
             label: "Experience (years)",
             width: "160px",
             align: "center",
@@ -240,24 +240,24 @@ export default function App() {
             filterable: true,
             resizable: true
           },
-          { 
-            key: "joinDate", 
+          {
+            key: "joinDate",
             label: "Join Date",
             width: "130px",
             sortable: true,
             filterable: true,
             resizable: true
           },
-          { 
-            key: "email", 
+          {
+            key: "email",
             label: "Email",
             width: "220px",
             sortable: true,
             filterable: true,
             resizable: true
           },
-          { 
-            key: "phone", 
+          {
+            key: "phone",
             label: "Phone",
             width: "140px",
             sortable: true,
@@ -300,6 +300,16 @@ export default function App() {
             return `$${item.salary.toLocaleString()}`;
           }
           return String(item[key]);
+        }}
+        enableExport={true}
+        exportFormat="both" // hoặc 'csv' hoặc 'excel'
+        exportFileName="my-data"
+        onBeforeExport={(data, columns) => {
+          // Transform data nếu cần
+          return { data, columns };
+        }}
+        onAfterExport={(format, filename) => {
+          console.log(`Exported ${filename}.${format}`);
         }}
       />
     </div>

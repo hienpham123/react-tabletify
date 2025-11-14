@@ -28,6 +28,7 @@ A fast, fully customizable React data table built purely with HTML and CSS.
 - ✅ **Totals Row** - Display count/aggregations in footer row
 - ✅ **Group By with Visual Indicator** - Group by column with checkmark in menu
 - ✅ **Row Drag & Drop** - Drag and drop rows to reorder them
+- ✅ **Export to CSV/Excel** - Export table data to CSV or Excel format (no external library required)
 
 ## Installation
 
@@ -120,6 +121,11 @@ function App() {
 | `onItemsPerPageChange` | `(itemsPerPage: number) => void` | - | Callback when items per page changes |
 | `enableRowReorder` | `boolean` | `false` | Enable row drag & drop to reorder rows |
 | `onRowReorder` | `(newData, draggedItem, fromIndex, toIndex) => void` | - | Callback when row order changes after drag & drop |
+| `enableExport` | `boolean` | `false` | Enable export functionality (CSV/Excel) |
+| `exportFormat` | `'csv' \| 'excel' \| 'both'` | `'both'` | Export format options |
+| `exportFileName` | `string` | `'export'` | Custom filename for exported file (without extension) |
+| `onBeforeExport` | `(data, columns) => { data, columns } \| undefined` | - | Callback before export (can transform data) |
+| `onAfterExport` | `(format, filename) => void` | - | Callback after export |
 | `className` | `string` | - | Additional CSS class |
 | `styles` | `CSSProperties` | - | Inline styles |
 
@@ -358,6 +364,29 @@ const [data, setData] = useState(users);
 // Note: Row reordering is disabled when grouping is enabled
 ```
 
+### With Export (CSV/Excel)
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  enableExport={true}
+  exportFormat="both" // 'csv', 'excel', or 'both'
+  exportFileName="users-data"
+  onBeforeExport={(data, columns) => {
+    // Optional: Transform data before export
+    // Return { data, columns } or undefined to use original
+    return undefined;
+  }}
+  onAfterExport={(format, filename) => {
+    console.log(`Exported ${filename}.${format === 'csv' ? 'csv' : 'xlsx'}`);
+  }}
+/>
+// Export toolbar will appear at the top of the table
+// Click CSV or Excel button to export filtered data
+// Note: Excel export uses HTML format (no external library required)
+```
+
 ## Architecture
 
 ReactTabletify is built with a modular architecture using custom hooks for better code organization and maintainability:
@@ -370,6 +399,7 @@ ReactTabletify is built with a modular architecture using custom hooks for bette
 - **`useKeyboardNavigation`** - Keyboard navigation support
 - **`useHeaderCallout`** - Header callout menu management
 - **`useRowReorder`** - Row drag & drop reordering
+- **Export utilities** - CSV and Excel export functions (no external dependencies)
 
 This modular approach makes the codebase easier to maintain, test, and extend.
 
@@ -568,6 +598,16 @@ const themeStyles = applyTheme(theme);
 ```
 
 ## Changelog
+
+### Version 0.4.0
+- ✅ Added Export to CSV/Excel functionality
+- ✅ Export toolbar with CSV and Excel buttons
+- ✅ Support for data transformation before export
+- ✅ No external library required for Excel export (uses HTML format)
+- ✅ Refactored components into smaller, more manageable units
+- ✅ Improved component naming for professionalism
+- ✅ Enhanced export button hover effects
+- ✅ Fixed header callout hover behavior (stays visible when hovering over callout)
 
 ### Version 0.3.0
 - ✅ Added Items Per Page Options dropdown in pagination

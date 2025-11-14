@@ -8,10 +8,13 @@ import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
 import { useHeaderCallout } from "../hooks/useHeaderCallout";
 import { useRowReorder } from "../hooks/useRowReorder";
 import { Pagination } from "./Pagination";
-import { HeaderCallout } from "./HeaderCallout";
 import { FilterPanel } from "./FilterPanel";
 import { TableSkeleton } from "./TableSkeleton";
 import { TableEmptyState } from "./TableEmptyState";
+import { TableHeader } from "./TableHeader";
+import { TableBody } from "./TableBody";
+import { TableFooter } from "./TableFooter";
+import { ExportButton } from "./ExportButton";
 import type { ReactTabletifyProps, Column } from "../types";
 import { getTheme, applyTheme } from "../utils/theme";
 import "./../styles/table.css";
@@ -98,6 +101,11 @@ export function ReactTabletify<T extends Record<string, any>>({
   enableKeyboardNavigation = true,
   enableRowReorder = false,
   onRowReorder,
+  enableExport = false,
+  exportFormat = 'both',
+  exportFileName = 'export',
+  onBeforeExport,
+  onAfterExport,
   ...otherProps
 }: ReactTabletifyProps<T>) {
   // Core table hook for sorting, filtering, pagination
@@ -530,6 +538,18 @@ export function ReactTabletify<T extends Record<string, any>>({
       }}
       tabIndex={enableKeyboardNavigation ? 0 : undefined}
     >
+      {enableExport && (
+        <div className="th-export-toolbar">
+          <ExportButton
+            data={table.filtered}
+            columns={sortedColumns}
+            format={exportFormat}
+            filename={exportFileName}
+            onBeforeExport={onBeforeExport}
+            onAfterExport={onAfterExport}
+          />
+        </div>
+      )}
       {loading && (
         <TableSkeleton
           columns={sortedColumns}
@@ -552,483 +572,135 @@ export function ReactTabletify<T extends Record<string, any>>({
           ...(stickyHeader && !maxHeight ? { maxHeight: 'calc(100vh - 200px)' } : {})
         }}>
           <table>
-            <thead>
-              <tr>
-                {selectionMode !== 'none' && (
-                  <th className="th-selection-column">
-                    {selectionMode === 'multiple' ? (
-                      <div className="th-selection-checkbox-wrapper">
-                        <input
-                          type="checkbox"
-                          className="th-selection-checkbox"
-                          checked={isAllSelected}
-                          ref={(input) => {
-                            if (input) input.indeterminate = isIndeterminate;
-                          }}
-                          onChange={(e) => handleSelectAll(e.target.checked)}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    ) : (
-                      <div className="th-selection-checkbox-wrapper"></div>
-                    )}
-                  </th>
-                )}
-                {sortedColumns.map((col, colIndex) => {
-                  const colKeyStr = String(col.key);
-                  const resizedWidth = columnWidths[colKeyStr];
-                  const pinPosition = internalPinnedColumns[String(col.key)] || col.pinned || null;
-                  const leftOffset = pinPosition === 'left' ? getLeftOffset(col, colIndex) : 0;
-                  const rightOffset = pinPosition === 'right' ? getRightOffset(col, colIndex) : 0;
-                  const headerStyle: React.CSSProperties = {
-                    ...col.style,
-                    width: resizedWidth ? `${resizedWidth}px` : col.width,
-                    minWidth: col.minWidth,
-                    maxWidth: col.maxWidth,
-                    textAlign: col.align,
-                    position: pinPosition ? 'sticky' : 'relative',
-                    ...(pinPosition === 'left' ? { left: `${leftOffset}px`, zIndex: stickyHeader ? 15 : 5 } : {}),
-                    ...(pinPosition === 'right' ? { right: `${rightOffset}px`, zIndex: stickyHeader ? 15 : 5 } : {}),
-                  };
-                  const headerClassName = col.className
-                    ? `th-header-cell ${pinPosition ? `th-header-pinned th-pinned-${pinPosition}` : ''} ${col.className}`
-                    : pinPosition ? `th-header-cell th-header-pinned th-pinned-${pinPosition}` : 'th-header-cell';
-
-                  return (
-                    <th
-                      key={colKeyStr}
-                      style={headerStyle}
-                      draggable={enableColumnReorder}
-                      onDragStart={() => handleColumnDragStart(col.key)}
-                      onDragOver={(e) => handleColumnDragOver(e, col.key)}
-                      onDrop={() => handleColumnDrop(col.key)}
-                      onDragLeave={() => {
-                        // dragOverColumn is managed by useColumnManagement hook
-                      }}
-                      className={`${dragOverColumn === col.key ? 'th-drag-over' : ''} ${pinPosition ? `th-pinned-${pinPosition}` : ''} ${pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : ''} ${pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : ''}`.trim()}
-                    >
-                      {onRenderHeader ? (
-                        onRenderHeader(col, colIndex)
-                      ) : (
-                        <div
-                          className={headerClassName}
-                          ref={(el) => {
-                            if (el) anchorRefs.current[String(col.key)] = el;
-                          }}
-                          onMouseEnter={() => callout.handleHeaderMouseEnter(String(col.key))}
-                          onMouseLeave={callout.handleHeaderMouseLeave}
-                          onClick={(ev) => onColumnHeaderClick?.(col, ev)}
-                        >
-                          <span className="th-header-label">
-                            {col.label}
-                            <span className="th-header-chevron-icon" role="presentation" aria-hidden="true">
-                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" fill="currentColor">
-                                <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z" />
-                              </svg>
-                            </span>
-                          </span>
-                          <div className="th-header-icons">
-                            {pinPosition && (
-                              <span className="th-header-pin-icon" title={`Pinned ${pinPosition}`}>
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 2048 2048"
-                                  fill="currentColor"
-                                >
-                                  <path d="M1990 748q-33 33-64 60t-66 47-73 29-89 11q-34 0-65-6l-379 379q13 38 19 78t6 80q0 65-13 118t-37 100-60 89-79 87l-386-386-568 569-136 45 45-136 569-568-386-386q44-44 86-79t89-59 100-38 119-13q40 0 80 6t78 19l379-379q-6-31-6-65 0-49 10-88t30-74 46-65 61-65l690 690z" />
-                                </svg>
-                              </span>
-                            )}
-                            {table.filters[String(col.key)] && table.filters[String(col.key)].length > 0 && (
-                              <span className="th-header-filter-icon" title="Filtered" role="presentation" aria-hidden="true">
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  width="14"
-                                  height="14"
-                                  viewBox="0 0 2048 2048"
-                                  fill="currentColor"
-                                >
-                                  <path d="M2048 128v219l-768 768v805H768v-805L0 347V128h2048z" />
-                                </svg>
-                              </span>
-                            )}
-                            {table.sortKey === col.key && (
-                              <span className="th-header-sort-icon">
-                                {table.sortDir === "asc" ? (
-                                  <span className="th-sort-arrow">↑</span>
-                                ) : (
-                                  <span className="th-sort-arrow">↓</span>
-                                )}
-                              </span>
-                            )}
-                          </div>
-                          <span className="th-header-action">⋮</span>
-                        </div>
-                      )}
-                      {col.resizable !== false && (
-                        <div
-                          className="th-resize-handle"
-                          onMouseDown={(e) => handleResizeStart(String(col.key), e)}
-                          style={{
-                            cursor: 'col-resize',
-                            position: 'absolute',
-                            right: 0,
-                            top: 0,
-                            bottom: 0,
-                            width: '4px',
-                            zIndex: 10,
-                            userSelect: 'none',
-                          }}
-                        />
-                      )}
-                      {callout.calloutKey === col.key && !resizingColumn && (
-                        <HeaderCallout
-                          anchorRef={{ current: anchorRefs.current[String(col.key)] }}
-                          onSortAsc={() => {
+            <TableHeader
+              columns={sortedColumns}
+              selectionMode={selectionMode}
+              isAllSelected={isAllSelected}
+              isIndeterminate={isIndeterminate}
+              onSelectAll={handleSelectAll}
+              columnWidths={columnWidths}
+              pinnedColumns={internalPinnedColumns}
+              lastLeftPinnedColumnKey={lastLeftPinnedColumnKey}
+              firstRightPinnedColumnKey={firstRightPinnedColumnKey}
+              stickyHeader={stickyHeader}
+              enableColumnReorder={enableColumnReorder || false}
+              dragOverColumn={dragOverColumn}
+              sortKey={table.sortKey}
+              sortDir={table.sortDir}
+              filters={table.filters}
+              anchorRefs={anchorRefs}
+              calloutKey={callout.calloutKey}
+              resizingColumn={resizingColumn}
+              onRenderHeader={onRenderHeader}
+              onColumnHeaderClick={onColumnHeaderClick}
+              onHeaderMouseEnter={callout.handleHeaderMouseEnter}
+              onHeaderMouseLeave={callout.handleHeaderMouseLeave}
+              onCalloutMouseEnter={callout.handleCalloutMouseEnter}
+              onCalloutMouseLeave={callout.handleCalloutMouseLeave}
+              onColumnDragStart={handleColumnDragStart}
+              onColumnDragOver={handleColumnDragOver}
+              onColumnDrop={handleColumnDrop}
+              onResizeStart={handleResizeStart}
+              onSortAsc={(col) => {
                             if (col.sortable !== false) {
                               table.handleSort(col.key, "asc");
-                              callout.dismissCallout();
                             }
                           }}
-                          onSortDesc={() => {
+              onSortDesc={(col) => {
                             if (col.sortable !== false) {
                               table.handleSort(col.key, "desc");
-                              callout.dismissCallout();
                             }
                           }}
-                          onFilter={() => {
+              onFilter={(col) => {
                             if (col.filterable !== false) {
                               handleOpenFilter(col.key);
                             }
                           }}
-                          onClearFilter={() => {
+              onClearFilter={(col) => {
                             if (col.filterable !== false) {
                               table.setFilter(String(col.key), []);
-                              callout.dismissCallout();
-                            }
-                          }}
-                          onPinLeft={() => {
-                            handleColumnPin(col.key, 'left');
-                            callout.dismissCallout();
-                          }}
-                          onPinRight={() => {
-                            handleColumnPin(col.key, 'right');
-                            callout.dismissCallout();
-                          }}
-                          onUnpin={() => {
-                            handleColumnPin(col.key, null);
-                            callout.dismissCallout();
-                          }}
-                          onToggleVisibility={() => {
+                }
+              }}
+              onPinLeft={(col) => handleColumnPin(col.key, 'left')}
+              onPinRight={(col) => handleColumnPin(col.key, 'right')}
+              onUnpin={(col) => handleColumnPin(col.key, null)}
+              onToggleVisibility={(col) => {
                             if (enableColumnVisibility) {
                               handleToggleColumnVisibility(col.key);
-                              callout.dismissCallout();
                             }
                           }}
-                          onGroupBy={() => {
-                            // Toggle groupBy: if already grouped by this column, ungroup; otherwise group by it
+              onGroupBy={(col) => {
                             if (currentGroupBy === col.key) {
                               setInternalGroupBy(undefined);
                             } else {
                               setInternalGroupBy(col.key);
                             }
-                            callout.dismissCallout();
-                          }}
-                          isGrouped={currentGroupBy === col.key}
-                          onColumnSettings={(onColumnPin || enableColumnVisibility) ? true : undefined}
-                          onTotalsChange={(value) => {
+              }}
+              currentGroupBy={currentGroupBy}
+              enableColumnVisibility={enableColumnVisibility || false}
+              enableGroupBy={true}
+              enableTotals={true}
+              onTotalsChange={(col, value) => {
                             setColumnTotals(prev => ({
                               ...prev,
                               [String(col.key)]: value
                             }));
-                            callout.dismissCallout();
-                          }}
-                          totalsValue={columnTotals[String(col.key)] || 'none'}
-                          columnLabel={col.label}
-                          onDismiss={() => callout.dismissCallout()}
-                          onMouseEnter={() => callout.handleHeaderMouseEnter(String(col.key))}
-                          onMouseLeave={callout.handleHeaderMouseLeave}
-                          sortable={col.sortable !== false}
-                          filterable={col.filterable !== false}
-                          hasFilter={table.filters[String(col.key)] && table.filters[String(col.key)].length > 0}
-                          pinned={internalPinnedColumns[String(col.key)] || col.pinned || null}
-                          visible={visibleColumns.has(col.key)}
-                          enableColumnVisibility={enableColumnVisibility}
-                          enableColumnReorder={enableColumnReorder}
-                          enableGroupBy={true}
-                          enableTotals={true}
-                        />
-                      )}
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {currentGroupBy && paginatedGroups ? (
-                paginatedGroups.map(([groupKey, rows]) => {
-                  const isExpanded = expandedGroups.has(groupKey);
-                  // Find the column label for the groupBy column
-                  const groupByColumn = columns.find(c => c.key === currentGroupBy);
-                  const groupByLabel = groupByColumn?.label || String(currentGroupBy);
-                  return (
-                    <React.Fragment key={groupKey}>
-                      <tr className="th-group-header">
-                        <td colSpan={sortedColumns.length + (selectionMode !== 'none' ? 1 : 0)} className="th-group-header-cell">
-                          <button
-                            className="th-group-toggle"
-                            onClick={() => toggleGroup(groupKey)}
-                            aria-expanded={isExpanded}
-                          >
-                            <svg
-                              width="16"
-                              height="16"
-                              viewBox="0 0 16 16"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                              className={isExpanded ? "expanded" : ""}
-                            >
-                              <path
-                                d="M6 4L10 8L6 12"
-                                stroke="currentColor"
-                                strokeWidth="1.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                fill="none"
-                              />
-                            </svg>
-                            <span className="th-group-label">
-                              {groupByLabel}: {groupKey}
-                            </span>
-                            <span className="th-group-count">({rows.length})</span>
-                          </button>
-                        </td>
-                      </tr>
-                      {isExpanded &&
-                        rows.map((row, i) => {
-                          // Find actual index in original data array (not filtered) for correct key calculation
-                          const dataIndex = data.findIndex(d => d === row);
-                          // Use dataIndex for key calculation to ensure consistency
-                          const rowIndexForKey = dataIndex >= 0 ? dataIndex : table.filtered.findIndex(d => d === row);
-                          // Use dataIndex for selection operations to ensure correct key calculation
-                          const rowIndexForSelection = dataIndex >= 0 ? dataIndex : (rowIndexForKey >= 0 ? rowIndexForKey : i);
-                          const itemKey = getItemKey(row, rowIndexForSelection);
-                          const isSelected = selectedItems.has(itemKey);
-                          // Use dataIndex for activeItemIndex comparison
-                          const isActive = dataIndex >= 0 && activeItemIndex === dataIndex;
-
-                          if (onRenderRow) {
-                            return (
-                              <React.Fragment key={itemKey}>
-                                {onRenderRow(row, rowIndexForSelection, columns)}
-                              </React.Fragment>
-                            );
-                          }
-
-                          // Get actual index in filtered data for drag & drop
-                          const actualIndex = table.filtered.findIndex(item => item === row);
-                          const dragIndex = actualIndex >= 0 ? actualIndex : rowIndexForSelection;
-                          const canDrag = enableRowReorder && !currentGroupBy;
-                          
-                          return (
-                            <tr
-                              key={itemKey}
-                              className={`th-group-row ${isSelected ? 'th-row-selected' : ''} ${isActive ? 'th-row-active' : ''} ${canDrag ? 'th-row-draggable' : ''} ${draggedRowIndex === dragIndex ? 'th-row-dragging' : ''} ${dragOverRowIndex === dragIndex ? 'th-row-drag-over' : ''}`}
-                              draggable={canDrag}
-                              onDragStart={(e) => handleRowDragStart(e, dragIndex)}
-                              onDragOver={(e) => handleRowDragOver(e, dragIndex)}
-                              onDragLeave={handleRowDragLeave}
-                              onDrop={(e) => handleRowDrop(e, dragIndex)}
-                              onDragEnd={handleRowDragEnd}
-                              onClick={(ev) => {
-                                if (!isDragging) {
-                                  handleItemClick(row, rowIndexForSelection, ev);
-                                }
-                              }}
-                              onContextMenu={(ev) => onItemContextMenu?.(row, rowIndexForSelection, ev)}
-                            >
-                              {selectionMode !== 'none' && (
-                                <td className="th-selection-column">
-                                  <div className="th-selection-checkbox-wrapper">
-                                    <input
-                                      type={selectionMode === 'single' ? 'radio' : 'checkbox'}
-                                      className="th-selection-checkbox"
-                                      checked={isSelected}
-                                      onChange={(e) => handleCheckboxChange(row, rowIndexForSelection, e.target.checked)}
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                  </div>
-                                </td>
-                              )}
-                              {sortedColumns.map((col) => {
-                                const colKeyStr = String(col.key);
-                                const resizedWidth = columnWidths[colKeyStr];
-                                const pinPosition = internalPinnedColumns[String(col.key)] || col.pinned || null;
-                                // Find the index of this column in sortedColumns
-                                const sortedIndex = sortedColumns.findIndex(c => String(c.key) === colKeyStr);
-                                const leftOffset = pinPosition === 'left' ? getLeftOffset(col, sortedIndex) : 0;
-                                const rightOffset = pinPosition === 'right' ? getRightOffset(col, sortedIndex) : 0;
-                                const cellStyle: React.CSSProperties = {
-                                  ...col.cellStyle,
-                                  textAlign: col.align,
-                                  width: resizedWidth ? `${resizedWidth}px` : col.width,
-                                  position: pinPosition ? 'sticky' : 'relative',
-                                  ...(pinPosition === 'left' ? { left: `${leftOffset}px`, zIndex: 3 } : {}),
-                                  ...(pinPosition === 'right' ? { right: `${rightOffset}px`, zIndex: 3 } : {}),
-                                };
-                                const cellClassName = col.cellClassName
-                                  ? `${col.cellClassName} ${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? `th-cell-pinned th-pinned-${pinPosition}` : ''} ${pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : ''} ${pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : ''}`
-                                  : `${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? `th-cell-pinned th-pinned-${pinPosition}` : ''} ${pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : ''} ${pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : ''}`.trim();
-                                const cellText = showTooltip ? getCellText(row, col) : undefined;
-                                return (
-                                  <td
-                                    key={colKeyStr}
-                                    style={cellStyle}
-                                    className={cellClassName}
-                                    onDoubleClick={() => handleCellEditStart(row, col, rowIndexForSelection)}
-                                    title={cellText || undefined}
-                                  >
-                                    {renderCell(row, col, rowIndexForSelection)}
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          );
-                        })}
-                    </React.Fragment>
-                  );
-                })
-              ) : (
-                table.paged.map((row, i) => {
-                  const itemKey = getItemKey(row, i);
-                  const isSelected = selectedItems.has(itemKey);
-                  const isActive = activeItemIndex === i;
-
-                  if (onRenderRow) {
-                    return (
-                      <React.Fragment key={itemKey}>
-                        {onRenderRow(row, i, columns)}
-                      </React.Fragment>
-                    );
-                  }
-
-                  // Get actual index in filtered data for drag & drop
-                  const actualIndex = table.filtered.findIndex(item => item === row);
-                  const dragIndex = actualIndex >= 0 ? actualIndex : i;
-                  const canDrag = enableRowReorder && !currentGroupBy;
-                  
-                  return (
-                    <tr
-                      key={itemKey}
-                      className={`${isSelected ? 'th-row-selected' : ''} ${isActive ? 'th-row-active' : ''} ${focusedRowIndex === i ? 'th-row-focused' : ''} ${canDrag ? 'th-row-draggable' : ''} ${draggedRowIndex === dragIndex ? 'th-row-dragging' : ''} ${dragOverRowIndex === dragIndex ? 'th-row-drag-over' : ''}`}
-                      draggable={canDrag}
-                      onDragStart={(e) => handleRowDragStart(e, dragIndex)}
-                      onDragOver={(e) => handleRowDragOver(e, dragIndex)}
-                      onDragLeave={handleRowDragLeave}
-                      onDrop={(e) => handleRowDrop(e, dragIndex)}
-                      onDragEnd={handleRowDragEnd}
-                      onClick={(ev) => {
-                        if (!isDragging) {
-                          handleItemClick(row, i, ev);
-                        }
-                      }}
-                      onContextMenu={(ev) => onItemContextMenu?.(row, i, ev)}
-                    >
-                      {selectionMode !== 'none' && (
-                        <td className="th-selection-column">
-                          <div className="th-selection-checkbox-wrapper">
-                            <input
-                              type={selectionMode === 'single' ? 'radio' : 'checkbox'}
-                              className="th-selection-checkbox"
-                              checked={isSelected}
-                              onChange={(e) => handleCheckboxChange(row, i, e.target.checked)}
-                              onClick={(e) => e.stopPropagation()}
-                            />
-                          </div>
-                        </td>
-                      )}
-                      {sortedColumns.map((col) => {
-                        const colKeyStr = String(col.key);
-                        const resizedWidth = columnWidths[colKeyStr];
-                        const pinPosition = internalPinnedColumns[String(col.key)] || col.pinned || null;
-                        // Find the index of this column in sortedColumns
-                        const sortedIndex = sortedColumns.findIndex(c => String(c.key) === colKeyStr);
-                        const leftOffset = pinPosition === 'left' ? getLeftOffset(col, sortedIndex) : 0;
-                        const rightOffset = pinPosition === 'right' ? getRightOffset(col, sortedIndex) : 0;
-                        const cellStyle: React.CSSProperties = {
-                          ...col.cellStyle,
-                          textAlign: col.align,
-                          width: resizedWidth ? `${resizedWidth}px` : col.width,
-                          position: pinPosition ? 'sticky' : 'relative',
-                          ...(pinPosition === 'left' ? { left: `${leftOffset}px`, zIndex: 3 } : {}),
-                          ...(pinPosition === 'right' ? { right: `${rightOffset}px`, zIndex: 3 } : {}),
-                        };
-                        const cellClassName = col.cellClassName
-                          ? `${col.cellClassName} ${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? `th-cell-pinned th-pinned-${pinPosition}` : ''} ${pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : ''} ${pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : ''}`
-                          : `${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? `th-cell-pinned th-pinned-${pinPosition}` : ''} ${pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : ''} ${pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : ''}`.trim();
-                        const cellText = showTooltip ? getCellText(row, col) : undefined;
-                        return (
-                          <td
-                            key={colKeyStr}
-                            style={cellStyle}
-                            className={cellClassName}
-                            onDoubleClick={() => handleCellEditStart(row, col, i)}
-                            title={cellText || undefined}
-                          >
-                            {renderCell(row, col, i)}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-            {Object.values(columnTotals).some(v => v === 'count') && (
-              <tfoot className="th-totals-sticky">
-                <tr className="th-totals-row">
-                  {selectionMode !== 'none' && (
-                    <td className="th-selection-column"></td>
-                  )}
-                  {sortedColumns.map((col) => {
-                    const colKeyStr = String(col.key);
-                    const totalsValue = columnTotals[colKeyStr] || 'none';
-                    const pinPosition = internalPinnedColumns[colKeyStr] || col.pinned || null;
-                    const sortedIndex = sortedColumns.findIndex(c => String(c.key) === colKeyStr);
-                    const leftOffset = pinPosition === 'left' ? getLeftOffset(col, sortedIndex) : 0;
-                    const rightOffset = pinPosition === 'right' ? getRightOffset(col, sortedIndex) : 0;
-                    const resizedWidth = columnWidths[colKeyStr];
-                    const cellStyle: React.CSSProperties = {
-                      textAlign: col.align,
-                      width: resizedWidth ? `${resizedWidth}px` : col.width,
-                      position: pinPosition ? 'sticky' : 'relative',
-                      ...(pinPosition === 'left' ? { left: `${leftOffset}px`, zIndex: 11 } : {}),
-                      ...(pinPosition === 'right' ? { right: `${rightOffset}px`, zIndex: 11 } : {}),
-                    };
-                    const cellClassName = `${pinPosition ? `th-cell-pinned th-pinned-${pinPosition}` : ''} ${pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : ''} ${pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : ''}`.trim();
-
-                    let cellContent: React.ReactNode = '';
-                    if (totalsValue === 'count') {
-                      // Calculate count for this column
-                      const count = table.filtered.length;
-                      cellContent = count.toLocaleString();
-                    }
-
-                    return (
-                      <td
-                        key={colKeyStr}
-                        style={cellStyle}
-                        className={cellClassName}
-                      >
-                        {cellContent ? `Count: ${cellContent}` : ''}
-                      </td>
-                    );
-                  })}
-                </tr>
-              </tfoot>
-            )}
+              }}
+              columnTotals={columnTotals}
+              getLeftOffset={getLeftOffset}
+              getRightOffset={getRightOffset}
+              dismissCallout={callout.dismissCallout}
+            />
+            <TableBody
+              data={data}
+              columns={sortedColumns}
+              paginatedGroups={paginatedGroups || undefined}
+              currentGroupBy={currentGroupBy}
+              expandedGroups={expandedGroups}
+              selectionMode={selectionMode}
+              selectedItems={selectedItems}
+              activeItemIndex={activeItemIndex}
+              focusedRowIndex={focusedRowIndex ?? undefined}
+              enableRowReorder={enableRowReorder}
+              draggedRowIndex={draggedRowIndex}
+              dragOverRowIndex={dragOverRowIndex}
+              isDragging={isDragging}
+              columnWidths={columnWidths}
+              pinnedColumns={internalPinnedColumns}
+              lastLeftPinnedColumnKey={lastLeftPinnedColumnKey || undefined}
+              firstRightPinnedColumnKey={firstRightPinnedColumnKey || undefined}
+              showTooltip={showTooltip}
+              onRenderRow={onRenderRow}
+              getItemKey={getItemKey}
+              onItemClick={handleItemClick}
+              onItemContextMenu={onItemContextMenu}
+              onCheckboxChange={handleCheckboxChange}
+              onCellEditStart={handleCellEditStart}
+              onRowDragStart={handleRowDragStart}
+              onRowDragOver={handleRowDragOver}
+              onRowDragLeave={handleRowDragLeave}
+              onRowDrop={handleRowDrop}
+              onRowDragEnd={handleRowDragEnd}
+              renderCell={renderCell}
+              getCellText={getCellText}
+              getLeftOffset={getLeftOffset}
+              getRightOffset={getRightOffset}
+              toggleGroup={toggleGroup}
+              filteredData={table.filtered}
+              pagedData={table.paged}
+            />
+            <TableFooter
+              columns={sortedColumns}
+              selectionMode={selectionMode}
+              columnTotals={columnTotals}
+              pinnedColumns={internalPinnedColumns}
+              columnWidths={columnWidths}
+              lastLeftPinnedColumnKey={lastLeftPinnedColumnKey || undefined}
+              firstRightPinnedColumnKey={firstRightPinnedColumnKey || undefined}
+              totalCount={table.filtered.length}
+              getLeftOffset={getLeftOffset}
+              getRightOffset={getRightOffset}
+            />
           </table>
         </div>
       )}

@@ -41,6 +41,27 @@ export function useHeaderCallout<T extends Record<string, any>>(
   }, []);
 
   /**
+   * Handle callout mouse enter - cancel dismiss timeout to keep callout visible
+   */
+  const handleCalloutMouseEnter = React.useCallback(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+  }, []);
+
+  /**
+   * Handle callout mouse leave - hide callout after delay
+   */
+  const handleCalloutMouseLeave = React.useCallback(() => {
+    if (hoverTimeoutRef.current) {
+      clearTimeout(hoverTimeoutRef.current);
+    }
+    hoverTimeoutRef.current = setTimeout(() => {
+      setCalloutKey(null);
+    }, 200);
+  }, []);
+
+  /**
    * Dismiss callout immediately
    */
   const dismissCallout = React.useCallback(() => {
@@ -64,6 +85,8 @@ export function useHeaderCallout<T extends Record<string, any>>(
     setCalloutKey,
     handleHeaderMouseEnter,
     handleHeaderMouseLeave,
+    handleCalloutMouseEnter,
+    handleCalloutMouseLeave,
     dismissCallout,
   };
 }
