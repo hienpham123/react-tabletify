@@ -17,4 +17,3 @@ import type { UseTableReturn } from "../types";
  * ```
  */
 export declare function useTable<T extends Record<string, any>>(data: T[], itemsPerPage?: number): UseTableReturn<T>;
-//# sourceMappingURL=useTable.d.ts.map

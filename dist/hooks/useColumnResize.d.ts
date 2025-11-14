@@ -12,4 +12,3 @@ export declare function useColumnResize<T extends Record<string, any>>(anchorRef
     resizingColumn: string | null;
     handleResizeStart: (colKey: string, e: React.MouseEvent) => void;
 };
-//# sourceMappingURL=useColumnResize.d.ts.map

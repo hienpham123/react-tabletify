@@ -13,4 +13,3 @@ interface TableSkeletonProps<T extends Record<string, any>> {
  */
 export declare function TableSkeleton<T extends Record<string, any>>({ columns, itemsPerPage, selectionMode, onRenderLoading, }: TableSkeletonProps<T>): import("react/jsx-runtime").JSX.Element;
 export {};
-//# sourceMappingURL=TableSkeleton.d.ts.map

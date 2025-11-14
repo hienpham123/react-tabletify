@@ -341,6 +341,7 @@ export interface ReactTabletifyProps<T extends Record<string, any>> {
         onClick: (item: T, index: number) => void;
         disabled?: boolean;
     }>;
+    enableCellSelection?: boolean;
     /**
      * Custom row hover effect
      * @default true
@@ -433,6 +434,53 @@ export interface ReactTabletifyProps<T extends Record<string, any>> {
      * @default true
      */
     showTooltip?: boolean;
+    /**
+     * Enable row drag & drop to reorder rows
+     * @default false
+     */
+    enableRowReorder?: boolean;
+    /**
+     * Callback when row order changes after drag & drop
+     * @param newData - The reordered data array
+     * @param draggedItem - The item that was dragged
+     * @param fromIndex - Original index of the dragged item
+     * @param toIndex - New index where the item was dropped
+     */
+    onRowReorder?: (newData: T[], draggedItem: T, fromIndex: number, toIndex: number) => void;
+    /**
+     * Enable export functionality (CSV/Excel)
+     * @default false
+     */
+    enableExport?: boolean;
+    /**
+     * Export format options
+     * - 'csv': Export as CSV file
+     * - 'excel': Export as Excel file (requires xlsx library)
+     * - 'both': Show both CSV and Excel options
+     * @default 'both'
+     */
+    exportFormat?: 'csv' | 'excel' | 'both';
+    /**
+     * Custom filename for exported file (without extension)
+     * @default 'export'
+     */
+    exportFileName?: string;
+    /**
+     * Callback before export (can be used to transform data)
+     * @param data - The data to be exported
+     * @param columns - The columns to be exported
+     * @returns Transformed data and columns, or undefined to use original
+     */
+    onBeforeExport?: (data: T[], columns: Column<T>[]) => {
+        data: T[];
+        columns: Column<T>[];
+    } | undefined;
+    /**
+     * Callback after export
+     * @param format - The export format used ('csv' or 'excel')
+     * @param filename - The filename used
+     */
+    onAfterExport?: (format: 'csv' | 'excel', filename: string) => void;
 }
 /**
  * Return type from the useTable hook
@@ -451,19 +499,36 @@ export interface UseTableReturn<T extends Record<string, any>> {
     totalPages: number;
     /** Number of items per page */
     itemsPerPage: number;
+    /** Go to first page */
+    goToFirstPage: () => void;
+    /** Go to last page */
+    goToLastPage: () => void;
+    /** Go to next page */
+    goToNextPage: () => void;
+    /** Go to previous page */
+    goToPrevPage: () => void;
     /** Current search term */
     search: string;
     /** Function to set the search term */
     setSearch: (search: string) => void;
+    /** Clear search term */
+    clearSearch: () => void;
     /** Current sort key (column being sorted) */
     sortKey: keyof T | null;
     /** Current sort direction */
     sortDir: 'asc' | 'desc';
     /** Function to handle sorting */
     handleSort: (key: keyof T, direction?: 'asc' | 'desc') => void;
+    /** Reset sorting to default */
+    resetSort: () => void;
     /** Current filters (field -> selected values) */
     filters: Record<string, string[]>;
     /** Function to set filter for a field */
     setFilter: (field: string, values: string[]) => void;
+    /** Clear filter for a specific field */
+    clearFilter: (field: string) => void;
+    /** Clear all filters */
+    clearFilters: () => void;
+    /** Reset all: clear search, filters, sort, and go to page 1 */
+    resetAll: () => void;
 }
-//# sourceMappingURL=index.d.ts.map

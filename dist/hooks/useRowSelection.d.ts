@@ -22,4 +22,3 @@ export declare function useRowSelection<T extends Record<string, any>>(data: T[]
     isItemSelected: (item: T, index: number) => boolean;
     setSelectedItems: React.Dispatch<React.SetStateAction<Set<string | number>>>;
 };
-//# sourceMappingURL=useRowSelection.d.ts.map

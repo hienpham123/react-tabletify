@@ -31,4 +31,3 @@ interface HeaderCalloutProps {
 }
 export declare function HeaderCallout({ anchorRef, onSortAsc, onSortDesc, onFilter, onClearFilter, onPinLeft, onPinRight, onUnpin, onToggleVisibility, onGroupBy, isGrouped, onColumnSettings, onTotalsChange, totalsValue, columnLabel, onDismiss, onMouseEnter, onMouseLeave, sortable, filterable, hasFilter, pinned, visible, enableColumnVisibility, enableColumnReorder, enableGroupBy, enableTotals, }: HeaderCalloutProps): import("react/jsx-runtime").JSX.Element | null;
 export {};
-//# sourceMappingURL=HeaderCallout.d.ts.map

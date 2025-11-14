@@ -11,4 +11,3 @@ interface PaginationProps {
 }
 export declare const Pagination: React.FC<PaginationProps>;
 export {};
-//# sourceMappingURL=Pagination.d.ts.map

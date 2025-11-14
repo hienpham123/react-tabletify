@@ -22,4 +22,3 @@ export declare function getTheme(theme?: ThemeMode | TableTheme): TableTheme;
  * @returns CSS properties object with CSS variables
  */
 export declare function applyTheme(theme: TableTheme): React.CSSProperties;
-//# sourceMappingURL=theme.d.ts.map

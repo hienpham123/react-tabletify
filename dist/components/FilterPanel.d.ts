@@ -8,4 +8,3 @@ interface FilterPanelProps {
 }
 export declare function FilterPanel({ field, values, selected, onApply, onDismiss }: FilterPanelProps): import("react/jsx-runtime").JSX.Element;
 export {};
-//# sourceMappingURL=FilterPanel.d.ts.map

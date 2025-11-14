@@ -21,4 +21,3 @@ export declare function useInlineEditing<T extends Record<string, any>>(onCellEd
     handleCellEditSave: (item: T, columnKey: keyof T, rowIndex: number) => void;
     handleCellEditCancel: () => void;
 };
-//# sourceMappingURL=useInlineEditing.d.ts.map

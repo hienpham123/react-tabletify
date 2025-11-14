@@ -11,6 +11,7 @@ export declare function useHeaderCallout<T extends Record<string, any>>(resizing
     setCalloutKey: React.Dispatch<React.SetStateAction<keyof T | null>>;
     handleHeaderMouseEnter: (key: keyof T | string) => void;
     handleHeaderMouseLeave: () => void;
+    handleCalloutMouseEnter: () => void;
+    handleCalloutMouseLeave: () => void;
     dismissCallout: () => void;
 };
-//# sourceMappingURL=useHeaderCallout.d.ts.map

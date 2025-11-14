@@ -16,4 +16,3 @@ export declare function useKeyboardNavigation<T extends Record<string, any>>(tab
     focusedRowIndex: number | null;
     setFocusedRowIndex: React.Dispatch<React.SetStateAction<number | null>>;
 };
-//# sourceMappingURL=useKeyboardNavigation.d.ts.map

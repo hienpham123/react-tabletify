@@ -10,4 +10,3 @@ interface TableEmptyStateProps {
  */
 export declare function TableEmptyState({ emptyMessage, onRenderEmpty, }: TableEmptyStateProps): import("react/jsx-runtime").JSX.Element;
 export {};
-//# sourceMappingURL=TableEmptyState.d.ts.map

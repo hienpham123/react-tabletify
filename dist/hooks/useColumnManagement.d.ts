@@ -26,4 +26,3 @@ export declare function useColumnManagement<T extends Record<string, any>>(colum
     handleColumnDragOver: (e: React.DragEvent, colKey: keyof T) => void;
     handleColumnDrop: (colKey: keyof T) => void;
 };
-//# sourceMappingURL=useColumnManagement.d.ts.map
