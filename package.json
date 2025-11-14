@@ -20,6 +20,10 @@
     "dist",
     "README.md",
     "package.json",
+    "CUSTOMIZATION_OPTIONS.md",
+    "FEATURES_ROADMAP.md",
+    "THEME_CUSTOMIZATION.md",
+    "THEME_EXAMPLES.md",
     "src"
   ],
   "style": "dist/index.css",
