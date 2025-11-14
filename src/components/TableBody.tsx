@@ -61,6 +61,15 @@ interface TableBodyProps<T extends Record<string, any>> {
   openMenuKey: string | null;
   onMenuToggle: (item: T, index: number) => void;
   onMenuDismiss: () => void;
+  enableCellSelection?: boolean;
+  isCellSelected?: (rowIndex: number, colKey: string) => boolean;
+  getCellRangeInfo?: (rowIndex: number, colKey: string) => { isStart: boolean; isEnd: boolean; isInRange: boolean; isTopRow?: boolean; isBottomRow?: boolean; isLeftCol?: boolean; isRightCol?: boolean };
+  isRowAboveRange?: (rowIndex: number) => boolean;
+  isColumnInRange?: (colKey: string) => boolean;
+  getColumnRangeInfo?: (colKey: string) => { isInRange: boolean; isLeftCol: boolean; isRightCol: boolean };
+  onCellMouseDown?: (rowIndex: number, colKey: string, e: React.MouseEvent) => void;
+  onCellMouseEnter?: (rowIndex: number, colKey: string, e: React.MouseEvent) => void;
+  onCellMouseUp?: (rowIndex: number, colKey: string, e: React.MouseEvent) => void;
 }
 
 /**
@@ -107,6 +116,15 @@ export function TableBody<T extends Record<string, any>>({
   openMenuKey,
   onMenuToggle,
   onMenuDismiss,
+  enableCellSelection = false,
+  isCellSelected,
+  getCellRangeInfo,
+  isRowAboveRange,
+  isColumnInRange,
+  getColumnRangeInfo,
+  onCellMouseDown,
+  onCellMouseEnter,
+  onCellMouseUp,
 }: TableBodyProps<T>) {
   // Find column label for groupBy
   const groupByColumn = currentGroupBy ? columns.find(c => c.key === currentGroupBy) : null;
@@ -188,6 +206,15 @@ export function TableBody<T extends Record<string, any>>({
                       openMenuKey={openMenuKey}
                       onMenuToggle={onMenuToggle}
                       onMenuDismiss={onMenuDismiss}
+                      enableCellSelection={enableCellSelection}
+                      isCellSelected={isCellSelected}
+                      getCellRangeInfo={getCellRangeInfo}
+                      isRowAboveRange={isRowAboveRange ? isRowAboveRange(rowIndexForSelection) : false}
+                      isColumnInRange={isColumnInRange}
+                      getColumnRangeInfo={getColumnRangeInfo}
+                      onCellMouseDown={onCellMouseDown}
+                      onCellMouseEnter={onCellMouseEnter}
+                      onCellMouseUp={onCellMouseUp}
                     />
                   );
                 })}
@@ -251,6 +278,15 @@ export function TableBody<T extends Record<string, any>>({
               openMenuKey={openMenuKey}
               onMenuToggle={onMenuToggle}
               onMenuDismiss={onMenuDismiss}
+              enableCellSelection={enableCellSelection}
+              isCellSelected={isCellSelected}
+              getCellRangeInfo={getCellRangeInfo}
+              isRowAboveRange={isRowAboveRange ? isRowAboveRange(i) : false}
+              isColumnInRange={isColumnInRange}
+              getColumnRangeInfo={getColumnRangeInfo}
+              onCellMouseDown={onCellMouseDown}
+              onCellMouseEnter={onCellMouseEnter}
+              onCellMouseUp={onCellMouseUp}
             />
           );
         })

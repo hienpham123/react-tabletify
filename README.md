@@ -30,6 +30,7 @@ A fast, fully customizable React data table built purely with HTML and CSS.
 - ✅ **Row Drag & Drop** - Drag and drop rows to reorder them
 - ✅ **Export to CSV/Excel** - Export table data to CSV or Excel format (no external library required)
 - ✅ **Row Actions Menu** - Context menu with custom actions for each row
+- ✅ **Excel-like Cell Selection** - Select multiple cells, copy, cut, paste, and delete (Ctrl+C, Ctrl+X, Ctrl+V, Delete)
 
 ## Installation
 
@@ -128,6 +129,7 @@ function App() {
 | `onBeforeExport` | `(data, columns) => { data, columns } \| undefined` | - | Callback before export (can transform data) |
 | `onAfterExport` | `(format, filename) => void` | - | Callback after export |
 | `rowActions` | `(item, index) => Array<{key, label, icon?, onClick, disabled?}>` | - | Function that returns array of actions for each row |
+| `enableCellSelection` | `boolean` | `false` | Enable Excel-like cell selection (copy, cut, paste) |
 | `className` | `string` | - | Additional CSS class |
 | `styles` | `CSSProperties` | - | Inline styles |
 
@@ -430,6 +432,28 @@ const [data, setData] = useState(users);
 // Menu automatically closes when clicking outside or pressing Escape
 ```
 
+### With Excel-like Cell Selection
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  enableCellSelection={true}
+  onCellEdit={(item, columnKey, newValue, index) => {
+    // Update your data
+    updateUser(index, columnKey, newValue);
+  }}
+/>
+// Click and drag to select multiple cells
+// Ctrl+C (Cmd+C on Mac) to copy - border changes to dashed
+// Ctrl+X (Cmd+X on Mac) to cut
+// Ctrl+V (Cmd+V on Mac) to paste - supports pasting from Excel/Google Sheets
+// Delete or Backspace to clear selected cells
+// Escape to clear selection
+// Shift+Click to extend selection range
+// When cell selection is enabled, row click focus is disabled
+```
+
 ## Architecture
 
 ReactTabletify is built with a modular architecture using custom hooks for better code organization and maintainability:
@@ -442,6 +466,8 @@ ReactTabletify is built with a modular architecture using custom hooks for bette
 - **`useKeyboardNavigation`** - Keyboard navigation support
 - **`useHeaderCallout`** - Header callout menu management
 - **`useRowReorder`** - Row drag & drop reordering
+- **`useCellSelection`** - Excel-like cell selection and range management
+- **`useClipboard`** - Copy, cut, and paste operations for cells
 - **Export utilities** - CSV and Excel export functions (no external dependencies)
 
 This modular approach makes the codebase easier to maintain, test, and extend.
@@ -641,6 +667,18 @@ const themeStyles = applyTheme(theme);
 ```
 
 ## Changelog
+
+### Version 0.6.0
+- ✅ Added Excel-like Cell Selection - Select multiple cells, copy, cut, paste, and delete
+- ✅ Support for range selection (click and drag)
+- ✅ Keyboard shortcuts: Ctrl+C (copy), Ctrl+X (cut), Ctrl+V (paste), Delete (clear), Escape (deselect)
+- ✅ Shift+Click to extend selection range
+- ✅ Visual feedback for selected cells and ranges
+- ✅ Copy to system clipboard (TSV format)
+- ✅ Paste from external sources (Excel, Google Sheets, etc.) - automatically parses TSV format
+- ✅ Dashed border when cells are copied (visual indicator)
+- ✅ Border styling for header row when range starts from first row
+- ✅ Disabled row focus/active styling when cell selection is enabled
 
 ### Version 0.5.0
 - ✅ Added Row Actions Menu - Context menu with custom actions for each row

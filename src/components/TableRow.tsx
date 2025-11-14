@@ -46,6 +46,15 @@ interface TableRowProps<T extends Record<string, any>> {
   openMenuKey: string | null;
   onMenuToggle: (item: T, index: number) => void;
   onMenuDismiss: () => void;
+  enableCellSelection?: boolean;
+  isCellSelected?: (rowIndex: number, colKey: string) => boolean;
+  getCellRangeInfo?: (rowIndex: number, colKey: string) => { isStart: boolean; isEnd: boolean; isInRange: boolean; isTopRow?: boolean; isBottomRow?: boolean; isLeftCol?: boolean; isRightCol?: boolean; isCopied?: boolean };
+  isRowAboveRange?: boolean;
+  isColumnInRange?: (colKey: string) => boolean;
+  getColumnRangeInfo?: (colKey: string) => { isInRange: boolean; isLeftCol: boolean; isRightCol: boolean };
+  onCellMouseDown?: (rowIndex: number, colKey: string, e: React.MouseEvent) => void;
+  onCellMouseEnter?: (rowIndex: number, colKey: string, e: React.MouseEvent) => void;
+  onCellMouseUp?: (rowIndex: number, colKey: string, e: React.MouseEvent) => void;
 }
 
 /**
@@ -86,14 +95,25 @@ export function TableRow<T extends Record<string, any>>({
   openMenuKey,
   onMenuToggle,
   onMenuDismiss,
+  enableCellSelection = false,
+  isCellSelected,
+  getCellRangeInfo,
+  isRowAboveRange = false,
+  isColumnInRange,
+  getColumnRangeInfo,
+  onCellMouseDown,
+  onCellMouseEnter,
+  onCellMouseUp,
 }: TableRowProps<T>) {
   const rowClassName = [
     isSelected ? 'th-row-selected' : '',
-    isActive ? 'th-row-active' : '',
-    isFocused ? 'th-row-focused' : '',
+    // Disable row active/focused styling when cell selection is enabled
+    !enableCellSelection && isActive ? 'th-row-active' : '',
+    !enableCellSelection && isFocused ? 'th-row-focused' : '',
     canDrag ? 'th-row-draggable' : '',
     isDragging ? 'th-row-dragging' : '',
     isDragOver ? 'th-row-drag-over' : '',
+    enableCellSelection && isRowAboveRange ? 'th-row-above-range' : '',
   ].filter(Boolean).join(' ');
 
   const actions = rowActions ? rowActions(item, index) : [];
@@ -115,7 +135,10 @@ export function TableRow<T extends Record<string, any>>({
         onDragEnd={onDragEnd}
         onClick={(ev) => {
           if (!isDraggingState) {
-            onItemClick(item, index, ev);
+            // Disable row click behavior when cell selection is enabled
+            if (!enableCellSelection) {
+              onItemClick(item, index, ev);
+            }
           }
         }}
         onContextMenu={(ev) => onItemContextMenu?.(item, index, ev)}
@@ -145,6 +168,13 @@ export function TableRow<T extends Record<string, any>>({
           const leftOffset = pinPosition === 'left' ? getLeftOffset(col, sortedIndex) : 0;
           const rightOffset = pinPosition === 'right' ? getRightOffset(col, sortedIndex) : 0;
 
+          const cellIsSelected = enableCellSelection && isCellSelected ? isCellSelected(index, colKeyStr) : false;
+          const rangeInfo = enableCellSelection && getCellRangeInfo ? getCellRangeInfo(index, colKeyStr) : { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false };
+          const isCopied = rangeInfo.isCopied ?? false;
+          // For row above range, check if this column is in range and get column range info
+          const columnRangeInfo = enableCellSelection && isRowAboveRange && getColumnRangeInfo ? getColumnRangeInfo(colKeyStr) : { isInRange: false, isLeftCol: false, isRightCol: false };
+          const isInRangeColumn = columnRangeInfo.isInRange;
+
           return (
             <TableCell
               key={colKeyStr}
@@ -161,6 +191,22 @@ export function TableRow<T extends Record<string, any>>({
               onDoubleClick={() => onCellEditStart(item, col, index)}
               renderCell={renderCell}
               getCellText={getCellText}
+              enableCellSelection={enableCellSelection}
+              isSelected={cellIsSelected}
+              isRangeStart={rangeInfo.isStart}
+              isRangeEnd={rangeInfo.isEnd}
+              isInRange={rangeInfo.isInRange}
+              isTopRow={rangeInfo.isTopRow}
+              isBottomRow={rangeInfo.isBottomRow}
+              isLeftCol={rangeInfo.isLeftCol}
+              isRightCol={rangeInfo.isRightCol}
+              isInRangeColumn={isInRangeColumn}
+              isLeftColInRange={columnRangeInfo.isLeftCol}
+              isRightColInRange={columnRangeInfo.isRightCol}
+              isCopied={isCopied}
+              onMouseDown={enableCellSelection && onCellMouseDown ? (e) => onCellMouseDown(index, colKeyStr, e) : undefined}
+              onMouseEnter={enableCellSelection && onCellMouseEnter ? (e) => onCellMouseEnter(index, colKeyStr, e) : undefined}
+              onMouseUp={enableCellSelection && onCellMouseUp ? (e) => onCellMouseUp(index, colKeyStr, e) : undefined}
             />
           );
         })}

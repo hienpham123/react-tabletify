@@ -1,0 +1,124 @@
+/* Cell Selection Styles (Excel-like) */
+
+/* Selected cell - single cell selection */
+.th-cell-selected {
+  background-color: var(--th-cell-selection-background, rgba(0, 120, 212, 0.1)) !important;
+  border: 1px solid var(--th-color-focus, #0078d4) !important;
+  outline: none !important;
+}
+
+/* Copied cells - dashed border */
+.th-cell-copied.th-cell-selected {
+  border: 1px dashed var(--th-color-focus, #0078d4) !important;
+}
+
+.th-cell-copied.th-cell-in-range {
+  /* Copied range cells will have dashed borders on edges */
+}
+
+/* Range selection - cells inside range */
+/* First, remove all default borders from cells in range */
+.th-table.enable-cell-selection td.th-cell-in-range {
+  background-color: var(--th-cell-range-background, rgba(0, 120, 212, 0.05)) !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  border-left: none !important;
+  border-right: none !important;
+}
+
+/* Border for cells on the edge of range - only outer edges get borders */
+/* Top row of range - remove border-top, we'll use border-bottom of row above */
+.th-table.enable-cell-selection td.th-cell-in-range.th-cell-range-top {
+  border-top: none !important;
+}
+
+/* Add border-bottom to cells in row above the range - only for cells in columns that are in range */
+/* Only apply border-bottom, NOT border-left or border-right */
+.th-table.enable-cell-selection tbody tr.th-row-above-range td[data-in-range-column="true"] {
+  border-bottom: 1px solid var(--th-color-focus, #0078d4) !important;
+  border-left: 1px solid var(--th-color-row-border, #f1f1f1) !important;
+  border-right: 1px solid var(--th-color-row-border, #f1f1f1) !important;
+}
+
+/* Add border-bottom to header cells when range starts from first row - only for cells in columns that are in range */
+/* Only apply border-bottom, NOT border-left or border-right */
+.th-table.enable-cell-selection thead th[data-in-range-column="true"] {
+  border-bottom: 1px solid var(--th-color-focus, #0078d4) !important;
+  border-left: 1px solid var(--th-color-row-border, #f1f1f1) !important;
+  border-right: 1px solid var(--th-color-row-border, #f1f1f1) !important;
+}
+
+/* Bottom row of range - all cells in bottom row get bottom border */
+.th-table.enable-cell-selection td.th-cell-in-range.th-cell-range-bottom {
+  border-bottom: 1px solid var(--th-color-focus, #0078d4) !important;
+}
+
+/* Left column of range - all cells in left column get left border */
+.th-table.enable-cell-selection td.th-cell-in-range.th-cell-range-left {
+  border-left: 1px solid var(--th-color-focus, #0078d4) !important;
+}
+
+/* Right column of range - all cells in right column get right border */
+.th-table.enable-cell-selection td.th-cell-in-range.th-cell-range-right {
+  border-right: 1px solid var(--th-color-focus, #0078d4) !important;
+}
+
+/* Copied range - dashed borders */
+.th-table.enable-cell-selection td.th-cell-copied.th-cell-in-range.th-cell-range-bottom {
+  border-bottom: 1px dashed var(--th-color-focus, #0078d4) !important;
+}
+
+.th-table.enable-cell-selection td.th-cell-copied.th-cell-in-range.th-cell-range-left {
+  border-left: 1px dashed var(--th-color-focus, #0078d4) !important;
+}
+
+.th-table.enable-cell-selection td.th-cell-copied.th-cell-in-range.th-cell-range-right {
+  border-right: 1px dashed var(--th-color-focus, #0078d4) !important;
+}
+
+/* Copied range - dashed border for row above */
+.th-table.enable-cell-selection tbody tr.th-row-above-range td.th-cell-copied[data-in-range-column="true"] {
+  border-bottom: 1px dashed var(--th-color-focus, #0078d4) !important;
+}
+
+/* Copied range - dashed border for header */
+.th-table.enable-cell-selection thead th.th-cell-copied[data-in-range-column="true"] {
+  border-bottom: 1px dashed var(--th-color-focus, #0078d4) !important;
+}
+
+/* Cell selection cursor */
+.th-table.enable-cell-selection td {
+  cursor: cell;
+  user-select: none;
+}
+
+.th-table.enable-cell-selection td:hover {
+  background-color: var(--th-cell-hover-background, #f0f8ff);
+}
+
+/* Dark theme adjustments */
+.th-theme-dark .th-cell-selected {
+  background-color: var(--th-cell-selection-background, rgba(96, 205, 255, 0.1)) !important;
+  border-color: var(--th-color-focus, #60cdff) !important;
+}
+
+.th-theme-dark .th-cell-in-range {
+  background-color: var(--th-cell-range-background, rgba(96, 205, 255, 0.05)) !important;
+}
+
+.th-theme-dark .th-cell-range-start {
+  border-color: var(--th-color-focus, #60cdff) !important;
+}
+
+.th-theme-dark .th-cell-range-end {
+  border-color: var(--th-color-focus, #60cdff) !important;
+}
+
+.th-theme-dark .th-table.enable-cell-selection td:hover {
+  background-color: var(--th-cell-hover-background, #2a3d4c);
+}
+
+.th-theme-dark .th-table.enable-cell-selection thead th[data-in-range-column="true"] {
+  border-bottom-color: var(--th-color-focus, #60cdff) !important;
+}
+

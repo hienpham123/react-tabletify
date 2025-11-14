@@ -7,6 +7,8 @@ import { useInlineEditing } from "../hooks/useInlineEditing";
 import { useKeyboardNavigation } from "../hooks/useKeyboardNavigation";
 import { useHeaderCallout } from "../hooks/useHeaderCallout";
 import { useRowReorder } from "../hooks/useRowReorder";
+import { useCellSelection, type CellPosition } from "../hooks/useCellSelection";
+import { useClipboard } from "../hooks/useClipboard";
 import { Pagination } from "./Pagination";
 import { FilterPanel } from "./FilterPanel";
 import { TableSkeleton } from "./TableSkeleton";
@@ -19,6 +21,7 @@ import type { ReactTabletifyProps, Column } from "../types";
 import { getTheme, applyTheme } from "../utils/theme";
 import "./../styles/table.css";
 import "./../styles/row-actions.css";
+import "./../styles/cell-selection.css";
 
 /**
  * ReactTabletify - A powerful, customizable data table component for React
@@ -108,6 +111,7 @@ export function ReactTabletify<T extends Record<string, any>>({
   onBeforeExport,
   onAfterExport,
   rowActions,
+  enableCellSelection = false,
   ...otherProps
 }: ReactTabletifyProps<T>) {
   // Core table hook for sorting, filtering, pagination
@@ -259,6 +263,241 @@ export function ReactTabletify<T extends Record<string, any>>({
     currentGroupBy,
     onRowReorder
   );
+
+  // Cell selection hook (Excel-like selection)
+  const cellSelection = useCellSelection(
+    table.paged,
+    sortedColumns,
+    enableCellSelection
+  );
+
+  // Clipboard hook (copy, cut, paste)
+  const clipboard = useClipboard<T>();
+
+  // Cell selection handlers
+  const handleCellMouseDown = React.useCallback((rowIndex: number, colKey: string, e: React.MouseEvent) => {
+    if (!enableCellSelection) return;
+    e.stopPropagation();
+    const isShift = e.shiftKey;
+    cellSelection.startSelection(rowIndex, colKey, isShift);
+    // Clear copied state when starting new selection
+    cellSelection.setCopied(false);
+  }, [enableCellSelection, cellSelection]);
+
+  const handleCellMouseEnter = React.useCallback((rowIndex: number, colKey: string, e: React.MouseEvent) => {
+    if (!enableCellSelection || !cellSelection.isSelecting) return;
+    cellSelection.updateSelection(rowIndex, colKey);
+  }, [enableCellSelection, cellSelection]);
+
+  const handleCellMouseUp = React.useCallback((rowIndex: number, colKey: string, e: React.MouseEvent) => {
+    if (!enableCellSelection) return;
+    cellSelection.endSelection();
+  }, [enableCellSelection, cellSelection]);
+
+  // Get cell range info for visual feedback
+  const getCellRangeInfo = React.useCallback((rowIndex: number, colKey: string) => {
+    if (!enableCellSelection || !cellSelection.selectedRange) {
+      return { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false };
+    }
+    const range = cellSelection.selectedRange;
+    const startRow = Math.min(range.start.rowIndex, range.end.rowIndex);
+    const endRow = Math.max(range.start.rowIndex, range.end.rowIndex);
+    
+    // Find column indices
+    const startColIndex = sortedColumns.findIndex(c => String(c.key) === range.start.colKey);
+    const endColIndex = sortedColumns.findIndex(c => String(c.key) === range.end.colKey);
+    const minColIndex = Math.min(startColIndex >= 0 ? startColIndex : 0, endColIndex >= 0 ? endColIndex : sortedColumns.length - 1);
+    const maxColIndex = Math.max(startColIndex >= 0 ? startColIndex : 0, endColIndex >= 0 ? endColIndex : sortedColumns.length - 1);
+    const currentColIndex = sortedColumns.findIndex(c => String(c.key) === colKey);
+    
+    const isStart = range.start.rowIndex === rowIndex && range.start.colKey === colKey;
+    const isEnd = range.end.rowIndex === rowIndex && range.end.colKey === colKey;
+    const isInRange = cellSelection.isCellSelected(rowIndex, colKey);
+    
+    // Check if cell is on the edge of the range
+    const isTopRow = rowIndex === startRow;
+    const isBottomRow = rowIndex === endRow;
+    const isLeftCol = currentColIndex === minColIndex;
+    const isRightCol = currentColIndex === maxColIndex;
+    
+    return { 
+      isStart, 
+      isEnd, 
+      isInRange,
+      isTopRow,
+      isBottomRow,
+      isLeftCol,
+      isRightCol,
+      isCopied: cellSelection.isCopied,
+    };
+  }, [enableCellSelection, cellSelection, sortedColumns]);
+
+  // Check if a row is immediately above the range
+  const isRowAboveRange = React.useCallback((rowIndex: number): boolean => {
+    if (!enableCellSelection || !cellSelection.selectedRange) {
+      return false;
+    }
+    const range = cellSelection.selectedRange;
+    const startRow = Math.min(range.start.rowIndex, range.end.rowIndex);
+    // Row is above range if it's one row before the start row (and startRow > 0)
+    return startRow > 0 && rowIndex === startRow - 1;
+  }, [enableCellSelection, cellSelection]);
+
+  // Check if range starts from first row (row 0) - need to style header
+  const isRangeFromFirstRow = React.useCallback((): boolean => {
+    if (!enableCellSelection || !cellSelection.selectedRange) {
+      return false;
+    }
+    const range = cellSelection.selectedRange;
+    const startRow = Math.min(range.start.rowIndex, range.end.rowIndex);
+    return startRow === 0;
+  }, [enableCellSelection, cellSelection]);
+
+  // Check if a column is in the range (for styling row above)
+  const isColumnInRange = React.useCallback((colKey: string): boolean => {
+    if (!enableCellSelection || !cellSelection.selectedRange) {
+      return false;
+    }
+    const range = cellSelection.selectedRange;
+    const startColIndex = sortedColumns.findIndex(c => String(c.key) === range.start.colKey);
+    const endColIndex = sortedColumns.findIndex(c => String(c.key) === range.end.colKey);
+    const minColIndex = Math.min(startColIndex >= 0 ? startColIndex : 0, endColIndex >= 0 ? endColIndex : sortedColumns.length - 1);
+    const maxColIndex = Math.max(startColIndex >= 0 ? startColIndex : 0, endColIndex >= 0 ? endColIndex : sortedColumns.length - 1);
+    const currentColIndex = sortedColumns.findIndex(c => String(c.key) === colKey);
+    return currentColIndex >= minColIndex && currentColIndex <= maxColIndex;
+  }, [enableCellSelection, cellSelection, sortedColumns]);
+
+  // Get column range info for row above range
+  const getColumnRangeInfo = React.useCallback((colKey: string) => {
+    if (!enableCellSelection || !cellSelection.selectedRange) {
+      return { isInRange: false, isLeftCol: false, isRightCol: false };
+    }
+    const range = cellSelection.selectedRange;
+    const startColIndex = sortedColumns.findIndex(c => String(c.key) === range.start.colKey);
+    const endColIndex = sortedColumns.findIndex(c => String(c.key) === range.end.colKey);
+    const minColIndex = Math.min(startColIndex >= 0 ? startColIndex : 0, endColIndex >= 0 ? endColIndex : sortedColumns.length - 1);
+    const maxColIndex = Math.max(startColIndex >= 0 ? startColIndex : 0, endColIndex >= 0 ? endColIndex : sortedColumns.length - 1);
+    const currentColIndex = sortedColumns.findIndex(c => String(c.key) === colKey);
+    const isInRange = currentColIndex >= minColIndex && currentColIndex <= maxColIndex;
+    const isLeftCol = currentColIndex === minColIndex;
+    const isRightCol = currentColIndex === maxColIndex;
+    return { isInRange, isLeftCol, isRightCol };
+  }, [enableCellSelection, cellSelection, sortedColumns]);
+
+  // Clear selection when focus leaves table
+  React.useEffect(() => {
+    if (!enableCellSelection) return;
+
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!tableRef.current) return;
+      
+      const target = e.target as Node | null;
+      if (target && !tableRef.current.contains(target)) {
+        // Clear selection when clicking outside table
+        cellSelection.clearSelection();
+      }
+    };
+
+    // Use mousedown instead of click to catch all clicks
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [enableCellSelection, cellSelection]);
+
+  // Keyboard handlers for copy/paste
+  React.useEffect(() => {
+    if (!enableCellSelection) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle if table container or cells are focused
+      const activeElement = document.activeElement;
+      if (!tableRef.current || !activeElement) return;
+      
+      // Check if active element is within the table
+      const isInTable = tableRef.current.contains(activeElement);
+      
+      // Don't handle if focus is outside table
+      if (!isInTable) {
+        return;
+      }
+
+      // Ctrl+C or Cmd+C - Copy
+      if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+        const selectedCells = cellSelection.getSelectedCells();
+        if (selectedCells.length > 0) {
+          e.preventDefault();
+          clipboard.copyCells(selectedCells, table.paged, sortedColumns.map(col => ({ key: col.key, label: col.label })));
+          // Mark selection as copied to show dashed border
+          cellSelection.setCopied(true);
+        }
+      }
+      // Ctrl+X or Cmd+X - Cut
+      else if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
+        const selectedCells = cellSelection.getSelectedCells();
+        if (selectedCells.length > 0) {
+          e.preventDefault();
+          clipboard.cutCells(selectedCells, table.paged, sortedColumns.map(col => ({ key: col.key, label: col.label })));
+        }
+      }
+      // Ctrl+V or Cmd+V - Paste
+      else if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        const selectedCells = cellSelection.getSelectedCells();
+        if (selectedCells.length > 0 && onCellEdit) {
+          e.preventDefault();
+          // Use original data for paste (not paged data)
+          const dataToUse = currentGroupBy ? table.filtered : data;
+          
+          // First try to paste from system clipboard (Excel, etc.)
+          // If that fails or returns nothing, try internal clipboard
+          clipboard.pasteFromSystemClipboard(
+            selectedCells,
+            dataToUse,
+            sortedColumns.map(col => ({ key: col.key, label: col.label })),
+            onCellEdit
+          ).then((success) => {
+            // If system clipboard paste didn't work, try internal clipboard
+            if (!success && clipboard.canPaste()) {
+              clipboard.pasteCells(selectedCells, dataToUse, sortedColumns.map(col => ({ key: col.key, label: col.label })), onCellEdit);
+            }
+          }).catch(() => {
+            // If system clipboard access failed, try internal clipboard
+            if (clipboard.canPaste()) {
+              clipboard.pasteCells(selectedCells, dataToUse, sortedColumns.map(col => ({ key: col.key, label: col.label })), onCellEdit);
+            }
+          });
+        }
+      }
+      // Delete key - Clear selected cells
+      else if (e.key === 'Delete' || e.key === 'Backspace') {
+        const selectedCells = cellSelection.getSelectedCells();
+        if (selectedCells.length > 0 && onCellEdit) {
+          e.preventDefault();
+          const dataToUse = currentGroupBy ? table.filtered : data;
+          selectedCells.forEach(cell => {
+            const item = dataToUse[cell.rowIndex];
+            if (item) {
+              // Find actual index in original data
+              const actualIndex = data.findIndex(d => d === item);
+              onCellEdit(item, cell.colKey as keyof T, '', actualIndex >= 0 ? actualIndex : cell.rowIndex);
+            }
+          });
+        }
+      }
+      // Escape - Clear selection
+      else if (e.key === 'Escape') {
+        cellSelection.clearSelection();
+        cellSelection.setCopied(false);
+      }
+    };
+
+    // Use document-level listener but check focus
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [enableCellSelection, cellSelection, clipboard, table.paged, sortedColumns, onCellEdit, currentGroupBy, data]);
 
   /**
    * Open filter panel for a column
@@ -545,14 +784,14 @@ export function ReactTabletify<T extends Record<string, any>>({
   return (
     <div
       ref={tableRef}
-      className={`th-table ${className || ''} th-theme-${tableTheme.mode || 'light'} ${resizingColumn ? 'resizing' : ''} ${stickyHeader ? 'th-sticky-header' : ''}`}
+      className={`th-table ${className || ''} th-theme-${tableTheme.mode || 'light'} ${resizingColumn ? 'resizing' : ''} ${stickyHeader ? 'th-sticky-header' : ''} ${enableCellSelection ? 'enable-cell-selection' : ''}`}
       style={{
         ...themeStyles,
         ...styles,
         ...(maxHeight ? { maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight, overflow: 'auto' } : {}),
         ...(resizingColumn ? { cursor: 'col-resize' } : {}),
       }}
-      tabIndex={enableKeyboardNavigation ? 0 : undefined}
+      tabIndex={enableCellSelection || enableKeyboardNavigation ? 0 : undefined}
     >
       {enableExport && (
         <div className="th-export-toolbar">
@@ -667,6 +906,11 @@ export function ReactTabletify<T extends Record<string, any>>({
               getRightOffset={getRightOffset}
               dismissCallout={callout.dismissCallout}
               enableRowActions={!!rowActions}
+              enableCellSelection={enableCellSelection}
+              isRangeFromFirstRow={isRangeFromFirstRow()}
+              isColumnInRange={isColumnInRange}
+              getColumnRangeInfo={getColumnRangeInfo}
+              isCopied={cellSelection.isCopied}
             />
             <TableBody
               data={data}
@@ -709,6 +953,15 @@ export function ReactTabletify<T extends Record<string, any>>({
               openMenuKey={openMenuKey}
               onMenuToggle={handleMenuToggle}
               onMenuDismiss={handleMenuDismiss}
+              enableCellSelection={enableCellSelection}
+              isCellSelected={cellSelection.isCellSelected}
+              getCellRangeInfo={getCellRangeInfo}
+              isRowAboveRange={isRowAboveRange}
+              isColumnInRange={isColumnInRange}
+              getColumnRangeInfo={getColumnRangeInfo}
+              onCellMouseDown={handleCellMouseDown}
+              onCellMouseEnter={handleCellMouseEnter}
+              onCellMouseUp={handleCellMouseUp}
             />
             <TableFooter
               columns={sortedColumns}

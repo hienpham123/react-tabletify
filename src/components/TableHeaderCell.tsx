@@ -47,6 +47,11 @@ interface TableHeaderCellProps<T extends Record<string, any>> {
   onTotalsChange: (value: 'none' | 'count') => void;
   totalsValue: 'none' | 'count';
   onDismiss: () => void;
+  enableCellSelection?: boolean;
+  isInRangeColumn?: boolean;
+  isLeftColInRange?: boolean;
+  isRightColInRange?: boolean;
+  isCopied?: boolean;
 }
 
 /**
@@ -97,6 +102,11 @@ export function TableHeaderCell<T extends Record<string, any>>({
   onTotalsChange,
   totalsValue,
   onDismiss,
+  enableCellSelection = false,
+  isInRangeColumn = false,
+  isLeftColInRange = false,
+  isRightColInRange = false,
+  isCopied = false,
 }: TableHeaderCellProps<T>) {
   const colKeyStr = String(column.key);
   
@@ -120,6 +130,7 @@ export function TableHeaderCell<T extends Record<string, any>>({
     pinPosition ? `th-pinned-${pinPosition}` : '',
     pinPosition === 'left' && column.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : '',
     pinPosition === 'right' && column.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : '',
+    enableCellSelection && isCopied ? 'th-cell-copied' : '',
   ].filter(Boolean).join(' ');
 
   return (
@@ -134,6 +145,9 @@ export function TableHeaderCell<T extends Record<string, any>>({
         // dragOverColumn is managed by useColumnManagement hook
       }}
       className={thClassName}
+      data-in-range-column={enableCellSelection && isInRangeColumn ? 'true' : undefined}
+      data-left-col-in-range={enableCellSelection && isLeftColInRange ? 'true' : undefined}
+      data-right-col-in-range={enableCellSelection && isRightColInRange ? 'true' : undefined}
     >
       {onRenderHeader ? (
         onRenderHeader(column, columnIndex)

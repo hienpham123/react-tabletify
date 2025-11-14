@@ -51,6 +51,11 @@ interface TableHeaderProps<T extends Record<string, any>> {
   getRightOffset: (column: Column<T>, index: number) => number;
   dismissCallout: () => void;
   enableRowActions?: boolean;
+  enableCellSelection?: boolean;
+  isRangeFromFirstRow?: boolean;
+  isColumnInRange?: (colKey: string) => boolean;
+  getColumnRangeInfo?: (colKey: string) => { isInRange: boolean; isLeftCol: boolean; isRightCol: boolean };
+  isCopied?: boolean;
 }
 
 /**
@@ -104,6 +109,11 @@ export function TableHeader<T extends Record<string, any>>({
   getRightOffset,
   dismissCallout,
   enableRowActions = false,
+  enableCellSelection = false,
+  isRangeFromFirstRow = false,
+  isColumnInRange,
+  getColumnRangeInfo,
+  isCopied = false,
 }: TableHeaderProps<T>) {
   return (
     <thead>
@@ -130,6 +140,10 @@ export function TableHeader<T extends Record<string, any>>({
           const pinPosition = pinnedColumns[colKeyStr] || col.pinned || null;
           const leftOffset = pinPosition === 'left' ? getLeftOffset(col, colIndex) : 0;
           const rightOffset = pinPosition === 'right' ? getRightOffset(col, colIndex) : 0;
+          
+          // Get column range info for header styling when range starts from first row
+          const columnRangeInfo = enableCellSelection && isRangeFromFirstRow && getColumnRangeInfo ? getColumnRangeInfo(colKeyStr) : { isInRange: false, isLeftCol: false, isRightCol: false };
+          const headerIsCopied = enableCellSelection && isRangeFromFirstRow && isCopied && columnRangeInfo.isInRange;
           
           // Callback ref to store in anchorRefs
           const anchorRefCallback = (el: HTMLDivElement | null) => {
@@ -179,6 +193,11 @@ export function TableHeader<T extends Record<string, any>>({
               onColumnDragOver={onColumnDragOver}
               onColumnDrop={onColumnDrop}
               onResizeStart={onResizeStart}
+              enableCellSelection={enableCellSelection}
+              isInRangeColumn={columnRangeInfo.isInRange}
+              isLeftColInRange={columnRangeInfo.isLeftCol}
+              isRightColInRange={columnRangeInfo.isRightCol}
+              isCopied={headerIsCopied}
               onSortAsc={() => {
                 if (col.sortable !== false) {
                   onSortAsc(col);

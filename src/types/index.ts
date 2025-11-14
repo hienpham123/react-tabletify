@@ -387,6 +387,7 @@ export interface ReactTabletifyProps<T extends Record<string, any>> {
     onClick: (item: T, index: number) => void;
     disabled?: boolean;
   }>;
+  enableCellSelection?: boolean;
 
   /** 
    * Custom row hover effect

@@ -269,7 +269,8 @@ export default function App() {
         // showPagination={false}
         // groupBy="department"
         // selectionMode="multiple"
-        enableRowReorder={true}
+        // enableRowReorder={true}
+        enableCellSelection={true}
         onRowReorder={(newData, draggedItem, fromIndex, toIndex) => {
           console.log('Row reordered:', { draggedItem, fromIndex, toIndex });
           setData(newData);
@@ -311,46 +312,46 @@ export default function App() {
         onAfterExport={(format, filename) => {
           console.log(`Exported ${filename}.${format}`);
         }}
-        rowActions={(item, index) => [
-          {
-            key: 'edit',
-            label: 'Edit',
-            onClick: (item, index) => {
-              console.log('Edit clicked:', item);
-              alert(`Edit: ${item.name}`);
-            },
-          },
-          {
-            key: 'duplicate',
-            label: 'Duplicate',
-            onClick: (item, index) => {
-              console.log('Duplicate clicked:', item);
-              const newItem = { ...item, id: data.length + 1, name: `${item.name} (Copy)` };
-              setData(prev => [...prev, newItem]);
-              alert(`Duplicated: ${item.name}`);
-            },
-          },
-          {
-            key: 'delete',
-            label: 'Delete',
-            onClick: (item, index) => {
-              console.log('Delete clicked:', item);
-              if (window.confirm(`Delete ${item.name}?`)) {
-                setData(prev => prev.filter(d => d.id !== item.id));
-                alert(`Deleted: ${item.name}`);
-              }
-            },
-            disabled: item.status === 'Active', // Disable delete for active users
-          },
-          {
-            key: 'view-details',
-            label: 'View Details',
-            onClick: (item, index) => {
-              console.log('View details clicked:', item);
-              alert(`Details for ${item.name}:\nEmail: ${item.email}\nDepartment: ${item.department}\nRole: ${item.role}`);
-            },
-          },
-        ]}
+        // rowActions={(item, index) => [
+        //   {
+        //     key: 'edit',
+        //     label: 'Edit',
+        //     onClick: (item, index) => {
+        //       console.log('Edit clicked:', item);
+        //       alert(`Edit: ${item.name}`);
+        //     },
+        //   },
+        //   {
+        //     key: 'duplicate',
+        //     label: 'Duplicate',
+        //     onClick: (item, index) => {
+        //       console.log('Duplicate clicked:', item);
+        //       const newItem = { ...item, id: data.length + 1, name: `${item.name} (Copy)` };
+        //       setData(prev => [...prev, newItem]);
+        //       alert(`Duplicated: ${item.name}`);
+        //     },
+        //   },
+        //   {
+        //     key: 'delete',
+        //     label: 'Delete',
+        //     onClick: (item, index) => {
+        //       console.log('Delete clicked:', item);
+        //       if (window.confirm(`Delete ${item.name}?`)) {
+        //         setData(prev => prev.filter(d => d.id !== item.id));
+        //         alert(`Deleted: ${item.name}`);
+        //       }
+        //     },
+        //     disabled: item.status === 'Active', // Disable delete for active users
+        //   },
+        //   {
+        //     key: 'view-details',
+        //     label: 'View Details',
+        //     onClick: (item, index) => {
+        //       console.log('View details clicked:', item);
+        //       alert(`Details for ${item.name}:\nEmail: ${item.email}\nDepartment: ${item.department}\nRole: ${item.role}`);
+        //     },
+        //   },
+        // ]}
       />
     </div>
   );
