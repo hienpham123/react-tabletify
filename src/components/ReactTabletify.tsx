@@ -77,6 +77,8 @@ export function ReactTabletify<T extends Record<string, any>>({
   selectionMode = 'none',
   onSelectionChanged,
   showPagination = true,
+  itemsPerPageOptions,
+  onItemsPerPageChange,
   theme,
   maxHeight,
   onCellEdit,
@@ -96,7 +98,15 @@ export function ReactTabletify<T extends Record<string, any>>({
   ...otherProps
 }: ReactTabletifyProps<T>) {
   // Core table hook for sorting, filtering, pagination
-  const table = useTable<T>(data, itemsPerPage);
+  // Manage itemsPerPage state internally if onItemsPerPageChange is provided
+  const [internalItemsPerPage, setInternalItemsPerPage] = React.useState(itemsPerPage);
+  
+  // Update internalItemsPerPage when itemsPerPage prop changes
+  React.useEffect(() => {
+    setInternalItemsPerPage(itemsPerPage);
+  }, [itemsPerPage]);
+
+  const table = useTable<T>(data, internalItemsPerPage);
 
   // Refs
   const anchorRefs = React.useRef<Record<string, HTMLDivElement>>({});
@@ -837,6 +847,12 @@ export function ReactTabletify<T extends Record<string, any>>({
           itemsPerPage={table.itemsPerPage}
           currentPage={table.currentPage}
           onPageChange={table.setCurrentPage}
+          itemsPerPageOptions={itemsPerPageOptions}
+          onItemsPerPageChange={(newItemsPerPage) => {
+            setInternalItemsPerPage(newItemsPerPage);
+            table.setCurrentPage(1); // Reset to page 1 when changing items per page
+            onItemsPerPageChange?.(newItemsPerPage);
+          }}
         />
       )}
 

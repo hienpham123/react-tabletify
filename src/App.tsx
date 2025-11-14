@@ -265,7 +265,13 @@ export default function App() {
             resizable: true
           },
         ]}
+        stickyHeader
         itemsPerPage={10}
+        showPagination={true}
+        itemsPerPageOptions={[10, 25, 50, 100]}
+        onItemsPerPageChange={(newItemsPerPage) => {
+          console.log('Items per page changed to:', newItemsPerPage);
+        }}
         // groupBy="department"
         // selectionMode="multiple"
         theme={getCurrentTheme()}

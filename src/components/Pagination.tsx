@@ -7,6 +7,8 @@ interface PaginationProps {
   currentPage: number;
   onPageChange: (page: number) => void;
   maxVisible?: number;
+  itemsPerPageOptions?: number[];
+  onItemsPerPageChange?: (itemsPerPage: number) => void;
 }
 
 export const Pagination: React.FC<PaginationProps> = ({
@@ -15,6 +17,8 @@ export const Pagination: React.FC<PaginationProps> = ({
   currentPage,
   onPageChange,
   maxVisible = 5,
+  itemsPerPageOptions,
+  onItemsPerPageChange,
 }) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   if (totalPages <= 1) return null;
@@ -76,6 +80,31 @@ export const Pagination: React.FC<PaginationProps> = ({
       >
         Next
       </button>
+
+      {itemsPerPageOptions && onItemsPerPageChange && (
+        <div className="th-pagination-items-per-page">
+          <label htmlFor="th-items-per-page-select" style={{ marginRight: '8px' }}>
+            Rows per page:
+          </label>
+          <select
+            id="th-items-per-page-select"
+            value={itemsPerPage}
+            onChange={(e) => {
+              const newItemsPerPage = Number(e.target.value);
+              onItemsPerPageChange(newItemsPerPage);
+              // Reset to page 1 when changing items per page
+              onPageChange(1);
+            }}
+            className="th-pagination-select"
+          >
+            {itemsPerPageOptions.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </div>
   );
 };

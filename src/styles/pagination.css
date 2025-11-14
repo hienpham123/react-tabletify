@@ -59,3 +59,38 @@
   color: var(--th-color-text-secondary, #999);
   padding: 0 4px;
 }
+
+.th-pagination-items-per-page {
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+  gap: 8px;
+}
+
+.th-pagination-items-per-page label {
+  font-size: 14px;
+  color: var(--th-color-text, #1a1a1a);
+  white-space: nowrap;
+}
+
+.th-pagination-select {
+  padding: 4px 8px;
+  border-radius: 4px;
+  border: 1px solid var(--th-color-border, #e0e0e0);
+  background-color: var(--th-color-background, #ffffff);
+  color: var(--th-color-text, #1a1a1a);
+  font-size: 14px;
+  cursor: pointer;
+  transition: border-color 0.2s;
+  min-width: 60px;
+}
+
+.th-pagination-select:hover {
+  border-color: var(--th-color-focus, #107c10);
+}
+
+.th-pagination-select:focus {
+  outline: none;
+  border-color: var(--th-color-focus, #107c10);
+  box-shadow: 0 0 0 2px rgba(16, 124, 16, 0.1);
+}
