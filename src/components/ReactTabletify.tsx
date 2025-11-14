@@ -429,6 +429,34 @@ export function ReactTabletify<T extends Record<string, any>>({
     return offset;
   }, [sortedColumns, internalPinnedColumns, columnWidths]);
 
+  // Find the last left-pinned column (the rightmost column in the left-pinned group)
+  const lastLeftPinnedColumnKey = React.useMemo(() => {
+    let lastLeftPinned: keyof T | null = null;
+    for (let i = 0; i < sortedColumns.length; i++) {
+      const col = sortedColumns[i];
+      const pinPosition = internalPinnedColumns[String(col.key)] || col.pinned || null;
+      if (pinPosition === 'left') {
+        lastLeftPinned = col.key;
+      } else if (lastLeftPinned !== null) {
+        // We've reached the end of left-pinned columns
+        break;
+      }
+    }
+    return lastLeftPinned;
+  }, [sortedColumns, internalPinnedColumns]);
+
+  // Find the first right-pinned column
+  const firstRightPinnedColumnKey = React.useMemo(() => {
+    for (let i = 0; i < sortedColumns.length; i++) {
+      const col = sortedColumns[i];
+      const pinPosition = internalPinnedColumns[String(col.key)] || col.pinned || null;
+      if (pinPosition === 'right') {
+        return col.key;
+      }
+    }
+    return null;
+  }, [sortedColumns, internalPinnedColumns]);
+
   return (
     <div
       ref={tableRef}
@@ -456,7 +484,12 @@ export function ReactTabletify<T extends Record<string, any>>({
         />
       )}
       {showTable && (
-        <div style={{ overflowX: 'auto', width: '100%' }}>
+        <div style={{ 
+          overflowX: 'auto', 
+          overflowY: stickyHeader && !maxHeight ? 'auto' : 'visible',
+          width: '100%',
+          ...(stickyHeader && !maxHeight ? { maxHeight: 'calc(100vh - 200px)' } : {})
+        }}>
           <table>
             <thead>
               <tr>
@@ -493,12 +526,12 @@ export function ReactTabletify<T extends Record<string, any>>({
                     maxWidth: col.maxWidth,
                     textAlign: col.align,
                     position: pinPosition ? 'sticky' : 'relative',
-                    ...(pinPosition === 'left' ? { left: `${leftOffset}px`, zIndex: 5 } : {}),
-                    ...(pinPosition === 'right' ? { right: `${rightOffset}px`, zIndex: 5 } : {}),
+                    ...(pinPosition === 'left' ? { left: `${leftOffset}px`, zIndex: stickyHeader ? 15 : 5 } : {}),
+                    ...(pinPosition === 'right' ? { right: `${rightOffset}px`, zIndex: stickyHeader ? 15 : 5 } : {}),
                   };
                   const headerClassName = col.className
-                    ? `th-header-cell ${pinPosition ? 'th-header-pinned' : ''} ${col.className}`
-                    : pinPosition ? `th-header-cell th-header-pinned` : 'th-header-cell';
+                    ? `th-header-cell ${pinPosition ? `th-header-pinned th-pinned-${pinPosition}` : ''} ${col.className}`
+                    : pinPosition ? `th-header-cell th-header-pinned th-pinned-${pinPosition}` : 'th-header-cell';
 
                   return (
                     <th
@@ -511,7 +544,7 @@ export function ReactTabletify<T extends Record<string, any>>({
                       onDragLeave={() => {
                         // dragOverColumn is managed by useColumnManagement hook
                       }}
-                      className={dragOverColumn === col.key ? 'th-drag-over' : ''}
+                      className={`${dragOverColumn === col.key ? 'th-drag-over' : ''} ${pinPosition ? `th-pinned-${pinPosition}` : ''} ${pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : ''} ${pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : ''}`.trim()}
                     >
                       {onRenderHeader ? (
                         onRenderHeader(col, colIndex)
@@ -745,8 +778,8 @@ export function ReactTabletify<T extends Record<string, any>>({
                                   ...(pinPosition === 'right' ? { right: `${rightOffset}px`, zIndex: 3 } : {}),
                                 };
                                 const cellClassName = col.cellClassName
-                                  ? `${col.cellClassName} ${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? 'th-cell-pinned' : ''}`
-                                  : `${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? 'th-cell-pinned' : ''}`.trim();
+                                  ? `${col.cellClassName} ${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? `th-cell-pinned th-pinned-${pinPosition}` : ''} ${pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : ''} ${pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : ''}`
+                                  : `${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? `th-cell-pinned th-pinned-${pinPosition}` : ''} ${pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : ''} ${pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : ''}`.trim();
                                 const cellText = showTooltip ? getCellText(row, col) : undefined;
                                 return (
                                   <td
@@ -817,8 +850,8 @@ export function ReactTabletify<T extends Record<string, any>>({
                           ...(pinPosition === 'right' ? { right: `${rightOffset}px`, zIndex: 3 } : {}),
                         };
                         const cellClassName = col.cellClassName
-                          ? `${col.cellClassName} ${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? 'th-cell-pinned' : ''}`
-                          : `${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? 'th-cell-pinned' : ''}`.trim();
+                          ? `${col.cellClassName} ${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? `th-cell-pinned th-pinned-${pinPosition}` : ''} ${pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : ''} ${pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : ''}`
+                          : `${col.editable ? 'th-cell-editable' : ''} ${pinPosition ? `th-cell-pinned th-pinned-${pinPosition}` : ''} ${pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : ''} ${pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : ''}`.trim();
                         const cellText = showTooltip ? getCellText(row, col) : undefined;
                         return (
                           <td

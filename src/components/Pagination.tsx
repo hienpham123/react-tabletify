@@ -21,7 +21,6 @@ export const Pagination: React.FC<PaginationProps> = ({
   onItemsPerPageChange,
 }) => {
   const totalPages = Math.ceil(totalItems / itemsPerPage);
-  if (totalPages <= 1) return null;
 
   const half = Math.floor(maxVisible / 2);
   let start = Math.max(1, currentPage - half);
@@ -35,14 +34,20 @@ export const Pagination: React.FC<PaginationProps> = ({
     onPageChange(p);
   };
 
+  // If no pagination buttons and no itemsPerPageOptions, return null
+  if (totalPages <= 0 && !(itemsPerPageOptions && onItemsPerPageChange)) {
+    return null;
+  }
+
   return (
     <div className="th-pagination">
       <button
         onClick={() => goToPage(currentPage - 1)}
         disabled={currentPage === 1}
-        className="th-pagination-btn"
+        className="th-pagination-btn th-pagination-arrow"
+        aria-label="Previous page"
       >
-        Prev
+        &lt;
       </button>
 
       {start > 1 && (
@@ -76,9 +81,10 @@ export const Pagination: React.FC<PaginationProps> = ({
       <button
         onClick={() => goToPage(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="th-pagination-btn"
+        className="th-pagination-btn th-pagination-arrow"
+        aria-label="Next page"
       >
-        Next
+        &gt;
       </button>
 
       {itemsPerPageOptions && onItemsPerPageChange && (

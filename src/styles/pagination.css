@@ -2,20 +2,23 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: var(--th-spacing-gap, 6px);
-  padding: 12px;
+  gap: var(--th-spacing-gap, 4px);
+  padding: 12px 16px;
   border-top: 1px solid var(--th-color-border-light, #eee);
-  background: var(--th-color-surface, #fafafa);
+  background: var(--th-color-surface, #ffffff);
+  border-radius: var(--th-border-radius-table, 8px);
+  box-shadow: var(--th-shadow-pagination, 0 1px 3px rgba(0, 0, 0, 0.1));
+  margin-top: 8px;
 }
 
 .th-pagination-btn {
-  background: var(--th-color-surface, white);
-  border: 1px solid var(--th-color-border, #ccc);
-  padding: 4px 10px;
-  border-radius: var(--th-border-radius-button, 4px);
-  font-size: var(--th-typography-font-size-small, 13px);
+  background: transparent;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: var(--th-typography-font-size-small, 14px);
   font-family: var(--th-typography-font-family, inherit);
-  color: var(--th-color-text, #323130);
+  color: var(--th-color-text-secondary, #605e5c);
   cursor: pointer;
   transition: all var(--th-transition-duration, 0.2s) var(--th-transition-easing, ease);
   min-width: 32px;
@@ -23,20 +26,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  font-weight: 600;
 }
 
-.th-pagination-btn:hover:not(:disabled) {
-  background: var(--th-color-primary, #107c10);
-  color: var(--th-color-surface, white);
-  border-color: var(--th-color-primary, #107c10);
+.th-pagination-btn:hover:not(:disabled):not(.th-page-active) {
+  background: var(--th-color-hover-row-background, #f3f2f1);
+  color: var(--th-color-text, #323130);
 }
 
 .th-pagination-btn:disabled {
-  opacity: 0.5;
   cursor: not-allowed;
-  background: var(--th-color-disabled, #f3f2f1);
-  border-color: var(--th-color-border, #edebe9);
-  color: var(--th-color-text-secondary, #a19f9d);
+  background: transparent;
+  color: var(--th-color-text-disabled, #c8c6c4);
 }
 
 .th-pagination-btn:focus {
@@ -49,15 +50,23 @@
 }
 
 .th-pagination .th-page-active {
-  background: var(--th-color-primary, #107c10);
-  color: var(--th-color-surface, white);
-  border-color: var(--th-color-primary, #107c10);
+  background: var(--th-color-primary, #0078d4);
+  color: var(--th-color-surface, #ffffff);
   font-weight: var(--th-typography-font-weight-bold, 600);
 }
 
+.th-pagination-btn.th-pagination-arrow {
+  font-size: 16px;
+  font-weight: var(--th-typography-font-weight-normal, 400);
+}
+
 .th-pagination-ellipsis {
-  color: var(--th-color-text-secondary, #999);
-  padding: 0 4px;
+  color: var(--th-color-text-secondary, #605e5c);
+  padding: 0 8px;
+  font-size: var(--th-typography-font-size-small, 14px);
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
 }
 
 .th-pagination-items-per-page {

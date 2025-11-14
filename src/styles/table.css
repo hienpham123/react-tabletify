@@ -102,6 +102,18 @@
   font-weight: 700;
 }
 
+/* Box shadow only for the last left-pinned column (rightmost in the left-pinned group) */
+.th-table thead th.th-pinned-last-left,
+.th-table tbody tr td.th-pinned-last-left {
+  box-shadow: 2px 0 8px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Box shadow only for the first right-pinned column (leftmost in the right-pinned group) */
+.th-table thead th.th-pinned-first-right,
+.th-table tbody tr td.th-pinned-first-right {
+  box-shadow: -2px 0 8px -2px rgba(0, 0, 0, 0.2) !important;
+}
+
 .th-header-label {
   flex: 1;
   min-width: 0;
@@ -410,7 +422,7 @@
 
 .th-cell-pinned {
   background: var(--th-color-row-background-pinned, #faf9f8) !important;
-  border-right: 1px solid var(--th-color-primary, #107c10);
+  border-right: 1px solid var(--th-color-row-background-pinned, #faf9f8) !important;
   font-weight: 500;
 }
 
@@ -522,7 +534,16 @@
 }
 
 .th-table.th-sticky-header thead th {
+  position: sticky;
+  top: 0;
   background: var(--th-color-header-background, #faf9f8);
+  z-index: 10;
+}
+
+/* Pinned columns in sticky header need higher z-index and maintain background */
+.th-table.th-sticky-header thead th.th-header-pinned {
+  z-index: 15 !important;
+  background: var(--th-color-header-background-pinned, #f3f2f1) !important;
 }
 
 /* --- Keyboard Navigation - Focused Row --- */
