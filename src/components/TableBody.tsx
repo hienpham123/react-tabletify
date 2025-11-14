@@ -51,6 +51,16 @@ interface TableBodyProps<T extends Record<string, any>> {
   toggleGroup: (groupKey: string) => void;
   filteredData: T[];
   pagedData: T[];
+  rowActions?: (item: T, index: number) => Array<{
+    key: string;
+    label: string;
+    icon?: React.ReactNode;
+    onClick: (item: T, index: number) => void;
+    disabled?: boolean;
+  }>;
+  openMenuKey: string | null;
+  onMenuToggle: (item: T, index: number) => void;
+  onMenuDismiss: () => void;
 }
 
 /**
@@ -93,6 +103,10 @@ export function TableBody<T extends Record<string, any>>({
   toggleGroup,
   filteredData,
   pagedData,
+  rowActions,
+  openMenuKey,
+  onMenuToggle,
+  onMenuDismiss,
 }: TableBodyProps<T>) {
   // Find column label for groupBy
   const groupByColumn = currentGroupBy ? columns.find(c => c.key === currentGroupBy) : null;
@@ -112,7 +126,7 @@ export function TableBody<T extends Record<string, any>>({
                 rowCount={rows.length}
                 isExpanded={isExpanded}
                 onToggle={() => toggleGroup(groupKey)}
-                colSpan={columns.length + (selectionMode !== 'none' ? 1 : 0)}
+                colSpan={columns.length + (selectionMode !== 'none' ? 1 : 0) + (rowActions ? 1 : 0)}
               />
               {isExpanded &&
                 rows.map((row, i) => {
@@ -170,6 +184,10 @@ export function TableBody<T extends Record<string, any>>({
                       getLeftOffset={getLeftOffset}
                       getRightOffset={getRightOffset}
                       isDraggingState={isDragging}
+                      rowActions={rowActions}
+                      openMenuKey={openMenuKey}
+                      onMenuToggle={onMenuToggle}
+                      onMenuDismiss={onMenuDismiss}
                     />
                   );
                 })}
@@ -229,6 +247,10 @@ export function TableBody<T extends Record<string, any>>({
               getLeftOffset={getLeftOffset}
               getRightOffset={getRightOffset}
               isDraggingState={isDragging}
+              rowActions={rowActions}
+              openMenuKey={openMenuKey}
+              onMenuToggle={onMenuToggle}
+              onMenuDismiss={onMenuDismiss}
             />
           );
         })

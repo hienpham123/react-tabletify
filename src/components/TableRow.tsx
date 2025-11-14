@@ -2,6 +2,8 @@ import * as React from "react";
 import type { Column } from "../types";
 import { SelectionCell } from "./SelectionCell";
 import { TableCell } from "./TableCell";
+import { RowActionsCell } from "./RowActionsCell";
+import { RowActionsMenu } from "./RowActionsMenu";
 
 interface TableRowProps<T extends Record<string, any>> {
   item: T;
@@ -34,6 +36,16 @@ interface TableRowProps<T extends Record<string, any>> {
   getLeftOffset: (column: Column<T>, index: number) => number;
   getRightOffset: (column: Column<T>, index: number) => number;
   isDraggingState: boolean;
+  rowActions?: (item: T, index: number) => Array<{
+    key: string;
+    label: string;
+    icon?: React.ReactNode;
+    onClick: (item: T, index: number) => void;
+    disabled?: boolean;
+  }>;
+  openMenuKey: string | null;
+  onMenuToggle: (item: T, index: number) => void;
+  onMenuDismiss: () => void;
 }
 
 /**
@@ -70,6 +82,10 @@ export function TableRow<T extends Record<string, any>>({
   getLeftOffset,
   getRightOffset,
   isDraggingState,
+  rowActions,
+  openMenuKey,
+  onMenuToggle,
+  onMenuDismiss,
 }: TableRowProps<T>) {
   const rowClassName = [
     isSelected ? 'th-row-selected' : '',
@@ -80,58 +96,85 @@ export function TableRow<T extends Record<string, any>>({
     isDragOver ? 'th-row-drag-over' : '',
   ].filter(Boolean).join(' ');
 
-  return (
-    <tr
-      key={itemKey}
-      className={rowClassName}
-      draggable={canDrag}
-      onDragStart={(e) => onDragStart(e, index)}
-      onDragOver={(e) => onDragOver(e, index)}
-      onDragLeave={onDragLeave}
-      onDrop={(e) => onDrop(e, index)}
-      onDragEnd={onDragEnd}
-      onClick={(ev) => {
-        if (!isDraggingState) {
-          onItemClick(item, index, ev);
-        }
-      }}
-      onContextMenu={(ev) => onItemContextMenu?.(item, index, ev)}
-    >
-      {selectionMode !== 'none' && (
-        <SelectionCell
-          selectionMode={selectionMode}
-          checked={isSelected}
-          onChange={(checked) => onCheckboxChange(item, index, checked)}
-        />
-      )}
-      {columns.map((col, colIndex) => {
-        const colKeyStr = String(col.key);
-        const resizedWidth = columnWidths[colKeyStr];
-        const pinPosition = pinnedColumns[colKeyStr] || col.pinned || null;
-        const sortedIndex = columns.findIndex(c => String(c.key) === colKeyStr);
-        const leftOffset = pinPosition === 'left' ? getLeftOffset(col, sortedIndex) : 0;
-        const rightOffset = pinPosition === 'right' ? getRightOffset(col, sortedIndex) : 0;
+  const actions = rowActions ? rowActions(item, index) : [];
+  // Use a more unique key that includes both itemKey and index
+  const menuKey = React.useMemo(() => `${String(itemKey)}-${index}`, [itemKey, index]);
+  const isMenuOpen = openMenuKey === menuKey;
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
 
-        return (
-          <TableCell
-            key={colKeyStr}
-            column={col}
+  return (
+    <>
+      <tr
+        key={itemKey}
+        className={rowClassName}
+        draggable={canDrag}
+        onDragStart={(e) => onDragStart(e, index)}
+        onDragOver={(e) => onDragOver(e, index)}
+        onDragLeave={onDragLeave}
+        onDrop={(e) => onDrop(e, index)}
+        onDragEnd={onDragEnd}
+        onClick={(ev) => {
+          if (!isDraggingState) {
+            onItemClick(item, index, ev);
+          }
+        }}
+        onContextMenu={(ev) => onItemContextMenu?.(item, index, ev)}
+      >
+        {selectionMode !== 'none' && (
+          <SelectionCell
+            selectionMode={selectionMode}
+            checked={isSelected}
+            onChange={(checked) => onCheckboxChange(item, index, checked)}
+          />
+        )}
+        {actions.length > 0 && (
+          <RowActionsCell
             item={item}
             index={index}
-            resizedWidth={resizedWidth}
-            pinPosition={pinPosition}
-            leftOffset={leftOffset}
-            rightOffset={rightOffset}
-            lastLeftPinnedColumnKey={lastLeftPinnedColumnKey}
-            firstRightPinnedColumnKey={firstRightPinnedColumnKey}
-            showTooltip={showTooltip}
-            onDoubleClick={() => onCellEditStart(item, col, index)}
-            renderCell={renderCell}
-            getCellText={getCellText}
+            actions={actions}
+            onMenuToggle={onMenuToggle}
+            isMenuOpen={isMenuOpen}
+            buttonRef={buttonRef}
           />
-        );
-      })}
-    </tr>
+        )}
+        {columns.map((col, colIndex) => {
+          const colKeyStr = String(col.key);
+          const resizedWidth = columnWidths[colKeyStr];
+          const pinPosition = pinnedColumns[colKeyStr] || col.pinned || null;
+          const sortedIndex = columns.findIndex(c => String(c.key) === colKeyStr);
+          const leftOffset = pinPosition === 'left' ? getLeftOffset(col, sortedIndex) : 0;
+          const rightOffset = pinPosition === 'right' ? getRightOffset(col, sortedIndex) : 0;
+
+          return (
+            <TableCell
+              key={colKeyStr}
+              column={col}
+              item={item}
+              index={index}
+              resizedWidth={resizedWidth}
+              pinPosition={pinPosition}
+              leftOffset={leftOffset}
+              rightOffset={rightOffset}
+              lastLeftPinnedColumnKey={lastLeftPinnedColumnKey}
+              firstRightPinnedColumnKey={firstRightPinnedColumnKey}
+              showTooltip={showTooltip}
+              onDoubleClick={() => onCellEditStart(item, col, index)}
+              renderCell={renderCell}
+              getCellText={getCellText}
+            />
+          );
+        })}
+      </tr>
+      {isMenuOpen && actions.length > 0 && (
+        <RowActionsMenu
+          anchorRef={buttonRef}
+          actions={actions}
+          item={item}
+          index={index}
+          onDismiss={onMenuDismiss}
+        />
+      )}
+    </>
   );
 }
 

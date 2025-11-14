@@ -18,6 +18,7 @@ import { ExportButton } from "./ExportButton";
 import type { ReactTabletifyProps, Column } from "../types";
 import { getTheme, applyTheme } from "../utils/theme";
 import "./../styles/table.css";
+import "./../styles/row-actions.css";
 
 /**
  * ReactTabletify - A powerful, customizable data table component for React
@@ -106,6 +107,7 @@ export function ReactTabletify<T extends Record<string, any>>({
   exportFileName = 'export',
   onBeforeExport,
   onAfterExport,
+  rowActions,
   ...otherProps
 }: ReactTabletifyProps<T>) {
   // Core table hook for sorting, filtering, pagination
@@ -119,7 +121,7 @@ export function ReactTabletify<T extends Record<string, any>>({
 
   // Auto-set default itemsPerPageOptions when showPagination is true
   const defaultItemsPerPageOptions = [10, 25, 50, 100];
-  const effectiveItemsPerPageOptions = showPagination 
+  const effectiveItemsPerPageOptions = showPagination
     ? (itemsPerPageOptions || defaultItemsPerPageOptions)
     : itemsPerPageOptions;
 
@@ -144,6 +146,9 @@ export function ReactTabletify<T extends Record<string, any>>({
 
   // Filter panel state
   const [filterField, setFilterField] = React.useState<string | null>(null);
+
+  // Row actions menu state
+  const [openMenuKey, setOpenMenuKey] = React.useState<string | null>(null);
 
   // Internal groupBy state (use prop if provided, otherwise use internal state)
   const [internalGroupBy, setInternalGroupBy] = React.useState<keyof T | undefined>(groupBy);
@@ -203,6 +208,17 @@ export function ReactTabletify<T extends Record<string, any>>({
     onActiveItemChanged,
     getKey
   );
+
+  // Row actions menu handlers (after getItemKey is defined)
+  const handleMenuToggle = React.useCallback((item: T, index: number) => {
+    const itemKey = getItemKey(item, index);
+    const menuKey = `${String(itemKey)}-${index}`;
+    setOpenMenuKey(prev => prev === menuKey ? null : menuKey);
+  }, [getItemKey]);
+
+  const handleMenuDismiss = React.useCallback(() => {
+    setOpenMenuKey(null);
+  }, []);
 
   // Column resize hook
   const {
@@ -650,6 +666,7 @@ export function ReactTabletify<T extends Record<string, any>>({
               getLeftOffset={getLeftOffset}
               getRightOffset={getRightOffset}
               dismissCallout={callout.dismissCallout}
+              enableRowActions={!!rowActions}
             />
             <TableBody
               data={data}
@@ -688,6 +705,10 @@ export function ReactTabletify<T extends Record<string, any>>({
               toggleGroup={toggleGroup}
               filteredData={table.filtered}
               pagedData={table.paged}
+              rowActions={rowActions}
+              openMenuKey={openMenuKey}
+              onMenuToggle={handleMenuToggle}
+              onMenuDismiss={handleMenuDismiss}
             />
             <TableFooter
               columns={sortedColumns}

@@ -29,6 +29,7 @@ A fast, fully customizable React data table built purely with HTML and CSS.
 - ✅ **Group By with Visual Indicator** - Group by column with checkmark in menu
 - ✅ **Row Drag & Drop** - Drag and drop rows to reorder them
 - ✅ **Export to CSV/Excel** - Export table data to CSV or Excel format (no external library required)
+- ✅ **Row Actions Menu** - Context menu with custom actions for each row
 
 ## Installation
 
@@ -126,6 +127,7 @@ function App() {
 | `exportFileName` | `string` | `'export'` | Custom filename for exported file (without extension) |
 | `onBeforeExport` | `(data, columns) => { data, columns } \| undefined` | - | Callback before export (can transform data) |
 | `onAfterExport` | `(format, filename) => void` | - | Callback after export |
+| `rowActions` | `(item, index) => Array<{key, label, icon?, onClick, disabled?}>` | - | Function that returns array of actions for each row |
 | `className` | `string` | - | Additional CSS class |
 | `styles` | `CSSProperties` | - | Inline styles |
 
@@ -387,6 +389,47 @@ const [data, setData] = useState(users);
 // Note: Excel export uses HTML format (no external library required)
 ```
 
+### With Row Actions Menu
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns}
+  rowActions={(item, index) => [
+    {
+      key: 'edit',
+      label: 'Edit',
+      icon: <EditIcon />, // Optional icon
+      onClick: (item, index) => {
+        console.log('Edit item:', item);
+        // Handle edit action
+      },
+    },
+    {
+      key: 'delete',
+      label: 'Delete',
+      icon: <DeleteIcon />, // Optional icon
+      onClick: (item, index) => {
+        console.log('Delete item:', item);
+        // Handle delete action
+      },
+      disabled: item.status === 'locked', // Optional: disable action
+    },
+    {
+      key: 'duplicate',
+      label: 'Duplicate',
+      onClick: (item, index) => {
+        console.log('Duplicate item:', item);
+        // Handle duplicate action
+      },
+    },
+  ]}
+/>
+// A three-dot menu button (⋮) will appear in the leftmost column (after selection column if enabled)
+// Click to open a dropdown menu with your custom actions
+// Menu automatically closes when clicking outside or pressing Escape
+```
+
 ## Architecture
 
 ReactTabletify is built with a modular architecture using custom hooks for better code organization and maintainability:
@@ -598,6 +641,14 @@ const themeStyles = applyTheme(theme);
 ```
 
 ## Changelog
+
+### Version 0.5.0
+- ✅ Added Row Actions Menu - Context menu with custom actions for each row
+- ✅ Three-dot menu button (⋮) in the leftmost column (after selection column)
+- ✅ Support for custom actions with icons and disabled state
+- ✅ Menu automatically closes when clicking outside or pressing Escape
+- ✅ Actions column header displays "Action" label
+- ✅ Improved menu positioning and styling
 
 ### Version 0.4.0
 - ✅ Added Export to CSV/Excel functionality

@@ -50,6 +50,7 @@ interface TableHeaderProps<T extends Record<string, any>> {
   getLeftOffset: (column: Column<T>, index: number) => number;
   getRightOffset: (column: Column<T>, index: number) => number;
   dismissCallout: () => void;
+  enableRowActions?: boolean;
 }
 
 /**
@@ -102,6 +103,7 @@ export function TableHeader<T extends Record<string, any>>({
   getLeftOffset,
   getRightOffset,
   dismissCallout,
+  enableRowActions = false,
 }: TableHeaderProps<T>) {
   return (
     <thead>
@@ -114,6 +116,13 @@ export function TableHeader<T extends Record<string, any>>({
             onChange={() => {}}
             onSelectAll={onSelectAll}
           />
+        )}
+        {enableRowActions && (
+          <th className="th-row-actions-column">
+            <div className="th-header-cell">
+              <span className="th-header-label"></span>
+            </div>
+          </th>
         )}
         {columns.map((col, colIndex) => {
           const colKeyStr = String(col.key);
