@@ -6,6 +6,8 @@ interface PaginationProps {
     currentPage: number;
     onPageChange: (page: number) => void;
     maxVisible?: number;
+    itemsPerPageOptions?: number[];
+    onItemsPerPageChange?: (itemsPerPage: number) => void;
 }
 export declare const Pagination: React.FC<PaginationProps>;
 export {};

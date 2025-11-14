@@ -10,6 +10,12 @@ interface HeaderCalloutProps {
     onPinRight?: () => void;
     onUnpin?: () => void;
     onToggleVisibility?: () => void;
+    onGroupBy?: () => void;
+    isGrouped?: boolean;
+    onColumnSettings?: boolean;
+    onTotalsChange?: (value: 'none' | 'count') => void;
+    totalsValue?: 'none' | 'count';
+    columnLabel?: string;
     onDismiss: () => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
@@ -20,7 +26,9 @@ interface HeaderCalloutProps {
     visible?: boolean;
     enableColumnVisibility?: boolean;
     enableColumnReorder?: boolean;
+    enableGroupBy?: boolean;
+    enableTotals?: boolean;
 }
-export declare function HeaderCallout({ anchorRef, onSortAsc, onSortDesc, onFilter, onClearFilter, onPinLeft, onPinRight, onUnpin, onToggleVisibility, onDismiss, onMouseEnter, onMouseLeave, sortable, filterable, hasFilter, pinned, visible, enableColumnVisibility, enableColumnReorder, }: HeaderCalloutProps): import("react/jsx-runtime").JSX.Element | null;
+export declare function HeaderCallout({ anchorRef, onSortAsc, onSortDesc, onFilter, onClearFilter, onPinLeft, onPinRight, onUnpin, onToggleVisibility, onGroupBy, isGrouped, onColumnSettings, onTotalsChange, totalsValue, columnLabel, onDismiss, onMouseEnter, onMouseLeave, sortable, filterable, hasFilter, pinned, visible, enableColumnVisibility, enableColumnReorder, enableGroupBy, enableTotals, }: HeaderCalloutProps): import("react/jsx-runtime").JSX.Element | null;
 export {};
 //# sourceMappingURL=HeaderCallout.d.ts.map

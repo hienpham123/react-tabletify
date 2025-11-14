@@ -248,6 +248,16 @@ export interface ReactTabletifyProps<T extends Record<string, any>> {
      */
     showPagination?: boolean;
     /**
+     * Options for items per page selector (e.g., [10, 25, 50, 100])
+     * When provided, a dropdown will be shown to change items per page
+     */
+    itemsPerPageOptions?: number[];
+    /**
+     * Callback when items per page changes
+     * @param itemsPerPage - The new items per page value
+     */
+    onItemsPerPageChange?: (itemsPerPage: number) => void;
+    /**
      * Table density/layout mode
      * @default 'normal'
      */
