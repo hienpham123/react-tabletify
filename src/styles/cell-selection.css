@@ -7,6 +7,13 @@
   outline: none !important;
 }
 
+/* Focused cell - cell with keyboard focus (for arrow key navigation) */
+.th-cell-focused {
+  outline: 2px solid var(--th-color-focus, #0078d4) !important;
+  outline-offset: -2px !important;
+  z-index: 1;
+}
+
 /* Copied cells - dashed border */
 .th-cell-copied.th-cell-selected {
   border: 1px dashed var(--th-color-focus, #0078d4) !important;

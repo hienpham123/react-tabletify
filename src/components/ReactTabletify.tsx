@@ -280,6 +280,7 @@ export function ReactTabletify<T extends Record<string, any>>({
     e.stopPropagation();
     const isShift = e.shiftKey;
     cellSelection.startSelection(rowIndex, colKey, isShift);
+    cellSelection.setFocusedCell(rowIndex, colKey);
     // Clear copied state when starting new selection
     cellSelection.setCopied(false);
   }, [enableCellSelection, cellSelection]);
@@ -296,9 +297,17 @@ export function ReactTabletify<T extends Record<string, any>>({
 
   // Get cell range info for visual feedback
   const getCellRangeInfo = React.useCallback((rowIndex: number, colKey: string) => {
-    if (!enableCellSelection || !cellSelection.selectedRange) {
-      return { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false };
+    if (!enableCellSelection) {
+      return { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false, isFocused: false };
     }
+    
+    // Check if cell is focused
+    const isFocused = cellSelection.focusedCell?.rowIndex === rowIndex && cellSelection.focusedCell?.colKey === colKey;
+    
+    if (!cellSelection.selectedRange) {
+      return { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false, isFocused };
+    }
+    
     const range = cellSelection.selectedRange;
     const startRow = Math.min(range.start.rowIndex, range.end.rowIndex);
     const endRow = Math.max(range.start.rowIndex, range.end.rowIndex);
@@ -329,6 +338,7 @@ export function ReactTabletify<T extends Record<string, any>>({
       isLeftCol,
       isRightCol,
       isCopied: cellSelection.isCopied,
+      isFocused,
     };
   }, [enableCellSelection, cellSelection, sortedColumns]);
 
@@ -490,6 +500,114 @@ export function ReactTabletify<T extends Record<string, any>>({
         cellSelection.clearSelection();
         cellSelection.setCopied(false);
       }
+      // Arrow Keys - Navigate between cells
+      else if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        // Only handle if not in editing mode
+        if (!editingCell) {
+          e.preventDefault();
+          const direction = e.key === 'ArrowUp' ? 'up' : 
+                           e.key === 'ArrowDown' ? 'down' : 
+                           e.key === 'ArrowLeft' ? 'left' : 'right';
+          const extendSelection = e.shiftKey;
+          const newPos = cellSelection.moveFocus(direction, extendSelection);
+          
+          // Scroll cell into view if needed
+          if (newPos && tableRef.current) {
+            const cellElement = tableRef.current.querySelector(
+              `[data-row-index="${newPos.rowIndex}"][data-col-key="${newPos.colKey}"]`
+            ) as HTMLElement;
+            if (cellElement) {
+              cellElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+            }
+          }
+        }
+      }
+      // Tab / Shift+Tab - Navigate horizontally
+      else if (e.key === 'Tab' && !editingCell) {
+        e.preventDefault();
+        const direction = e.shiftKey ? 'left' : 'right';
+        const newPos = cellSelection.moveFocus(direction, false);
+        
+        if (newPos && tableRef.current) {
+          const cellElement = tableRef.current.querySelector(
+            `[data-row-index="${newPos.rowIndex}"][data-col-key="${newPos.colKey}"]`
+          ) as HTMLElement;
+          if (cellElement) {
+            cellElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+          }
+        }
+      }
+      // Enter / Shift+Enter - Navigate vertically
+      else if (e.key === 'Enter' && !editingCell) {
+        e.preventDefault();
+        const direction = e.shiftKey ? 'up' : 'down';
+        const newPos = cellSelection.moveFocus(direction, false);
+        
+        if (newPos && tableRef.current) {
+          const cellElement = tableRef.current.querySelector(
+            `[data-row-index="${newPos.rowIndex}"][data-col-key="${newPos.colKey}"]`
+          ) as HTMLElement;
+          if (cellElement) {
+            cellElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+          }
+        }
+      }
+      // Home / End - Navigate to start/end of row
+      else if ((e.key === 'Home' || e.key === 'End') && !editingCell) {
+        e.preventDefault();
+        const focused = cellSelection.focusedCell || (cellSelection.selectedRange?.end);
+        if (focused) {
+          const currentColIndex = sortedColumns.findIndex(c => String(c.key) === focused.colKey);
+          if (currentColIndex >= 0) {
+            const targetColIndex = e.key === 'Home' ? 0 : sortedColumns.length - 1;
+            const targetColKey = String(sortedColumns[targetColIndex]?.key);
+            if (targetColKey) {
+              cellSelection.setFocusedCell(focused.rowIndex, targetColKey);
+              cellSelection.startSelection(focused.rowIndex, targetColKey, e.shiftKey);
+            }
+          }
+        }
+      }
+      // Ctrl+Arrow - Navigate to edge of data
+      else if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !editingCell) {
+        e.preventDefault();
+        const focused = cellSelection.focusedCell || (cellSelection.selectedRange?.end);
+        if (focused) {
+          const dataToUse = currentGroupBy ? table.filtered : data;
+          let targetRowIndex = focused.rowIndex;
+          let targetColIndex = sortedColumns.findIndex(c => String(c.key) === focused.colKey);
+          
+          if (e.key === 'ArrowUp') {
+            // Move to top of column
+            targetRowIndex = 0;
+          } else if (e.key === 'ArrowDown') {
+            // Move to bottom of column
+            targetRowIndex = dataToUse.length - 1;
+          } else if (e.key === 'ArrowLeft') {
+            // Move to leftmost column
+            targetColIndex = 0;
+          } else if (e.key === 'ArrowRight') {
+            // Move to rightmost column
+            targetColIndex = sortedColumns.length - 1;
+          }
+          
+          const targetColKey = String(sortedColumns[targetColIndex]?.key);
+          if (targetColKey) {
+            cellSelection.setFocusedCell(targetRowIndex, targetColKey);
+            cellSelection.startSelection(targetRowIndex, targetColKey, e.shiftKey);
+            
+            // Scroll into view
+            if (tableRef.current) {
+              const cellElement = tableRef.current.querySelector(
+                `[data-row-index="${targetRowIndex}"][data-col-key="${targetColKey}"]`
+              ) as HTMLElement;
+              if (cellElement) {
+                cellElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+              }
+            }
+          }
+        }
+      }
     };
 
     // Use document-level listener but check focus
@@ -497,7 +615,7 @@ export function ReactTabletify<T extends Record<string, any>>({
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [enableCellSelection, cellSelection, clipboard, table.paged, sortedColumns, onCellEdit, currentGroupBy, data]);
+  }, [enableCellSelection, cellSelection, clipboard, table.paged, sortedColumns, onCellEdit, currentGroupBy, data, editingCell, table.filtered]);
 
   /**
    * Open filter panel for a column

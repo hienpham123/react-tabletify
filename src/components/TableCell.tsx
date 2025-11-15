@@ -27,6 +27,9 @@ interface TableCellProps<T extends Record<string, any>> {
   isLeftColInRange?: boolean;
   isRightColInRange?: boolean;
   isCopied?: boolean;
+  isFocused?: boolean;
+  rowIndex?: number;
+  colKey?: string;
   onMouseDown?: (e: React.MouseEvent) => void;
   onMouseEnter?: (e: React.MouseEvent) => void;
   onMouseUp?: (e: React.MouseEvent) => void;
@@ -62,6 +65,9 @@ export function TableCell<T extends Record<string, any>>({
   isLeftColInRange = false,
   isRightColInRange = false,
   isCopied = false,
+  isFocused = false,
+  rowIndex,
+  colKey,
   onMouseDown,
   onMouseEnter,
   onMouseUp,
@@ -85,6 +91,7 @@ export function TableCell<T extends Record<string, any>>({
     pinPosition === 'left' && column.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : '',
     pinPosition === 'right' && column.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : '',
     enableCellSelection && isSelected ? 'th-cell-selected' : '',
+    enableCellSelection && isFocused ? 'th-cell-focused' : '',
     enableCellSelection && isRangeStart ? 'th-cell-range-start' : '',
     enableCellSelection && isRangeEnd ? 'th-cell-range-end' : '',
     enableCellSelection && isInRange ? 'th-cell-in-range' : '',
@@ -110,6 +117,8 @@ export function TableCell<T extends Record<string, any>>({
       data-in-range-column={enableCellSelection && isInRangeColumn ? 'true' : undefined}
       data-left-col-in-range={enableCellSelection && isLeftColInRange ? 'true' : undefined}
       data-right-col-in-range={enableCellSelection && isRightColInRange ? 'true' : undefined}
+      data-row-index={enableCellSelection && rowIndex !== undefined ? rowIndex : undefined}
+      data-col-key={enableCellSelection && colKey ? colKey : undefined}
     >
       {renderCell(item, column, index)}
     </td>

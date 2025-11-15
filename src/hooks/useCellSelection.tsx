@@ -15,11 +15,14 @@ interface UseCellSelectionReturn {
   selectedRange: CellRange | null;
   isSelecting: boolean;
   isCopied: boolean;
+  focusedCell: CellPosition | null;
   startSelection: (rowIndex: number, colKey: string, isShift: boolean) => void;
   updateSelection: (rowIndex: number, colKey: string) => void;
   endSelection: () => void;
   clearSelection: () => void;
   setCopied: (copied: boolean) => void;
+  setFocusedCell: (rowIndex: number, colKey: string) => void;
+  moveFocus: (direction: 'up' | 'down' | 'left' | 'right', extendSelection?: boolean) => CellPosition | null;
   isCellSelected: (rowIndex: number, colKey: string) => boolean;
   getSelectedCells: () => CellPosition[];
   getSelectedRange: () => CellRange | null;
@@ -39,6 +42,7 @@ export function useCellSelection<T extends Record<string, any>>(
   const [isSelecting, setIsSelecting] = React.useState(false);
   const [selectionStart, setSelectionStart] = React.useState<CellPosition | null>(null);
   const [isCopied, setIsCopied] = React.useState(false);
+  const [focusedCell, setFocusedCellState] = React.useState<CellPosition | null>(null);
 
   const getCellKey = React.useCallback((rowIndex: number, colKey: string): string => {
     return `${rowIndex}-${colKey}`;
@@ -142,7 +146,87 @@ export function useCellSelection<T extends Record<string, any>>(
     setIsSelecting(false);
     setSelectionStart(null);
     setIsCopied(false);
+    // Keep focusedCell when clearing selection (Excel behavior)
   }, []);
+
+  const setFocusedCell = React.useCallback((rowIndex: number, colKey: string) => {
+    if (!enabled) return;
+    const pos: CellPosition = { rowIndex, colKey };
+    setFocusedCellState(pos);
+    // When setting focus, also select that cell if no selection exists
+    if (selectedCells.size === 0) {
+      startSelection(rowIndex, colKey, false);
+    }
+  }, [enabled, selectedCells.size, startSelection]);
+
+  const moveFocus = React.useCallback((
+    direction: 'up' | 'down' | 'left' | 'right',
+    extendSelection: boolean = false
+  ): CellPosition | null => {
+    if (!enabled) return null;
+    
+    // Get current focused cell or use first selected cell
+    let currentPos: CellPosition | null = focusedCell;
+    if (!currentPos && selectedRange) {
+      currentPos = selectedRange.end;
+    }
+    if (!currentPos) {
+      // No focus, start at first cell
+      if (data.length > 0 && columns.length > 0) {
+        currentPos = { rowIndex: 0, colKey: String(columns[0].key) };
+      } else {
+        return null;
+      }
+    }
+
+    const currentRowIndex = currentPos.rowIndex;
+    const currentColIndex = columns.findIndex(c => String(c.key) === currentPos!.colKey);
+    
+    if (currentColIndex === -1) return null;
+
+    let newRowIndex = currentRowIndex;
+    let newColIndex = currentColIndex;
+    const maxRowIndex = data.length - 1;
+
+    // Calculate new position based on direction
+    switch (direction) {
+      case 'up':
+        newRowIndex = Math.max(0, currentRowIndex - 1);
+        break;
+      case 'down':
+        newRowIndex = Math.min(maxRowIndex, currentRowIndex + 1);
+        break;
+      case 'left':
+        newColIndex = Math.max(0, currentColIndex - 1);
+        break;
+      case 'right':
+        newColIndex = Math.min(columns.length - 1, currentColIndex + 1);
+        break;
+    }
+
+    const newColKey = String(columns[newColIndex]?.key);
+    if (!newColKey) return null;
+
+    const newPos: CellPosition = { rowIndex: newRowIndex, colKey: newColKey };
+
+    // Update focus
+    setFocusedCellState(newPos);
+
+    // Update selection
+    if (extendSelection) {
+      // Extend selection from original start point
+      const startPos = selectionStart || (selectedRange?.start || currentPos);
+      const newRange = normalizeRange(startPos, newPos);
+      setSelectedRange(newRange);
+      const cells = getCellsInRange(newRange);
+      setSelectedCells(new Set(cells.map(c => getCellKey(c.rowIndex, c.colKey))));
+    } else {
+      // Move selection to new cell
+      startSelection(newRowIndex, newColKey, false);
+    }
+
+    return newPos;
+  }, [enabled, focusedCell, selectedRange, selectionStart, data, columns, normalizeRange, getCellsInRange, getCellKey, startSelection]);
 
   const setCopied = React.useCallback((copied: boolean) => {
     setIsCopied(copied);
@@ -171,11 +255,14 @@ export function useCellSelection<T extends Record<string, any>>(
     selectedRange,
     isSelecting,
     isCopied,
+    focusedCell,
     startSelection,
     updateSelection,
     endSelection,
     clearSelection,
     setCopied,
+    setFocusedCell,
+    moveFocus,
     isCellSelected,
     getSelectedCells,
     getSelectedRange,

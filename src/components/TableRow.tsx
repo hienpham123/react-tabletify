@@ -49,7 +49,7 @@ interface TableRowProps<T extends Record<string, any>> {
   enableCellSelection?: boolean;
   cellSelectionIndex?: number; // Index in paged data for cell selection operations
   isCellSelected?: (rowIndex: number, colKey: string) => boolean;
-  getCellRangeInfo?: (rowIndex: number, colKey: string) => { isStart: boolean; isEnd: boolean; isInRange: boolean; isTopRow?: boolean; isBottomRow?: boolean; isLeftCol?: boolean; isRightCol?: boolean; isCopied?: boolean };
+  getCellRangeInfo?: (rowIndex: number, colKey: string) => { isStart: boolean; isEnd: boolean; isInRange: boolean; isTopRow?: boolean; isBottomRow?: boolean; isLeftCol?: boolean; isRightCol?: boolean; isCopied?: boolean; isFocused?: boolean };
   isRowAboveRange?: boolean;
   isColumnInRange?: (colKey: string) => boolean;
   getColumnRangeInfo?: (colKey: string) => { isInRange: boolean; isLeftCol: boolean; isRightCol: boolean };
@@ -173,8 +173,9 @@ export function TableRow<T extends Record<string, any>>({
           // Use cellSelectionIndex (index in paged data) for cell selection operations, fallback to index if not provided
           const cellIndex = cellSelectionIndex !== undefined ? cellSelectionIndex : index;
           const cellIsSelected = enableCellSelection && isCellSelected ? isCellSelected(cellIndex, colKeyStr) : false;
-          const rangeInfo = enableCellSelection && getCellRangeInfo ? getCellRangeInfo(cellIndex, colKeyStr) : { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false };
+          const rangeInfo = enableCellSelection && getCellRangeInfo ? getCellRangeInfo(cellIndex, colKeyStr) : { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false, isFocused: false };
           const isCopied = rangeInfo.isCopied ?? false;
+          const isFocused = rangeInfo.isFocused ?? false;
           // For row above range, check if this column is in range and get column range info
           const columnRangeInfo = enableCellSelection && isRowAboveRange && getColumnRangeInfo ? getColumnRangeInfo(colKeyStr) : { isInRange: false, isLeftCol: false, isRightCol: false };
           const isInRangeColumn = columnRangeInfo.isInRange;
@@ -197,6 +198,7 @@ export function TableRow<T extends Record<string, any>>({
               getCellText={getCellText}
               enableCellSelection={enableCellSelection}
               isSelected={cellIsSelected}
+              isFocused={isFocused}
               isRangeStart={rangeInfo.isStart}
               isRangeEnd={rangeInfo.isEnd}
               isInRange={rangeInfo.isInRange}
@@ -208,6 +210,8 @@ export function TableRow<T extends Record<string, any>>({
               isLeftColInRange={columnRangeInfo.isLeftCol}
               isRightColInRange={columnRangeInfo.isRightCol}
               isCopied={isCopied}
+              rowIndex={cellIndex}
+              colKey={colKeyStr}
               onMouseDown={enableCellSelection && onCellMouseDown ? (e) => onCellMouseDown(cellIndex, colKeyStr, e) : undefined}
               onMouseEnter={enableCellSelection && onCellMouseEnter ? (e) => onCellMouseEnter(cellIndex, colKeyStr, e) : undefined}
               onMouseUp={enableCellSelection && onCellMouseUp ? (e) => onCellMouseUp(cellIndex, colKeyStr, e) : undefined}
