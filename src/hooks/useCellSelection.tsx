@@ -20,8 +20,10 @@ interface UseCellSelectionReturn {
   updateSelection: (rowIndex: number, colKey: string) => void;
   endSelection: () => void;
   clearSelection: () => void;
+  clearFocus: () => void;
   setCopied: (copied: boolean) => void;
   setFocusedCell: (rowIndex: number, colKey: string) => void;
+  setSelectionRange: (start: CellPosition, end: CellPosition) => void;
   moveFocus: (direction: 'up' | 'down' | 'left' | 'right', extendSelection?: boolean) => CellPosition | null;
   isCellSelected: (rowIndex: number, colKey: string) => boolean;
   getSelectedCells: () => CellPosition[];
@@ -149,6 +151,10 @@ export function useCellSelection<T extends Record<string, any>>(
     // Keep focusedCell when clearing selection (Excel behavior)
   }, []);
 
+  const clearFocus = React.useCallback(() => {
+    setFocusedCellState(null);
+  }, []);
+
   const setFocusedCell = React.useCallback((rowIndex: number, colKey: string) => {
     if (!enabled) return;
     const pos: CellPosition = { rowIndex, colKey };
@@ -232,6 +238,20 @@ export function useCellSelection<T extends Record<string, any>>(
     setIsCopied(copied);
   }, []);
 
+  const setSelectionRange = React.useCallback((start: CellPosition, end: CellPosition) => {
+    if (!enabled) return;
+    
+    const range = normalizeRange(start, end);
+    setSelectedRange(range);
+    
+    const cells = getCellsInRange(range);
+    setSelectedCells(new Set(cells.map(c => getCellKey(c.rowIndex, c.colKey))));
+    
+    // Clear selecting state since we're setting range directly
+    setIsSelecting(false);
+    setSelectionStart(null);
+  }, [enabled, normalizeRange, getCellsInRange, getCellKey]);
+
   const isCellSelected = React.useCallback((rowIndex: number, colKey: string): boolean => {
     return selectedCells.has(getCellKey(rowIndex, colKey));
   }, [selectedCells, getCellKey]);
@@ -260,8 +280,10 @@ export function useCellSelection<T extends Record<string, any>>(
     updateSelection,
     endSelection,
     clearSelection,
+    clearFocus,
     setCopied,
     setFocusedCell,
+    setSelectionRange,
     moveFocus,
     isCellSelected,
     getSelectedCells,

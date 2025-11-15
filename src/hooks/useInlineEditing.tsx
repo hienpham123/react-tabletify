@@ -27,6 +27,7 @@ export function useInlineEditing<T extends Record<string, any>>(
    * Save edited cell value
    */
   const handleCellEditSave = React.useCallback((item: T, columnKey: keyof T, rowIndex: number) => {
+    // Always call onCellEdit if provided (it might be handleCellEdit which manages internal state)
     if (onCellEdit) {
       onCellEdit(item, columnKey, editValue, rowIndex);
     }
@@ -43,12 +44,19 @@ export function useInlineEditing<T extends Record<string, any>>(
   }, []);
 
   /**
-   * Focus and select text in input when editing starts
+   * Focus and position cursor at end of text when editing starts
    */
   React.useEffect(() => {
     if (editingCell && editInputRef.current) {
-      editInputRef.current.focus();
-      editInputRef.current.select();
+      // Use setTimeout to ensure the input is rendered before focusing
+      setTimeout(() => {
+        if (editInputRef.current) {
+          editInputRef.current.focus();
+          // Position cursor at the end of the value instead of selecting all
+          const length = editInputRef.current.value.length;
+          editInputRef.current.setSelectionRange(length, length);
+        }
+      }, 0);
     }
   }, [editingCell]);
 

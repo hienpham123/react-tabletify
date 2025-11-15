@@ -141,16 +141,6 @@ export default function App() {
         loading={loading}
         columns={[
           {
-            key: "id",
-            label: "ID",
-            width: "80px",
-            align: "center",
-            sortable: true,
-            filterable: false,
-            resizable: true,
-            editable: false
-          },
-          {
             key: "name",
             label: "Name",
             width: "200px",
@@ -158,7 +148,7 @@ export default function App() {
             sortable: true,
             filterable: true,
             resizable: true,
-            editable: true
+            editable: true,
           },
           {
             key: "age",
@@ -168,7 +158,8 @@ export default function App() {
             sortable: true,
             filterable: true,
             resizable: true,
-            editable: true
+            editable: true,
+            showCallout: false,
           },
           {
             key: "role",
@@ -276,23 +267,10 @@ export default function App() {
           setData(newData);
         }}
         theme={getCurrentTheme()}
-        showTooltip={false}
+        // showTooltip={false}
         onSelectionChanged={(selected) => console.log('Selected items:', selected)}
         onItemInvoked={(item) => console.log('Item invoked:', item)}
         onColumnHeaderClick={(column) => console.log('Column header clicked:', column.label)}
-        onCellEdit={(item, columnKey, newValue, index) => {
-          console.log('Cell edited:', { item, columnKey, newValue, index });
-          // Update the data
-          setData(prev => {
-            const newData = [...prev];
-            // Find the item in the data array
-            const itemIndex = newData.findIndex(d => d.id === item.id || d === item);
-            if (itemIndex >= 0) {
-              newData[itemIndex] = { ...newData[itemIndex], [columnKey]: newValue };
-            }
-            return newData;
-          });
-        }}
         onColumnPin={(columnKey, pinPosition) => {
           console.log('Column pinned:', { columnKey, pinPosition });
         }}

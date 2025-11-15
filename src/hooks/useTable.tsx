@@ -155,6 +155,7 @@ export function useTable<T extends Record<string, any>>(
     return {
         // data
         filtered,
+        sorted,
         paged,
 
         // pagination

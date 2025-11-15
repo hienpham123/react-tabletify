@@ -118,22 +118,46 @@ export function useClipboard<T extends Record<string, any>>(): UseClipboardRetur
     } else {
       // Paste data starting from first target cell, repeating if needed
       const targetStart = targetCells[0];
+      if (!targetStart) return;
+      
+      // Find the starting column index
+      const startColIndex = columns.findIndex(c => String(c.key) === targetStart.colKey);
+      if (startColIndex === -1) {
+        return;
+      }
+
+      // Paste each row from clipboard
       clipboardData.forEach((row, rowOffset) => {
         const targetRowIndex = targetStart.rowIndex + rowOffset;
-        if (targetRowIndex >= data.length) return;
+        if (targetRowIndex < 0 || targetRowIndex >= data.length) {
+          return;
+        }
 
         const targetItem = data[targetRowIndex];
-        if (!targetItem) return;
+        if (!targetItem) {
+          return;
+        }
 
-        const startColIndex = columns.findIndex(c => String(c.key) === targetStart.colKey);
-        if (startColIndex === -1) return;
-
+        // Paste each value in the row to consecutive columns starting from startColIndex
         row.forEach((value, colOffset) => {
           const targetColIndex = startColIndex + colOffset;
-          if (targetColIndex >= columns.length) return;
+          
+          // Skip if column index is out of bounds
+          if (targetColIndex < 0 || targetColIndex >= columns.length) {
+            return;
+          }
 
           const targetCol = columns[targetColIndex];
-          onCellEdit(targetItem, targetCol.key, value, targetRowIndex);
+          if (!targetCol) {
+            return;
+          }
+          
+          // Paste the value
+          try {
+            onCellEdit(targetItem, targetCol.key, value, targetRowIndex);
+          } catch (error) {
+            // Silently handle errors
+          }
         });
       });
     }
@@ -176,6 +200,7 @@ export function useClipboard<T extends Record<string, any>>(): UseClipboardRetur
       const rows = clipboardText.split(/\r?\n/).filter(row => row.trim().length > 0);
       if (rows.length === 0) return false;
 
+
       const parsedData: string[][] = rows.map(row => {
         // Split by tab, but handle quoted values
         const cells: string[] = [];
@@ -208,6 +233,7 @@ export function useClipboard<T extends Record<string, any>>(): UseClipboardRetur
         return cells;
       });
 
+
       if (parsedData.length === 0 || parsedData[0].length === 0) return false;
 
       // Paste data starting from first target cell
@@ -226,30 +252,50 @@ export function useClipboard<T extends Record<string, any>>(): UseClipboardRetur
       } else {
         // Paste data starting from first target cell, repeating if needed
         let pasted = false;
+        const targetStart = targetCells[0];
+        if (!targetStart) return false;
+        
+        // Find the starting column index
+        const startColIndex = columns.findIndex(c => String(c.key) === targetStart.colKey);
+        if (startColIndex === -1) {
+          return false;
+        }
+
+        // Paste each row from clipboard
         parsedData.forEach((row, rowOffset) => {
           const targetRowIndex = targetStart.rowIndex + rowOffset;
-          if (targetRowIndex >= data.length) return;
+          if (targetRowIndex < 0 || targetRowIndex >= data.length) return;
 
           const targetItem = data[targetRowIndex];
           if (!targetItem) return;
 
-          const startColIndex = columns.findIndex(c => String(c.key) === targetStart.colKey);
-          if (startColIndex === -1) return;
-
+          // Paste each value in the row to consecutive columns starting from startColIndex
           row.forEach((value, colOffset) => {
             const targetColIndex = startColIndex + colOffset;
-            if (targetColIndex >= columns.length) return;
+            
+            // Skip if column index is out of bounds
+            if (targetColIndex < 0 || targetColIndex >= columns.length) {
+              return;
+            }
 
             const targetCol = columns[targetColIndex];
-            onCellEdit(targetItem, targetCol.key, value, targetRowIndex);
-            pasted = true;
+            if (!targetCol) {
+              return;
+            }
+            
+            // Paste the value
+            try {
+              onCellEdit(targetItem, targetCol.key, value, targetRowIndex);
+              pasted = true;
+            } catch (error) {
+              // Silently handle errors
+            }
           });
         });
         return pasted;
       }
     } catch (error) {
       // Clipboard access might be denied or not available
-      console.warn('Failed to read from clipboard:', error);
       return false;
     }
   }, []);

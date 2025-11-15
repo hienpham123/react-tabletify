@@ -40,6 +40,12 @@
   table-layout: fixed;
 }
 
+/* When cell selection is enabled, use separate borders to avoid outline covering borders */
+.th-table.enable-cell-selection table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
 .th-table th,
 .th-table td {
   padding: var(--th-spacing-cell-padding, 10px 12px);
@@ -48,12 +54,39 @@
   font-size: var(--th-typography-font-size, 14px);
   font-family: var(--th-typography-font-family, inherit);
   line-height: var(--th-typography-line-height, 20px);
+  color: var(--th-color-row-text, #323130);
+  vertical-align: top;
+}
+
+/* When cell selection is enabled, add right border to all cells */
+.th-table.enable-cell-selection th,
+.th-table.enable-cell-selection td {
+  border-right: 1px solid var(--th-color-row-border, #f1f1f1);
+}
+
+/* Remove right border from last column when cell selection is enabled */
+.th-table.enable-cell-selection th:last-child,
+.th-table.enable-cell-selection td:last-child {
+  border-right: none;
+}
+
+/* Table cells - conditional text wrapping based on showTooltip */
+/* When showTooltip=true: show ellipsis and tooltip */
+.th-table td.th-cell-with-tooltip {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--th-color-row-text, #323130);
 }
 
+/* When showTooltip=false: allow text wrapping */
+.th-table td.th-cell-no-tooltip {
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-wrap: break-word;
+  word-break: break-word;
+}
+
+/* Table headers - keep single line, no wrapping */
 .th-table th {
   background: var(--th-color-header-background, #faf9f8);
   font-weight: var(--th-typography-font-weight-bold, 600);
@@ -61,6 +94,15 @@
   position: relative;
   padding: 0;
   color: var(--th-color-header-text, #323130);
+  border-right: 1px solid var(--th-color-row-border, #e1e1e1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Remove border from last column */
+.th-table thead tr th:last-child {
+  border-right: none;
 }
 
 .th-resize-handle {
@@ -443,9 +485,18 @@
   background-color: var(--th-color-hover, rgba(16, 124, 16, 0.05)) !important;
 }
 
+/* Cell edit container */
+.th-cell-edit-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  position: relative;
+}
+
 .th-cell-edit-input {
   width: 100%;
-  height: 100%;
+  height: 28px;
   border: 1px solid var(--th-color-focus, #107c10);
   border-radius: var(--th-border-radius-button, 2px);
   padding: 4px 8px;
@@ -459,7 +510,77 @@
 
 .th-cell-edit-input:focus {
   border-color: var(--th-color-focus, #107c10);
-  box-shadow: 0 0 0 1px var(--th-color-focus, rgba(16, 124, 16, 0.2));
+  box-shadow: none;
+}
+
+/* Excel-like inline editing: no border, fit cell height seamlessly */
+.th-cell-edit-input-excel {
+  width: 100% !important;
+  min-height: 100% !important;
+  height: auto !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: inherit !important;
+  margin: 0 !important;
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
+  line-height: inherit !important;
+  vertical-align: top;
+  white-space: normal !important;
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+  resize: none;
+}
+
+.th-cell-edit-input-excel:focus {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  background: transparent !important;
+}
+
+/* Edit buttons */
+.th-cell-edit-buttons {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.th-cell-edit-button {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  outline: none;
+  transition: background-color 0.15s ease;
+}
+
+.th-cell-edit-save {
+  background-color: var(--th-color-primary, #107c10);
+  color: white;
+}
+
+.th-cell-edit-save:hover {
+  background-color: var(--th-color-primary-hover, #0d6b0d);
+}
+
+.th-cell-edit-cancel {
+  background-color: #d1d1d1;
+  color: #323130;
+}
+
+.th-cell-edit-cancel:hover {
+  background-color: #b8b8b8;
 }
 
 /* --- Loading Skeleton --- */

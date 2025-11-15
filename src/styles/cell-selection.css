@@ -10,8 +10,37 @@
 /* Focused cell - cell with keyboard focus (for arrow key navigation) */
 .th-cell-focused {
   outline: 2px solid var(--th-color-focus, #0078d4) !important;
-  outline-offset: -2px !important;
+  outline-offset: -1px !important;
   z-index: 1;
+  /* Ensure border-top is not too thick - use the same color as row border */
+  border-top: 1px solid var(--th-color-row-border, #f1f1f1) !important;
+}
+
+/* Remove outline when cell is being edited (input has its own border) */
+.th-cell-focused .th-cell-edit-input {
+  outline: none !important;
+}
+
+/* Remove cell outline when editing */
+td.th-cell-focused:has(.th-cell-edit-input),
+th.th-cell-focused:has(.th-cell-edit-input) {
+  outline: none !important;
+}
+
+/* Excel-like editing: ensure cell maintains height and input fits seamlessly */
+td:has(.th-cell-edit-input-excel),
+th:has(.th-cell-edit-input-excel) {
+  padding: inherit !important;
+  vertical-align: top;
+  height: auto;
+}
+
+td:has(.th-cell-edit-input-excel) .th-cell-edit-input-excel {
+  display: block;
+  width: 100%;
+  min-height: 100%;
+  height: auto;
+  line-height: inherit;
 }
 
 /* Copied cells - dashed border */
@@ -19,18 +48,30 @@
   border: 1px dashed var(--th-color-focus, #0078d4) !important;
 }
 
-.th-cell-copied.th-cell-in-range {
-  /* Copied range cells will have dashed borders on edges */
-}
-
 /* Range selection - cells inside range */
 /* First, remove all default borders from cells in range */
+/* Use solid color instead of rgba with opacity to avoid seeing columns below when scrolling with pinned columns */
 .th-table.enable-cell-selection td.th-cell-in-range {
   background-color: var(--th-cell-range-background, rgba(0, 120, 212, 0.05)) !important;
   border-top: none !important;
   border-bottom: none !important;
   border-left: none !important;
   border-right: none !important;
+}
+
+/* Use solid background for pinned columns in range to prevent seeing columns below */
+.th-table.enable-cell-selection td.th-cell-in-range.th-pinned-left,
+.th-table.enable-cell-selection td.th-cell-in-range.th-pinned-right,
+.th-table.enable-cell-selection td.th-cell-in-range.th-cell-pinned {
+  /* Convert rgba to solid color - use a light blue/grey that matches the opacity effect */
+  background-color: #f0f8ff !important;
+}
+
+/* Dark theme adjustment for pinned columns */
+.th-theme-dark .th-table.enable-cell-selection td.th-cell-in-range.th-pinned-left,
+.th-theme-dark .th-table.enable-cell-selection td.th-cell-in-range.th-pinned-right,
+.th-theme-dark .th-table.enable-cell-selection td.th-cell-in-range.th-cell-pinned {
+  background-color: #1a2a3a !important;
 }
 
 /* Border for cells on the edge of range - only outer edges get borders */

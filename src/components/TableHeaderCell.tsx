@@ -163,11 +163,13 @@ export function TableHeaderCell<T extends Record<string, any>>({
         >
           <span className="th-header-label">
             {column.label}
-            <span className="th-header-chevron-icon" role="presentation" aria-hidden="true">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" fill="currentColor">
-                <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z" />
-              </svg>
-            </span>
+            {column.showCallout !== false && (
+              <span className="th-header-chevron-icon" role="presentation" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" fill="currentColor">
+                  <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z" />
+                </svg>
+              </span>
+            )}
           </span>
           <div className="th-header-icons">
             {pinPosition && (
@@ -225,7 +227,7 @@ export function TableHeaderCell<T extends Record<string, any>>({
           }}
         />
       )}
-      {calloutKey === colKeyStr && !resizingColumn && (
+      {calloutKey === colKeyStr && !resizingColumn && column.showCallout !== false && (
         <HeaderCallout
           anchorRef={anchorRefForCallout}
           onSortAsc={onSortAsc}

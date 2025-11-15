@@ -35,6 +35,17 @@ export function useKeyboardNavigation<T extends Record<string, any>>(
       
       if (currentItems.length === 0) return;
 
+      // Don't handle keyboard events if user is editing a cell (typing in input)
+      // Check if active element is an input, textarea, or contenteditable
+      const activeElement = document.activeElement;
+      if (activeElement && (
+          activeElement.tagName === 'INPUT' || 
+          activeElement.tagName === 'TEXTAREA' || 
+          activeElement.getAttribute('contenteditable') === 'true')) {
+        // Allow normal typing (including Space) in input fields
+        return;
+      }
+
       let newFocusedIndex = focusedRowIndex ?? 0;
 
       switch (e.key) {

@@ -118,6 +118,14 @@ export function ReactTabletify<T extends Record<string, any>>({
   // Manage itemsPerPage state internally if onItemsPerPageChange is provided
   const [internalItemsPerPage, setInternalItemsPerPage] = React.useState(itemsPerPage);
 
+  // Internal data state for cell editing when enableCellSelection is true and no onCellEdit is provided
+  const [internalData, setInternalData] = React.useState<T[]>(data);
+
+  // Update internal data when data prop changes
+  React.useEffect(() => {
+    setInternalData(data);
+  }, [data]);
+
   // Update internalItemsPerPage when itemsPerPage prop changes
   React.useEffect(() => {
     setInternalItemsPerPage(itemsPerPage);
@@ -138,8 +146,12 @@ export function ReactTabletify<T extends Record<string, any>>({
   // When showPagination is false, show all items (set itemsPerPage to a very large number)
   const effectiveItemsPerPage = showPagination ? internalItemsPerPage : Number.MAX_SAFE_INTEGER;
 
-  // Temporary: use data for initial table setup, will be updated after useRowReorder
-  const table = useTable<T>(data, effectiveItemsPerPage);
+  // Use internal data if no onCellEdit is provided (for automatic data management)
+  // Otherwise use the data prop (parent manages data)
+  const dataToUse = !onCellEdit ? internalData : data;
+
+  // Temporary: use dataToUse for initial table setup, will be updated after useRowReorder
+  const table = useTable<T>(dataToUse, effectiveItemsPerPage);
 
   // Refs
   const anchorRefs = React.useRef<Record<string, HTMLDivElement>>({});
@@ -170,6 +182,38 @@ export function ReactTabletify<T extends Record<string, any>>({
   // Grouping state
   const [expandedGroups, setExpandedGroups] = React.useState<Set<string>>(new Set());
 
+  // Create row number column when enableCellSelection is true
+  const rowNumberColumn: Column<T> = React.useMemo(() => ({
+    key: '__rowNumber__' as keyof T,
+    label: 'STT',
+    width: '80px',
+    align: 'center',
+    sortable: false,
+    filterable: false,
+    resizable: false,
+    editable: false,
+    pinned: 'left',
+    showCallout: false,
+    onRenderCell: (item: T, columnKey: keyof T, index: number) => {
+      // Calculate row number based on current page and index
+      const pageStartIndex = (table.currentPage - 1) * table.itemsPerPage;
+      const rowNumber = pageStartIndex + index + 1;
+      return rowNumber;
+    }
+  }), [table.currentPage, table.itemsPerPage]);
+
+  // Add row number column to columns when enableCellSelection is true
+  const columnsWithRowNumber = React.useMemo(() => {
+    if (enableCellSelection) {
+      // Check if row number column already exists
+      const hasRowNumber = columns.some(col => String(col.key) === '__rowNumber__');
+      if (!hasRowNumber) {
+        return [rowNumberColumn, ...columns];
+      }
+    }
+    return columns;
+  }, [enableCellSelection, columns, rowNumberColumn]);
+
   // Column management hook (visibility, reordering, pinning)
   const {
     internalPinnedColumns,
@@ -184,7 +228,7 @@ export function ReactTabletify<T extends Record<string, any>>({
     handleColumnDragOver,
     handleColumnDrop,
   } = useColumnManagement(
-    columns,
+    columnsWithRowNumber,
     pinnedColumns,
     enableColumnVisibility,
     onColumnVisibilityChange,
@@ -206,7 +250,7 @@ export function ReactTabletify<T extends Record<string, any>>({
     isItemSelected,
     setSelectedItems,
   } = useRowSelection(
-    data,
+    dataToUse,
     selectionMode,
     onSelectionChanged,
     onActiveItemChanged,
@@ -234,16 +278,45 @@ export function ReactTabletify<T extends Record<string, any>>({
   // Header callout hook (after resize to get resizingColumn state)
   const callout = useHeaderCallout(resizingColumn);
 
+  // Cell edit handler - updates internal state or calls onCellEdit callback
+  const handleCellEdit = React.useCallback((item: T, columnKey: keyof T, newValue: any, index: number) => {
+    if (onCellEdit) {
+      // Call parent's onCellEdit callback if provided
+      onCellEdit(item, columnKey, newValue, index);
+    } else {
+      // If no onCellEdit callback, automatically update internal state
+      // Note: index might be from pagedData, so we need to find the actual item in dataToUse
+      setInternalData(prev => {
+        const newData = [...prev];
+        // Try to find the item by reference first (faster)
+        const itemIndex = newData.findIndex(d => d === item);
+        const actualIndex = itemIndex >= 0 ? itemIndex : index;
+        
+        if (actualIndex >= 0 && actualIndex < newData.length) {
+          newData[actualIndex] = { ...newData[actualIndex], [columnKey]: newValue };
+        }
+        return newData;
+      });
+    }
+  }, [onCellEdit]);
+
   // Inline editing hook
   const {
     editingCell,
     editValue,
     editInputRef,
     setEditValue,
-    handleCellEditStart,
+    handleCellEditStart: handleCellEditStartOriginal,
     handleCellEditSave,
     handleCellEditCancel,
-  } = useInlineEditing(onCellEdit);
+  } = useInlineEditing(handleCellEdit);
+
+  // Wrap handleCellEditStart to skip row number column
+  const handleCellEditStart = React.useCallback((item: T, column: { key: keyof T; editable?: boolean }, rowIndex: number) => {
+    // Skip row number column
+    if (String(column.key) === '__rowNumber__') return;
+    handleCellEditStartOriginal(item, column, rowIndex);
+  }, [handleCellEditStartOriginal]);
 
   // Row drag & drop hook
   const {
@@ -258,7 +331,7 @@ export function ReactTabletify<T extends Record<string, any>>({
     handleRowDragEnd,
   } = useRowReorder(
     enableRowReorder,
-    data,
+    dataToUse,
     table.filtered,
     currentGroupBy,
     onRowReorder
@@ -271,12 +344,25 @@ export function ReactTabletify<T extends Record<string, any>>({
     enableCellSelection
   );
 
+  // Clear cell selection and focus when page changes (cells are no longer visible)
+  // Use a ref to track previous page to avoid clearing on initial mount
+  const prevPageRef = React.useRef(table.currentPage);
+  React.useEffect(() => {
+    if (enableCellSelection && prevPageRef.current !== table.currentPage) {
+      cellSelection.clearSelection();
+      cellSelection.clearFocus();
+      prevPageRef.current = table.currentPage;
+    }
+  }, [table.currentPage, enableCellSelection, cellSelection.clearSelection, cellSelection.clearFocus]);
+
   // Clipboard hook (copy, cut, paste)
   const clipboard = useClipboard<T>();
 
-  // Cell selection handlers
+  // Cell selection handlers - skip row number column
   const handleCellMouseDown = React.useCallback((rowIndex: number, colKey: string, e: React.MouseEvent) => {
     if (!enableCellSelection) return;
+    // Skip row number column
+    if (colKey === '__rowNumber__') return;
     e.stopPropagation();
     const isShift = e.shiftKey;
     cellSelection.startSelection(rowIndex, colKey, isShift);
@@ -287,11 +373,15 @@ export function ReactTabletify<T extends Record<string, any>>({
 
   const handleCellMouseEnter = React.useCallback((rowIndex: number, colKey: string, e: React.MouseEvent) => {
     if (!enableCellSelection || !cellSelection.isSelecting) return;
+    // Skip row number column
+    if (colKey === '__rowNumber__') return;
     cellSelection.updateSelection(rowIndex, colKey);
   }, [enableCellSelection, cellSelection]);
 
   const handleCellMouseUp = React.useCallback((rowIndex: number, colKey: string, e: React.MouseEvent) => {
     if (!enableCellSelection) return;
+    // Skip row number column
+    if (colKey === '__rowNumber__') return;
     cellSelection.endSelection();
   }, [enableCellSelection, cellSelection]);
 
@@ -394,7 +484,7 @@ export function ReactTabletify<T extends Record<string, any>>({
     return { isInRange, isLeftCol, isRightCol };
   }, [enableCellSelection, cellSelection, sortedColumns]);
 
-  // Clear selection when focus leaves table
+  // Clear selection and focus when focus leaves table
   React.useEffect(() => {
     if (!enableCellSelection) return;
 
@@ -403,8 +493,9 @@ export function ReactTabletify<T extends Record<string, any>>({
       
       const target = e.target as Node | null;
       if (target && !tableRef.current.contains(target)) {
-        // Clear selection when clicking outside table
+        // Clear selection and focus when clicking outside table
         cellSelection.clearSelection();
+        cellSelection.clearFocus();
       }
     };
 
@@ -413,6 +504,30 @@ export function ReactTabletify<T extends Record<string, any>>({
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [enableCellSelection, cellSelection]);
+
+  // Handle focus out events separately to ensure tableRef is available
+  React.useEffect(() => {
+    if (!enableCellSelection || !tableRef.current) return;
+
+    const handleFocusOut = (e: FocusEvent) => {
+      if (!tableRef.current) return;
+      
+      // Check if the new focus target is outside the table
+      const relatedTarget = e.relatedTarget as Node | null;
+      if (relatedTarget && !tableRef.current.contains(relatedTarget)) {
+        // Clear selection and focus when focus leaves table
+        cellSelection.clearSelection();
+        cellSelection.clearFocus();
+      }
+    };
+
+    const tableElement = tableRef.current;
+    tableElement.addEventListener('focusout', handleFocusOut);
+
+    return () => {
+      tableElement.removeEventListener('focusout', handleFocusOut);
     };
   }, [enableCellSelection, cellSelection]);
 
@@ -433,12 +548,51 @@ export function ReactTabletify<T extends Record<string, any>>({
         return;
       }
 
+      // Don't handle keyboard shortcuts if user is editing a cell (typing in input)
+      // Check if active element is an input, textarea, or contenteditable
+      if (activeElement.tagName === 'INPUT' || 
+          activeElement.tagName === 'TEXTAREA' || 
+          activeElement.getAttribute('contenteditable') === 'true') {
+        // Allow normal typing (including Space) in input fields
+        // Only prevent shortcuts that might conflict
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'v')) {
+          // Allow copy/cut/paste in input fields
+          return;
+        }
+        // For all other keys when editing, don't interfere
+        return;
+      }
+
       // Ctrl+C or Cmd+C - Copy
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
         const selectedCells = cellSelection.getSelectedCells();
-        if (selectedCells.length > 0) {
+        // Filter out row number column
+        const cellsWithoutRowNumber = selectedCells.filter(cell => cell.colKey !== '__rowNumber__');
+        if (cellsWithoutRowNumber.length > 0) {
           e.preventDefault();
-          clipboard.copyCells(selectedCells, table.paged, sortedColumns.map(col => ({ key: col.key, label: col.label })));
+          // Convert cell indices from paged to sorted data
+          const dataForCopy = currentGroupBy ? table.filtered : table.sorted;
+          const pageStartIndex = (table.currentPage - 1) * table.itemsPerPage;
+          const cellsInSortedData = cellsWithoutRowNumber.map(cell => {
+            // Convert rowIndex from paged to sorted index
+            const sortedRowIndex = pageStartIndex + cell.rowIndex;
+            // Find the actual item in sorted data to ensure correct index
+            const pagedItem = table.paged[cell.rowIndex];
+            if (pagedItem) {
+              const itemIndexInSorted = dataForCopy.findIndex((item: T) => {
+                if (item === pagedItem) return true;
+                return getItemKey(item, -1) === getItemKey(pagedItem, -1);
+              });
+              if (itemIndexInSorted >= 0) {
+                return { rowIndex: itemIndexInSorted, colKey: cell.colKey };
+              }
+            }
+            // Fallback to calculated index
+            return { rowIndex: sortedRowIndex, colKey: cell.colKey };
+          });
+          // Filter out row number column from columns passed to clipboard
+          const columnsForClipboard = sortedColumns.filter(col => String(col.key) !== '__rowNumber__').map(col => ({ key: col.key, label: col.label }));
+          clipboard.copyCells(cellsInSortedData, dataForCopy, columnsForClipboard);
           // Mark selection as copied to show dashed border
           cellSelection.setCopied(true);
         }
@@ -446,51 +600,227 @@ export function ReactTabletify<T extends Record<string, any>>({
       // Ctrl+X or Cmd+X - Cut
       else if ((e.ctrlKey || e.metaKey) && e.key === 'x') {
         const selectedCells = cellSelection.getSelectedCells();
-        if (selectedCells.length > 0) {
+        // Filter out row number column
+        const cellsWithoutRowNumber = selectedCells.filter(cell => cell.colKey !== '__rowNumber__');
+        if (cellsWithoutRowNumber.length > 0) {
           e.preventDefault();
-          clipboard.cutCells(selectedCells, table.paged, sortedColumns.map(col => ({ key: col.key, label: col.label })));
+          // Convert cell indices from paged to sorted data
+          const dataForCut = currentGroupBy ? table.filtered : table.sorted;
+          const pageStartIndex = (table.currentPage - 1) * table.itemsPerPage;
+          const cellsInSortedData = cellsWithoutRowNumber.map(cell => {
+            // Convert rowIndex from paged to sorted index
+            const sortedRowIndex = pageStartIndex + cell.rowIndex;
+            // Find the actual item in sorted data to ensure correct index
+            const pagedItem = table.paged[cell.rowIndex];
+            if (pagedItem) {
+              const itemIndexInSorted = dataForCut.findIndex((item: T) => {
+                if (item === pagedItem) return true;
+                return getItemKey(item, -1) === getItemKey(pagedItem, -1);
+              });
+              if (itemIndexInSorted >= 0) {
+                return { rowIndex: itemIndexInSorted, colKey: cell.colKey };
+              }
+            }
+            // Fallback to calculated index
+            return { rowIndex: sortedRowIndex, colKey: cell.colKey };
+          });
+          // Filter out row number column from columns passed to clipboard
+          const columnsForClipboard = sortedColumns.filter(col => String(col.key) !== '__rowNumber__').map(col => ({ key: col.key, label: col.label }));
+          clipboard.cutCells(cellsInSortedData, dataForCut, columnsForClipboard);
         }
       }
       // Ctrl+V or Cmd+V - Paste
       else if ((e.ctrlKey || e.metaKey) && e.key === 'v') {
+        // Determine paste target: use focused cell, or start of selected range, or first selected cell
+        const focused = cellSelection.focusedCell;
+        const range = cellSelection.selectedRange;
         const selectedCells = cellSelection.getSelectedCells();
-        if (selectedCells.length > 0 && onCellEdit) {
+        
+        // Priority: focused cell > range start > first selected cell
+        let pasteTarget: { rowIndex: number; colKey: string } | null = null;
+        
+        if (focused) {
+          pasteTarget = { rowIndex: focused.rowIndex, colKey: focused.colKey };
+        } else if (range) {
+          // Use the start of the range as paste target (where user started selecting)
+          pasteTarget = { rowIndex: range.start.rowIndex, colKey: range.start.colKey };
+        } else if (selectedCells.length > 0) {
+          pasteTarget = selectedCells[0];
+        }
+        
+        if (pasteTarget) {
           e.preventDefault();
-          // Use original data for paste (not paged data)
-          const dataToUse = currentGroupBy ? table.filtered : data;
+          // Use table.sorted for paste (includes filter and sort) to ensure correct position
+          // When grouped, use table.filtered; otherwise use table.sorted
+          const dataForPaste = currentGroupBy ? table.filtered : table.sorted;
+          
+          // Convert rowIndex from pagedData index to dataForPaste index
+          // pasteTarget.rowIndex is the index in table.paged, we need to find the actual item
+          // and then find its index in dataForPaste
+          const pagedItem = table.paged[pasteTarget.rowIndex];
+          let actualRowIndex = pasteTarget.rowIndex;
+          
+          if (pagedItem) {
+            // Find the item in dataForPaste
+            const itemIndexInDataForPaste = dataForPaste.findIndex((item: T) => {
+              // Try to match by reference first (faster)
+              if (item === pagedItem) return true;
+              // If that fails, try to match by a unique identifier (like id)
+              // This is a fallback for cases where items are cloned
+              return getItemKey(item, -1) === getItemKey(pagedItem, -1);
+            });
+            
+            if (itemIndexInDataForPaste >= 0) {
+              actualRowIndex = itemIndexInDataForPaste;
+            } else {
+              // If item not found, calculate index based on pagination
+              // pasteTarget.rowIndex is in table.paged, convert to table.sorted index
+              const pageStartIndex = (table.currentPage - 1) * table.itemsPerPage;
+              actualRowIndex = pageStartIndex + pasteTarget.rowIndex;
+              // Ensure it's within bounds
+              if (actualRowIndex >= dataForPaste.length) {
+                actualRowIndex = dataForPaste.length - 1;
+              }
+            }
+          } else {
+            // If pagedItem is null, calculate index based on pagination
+            const pageStartIndex = (table.currentPage - 1) * table.itemsPerPage;
+            actualRowIndex = pageStartIndex + pasteTarget.rowIndex;
+            // Ensure it's within bounds
+            if (actualRowIndex >= dataForPaste.length) {
+              actualRowIndex = dataForPaste.length - 1;
+            }
+          }
+          
+          // Create a wrapper for onCellEdit that finds the item in dataToUse by reference/key
+          const handleCellEditForPaste = (item: T, columnKey: keyof T, newValue: any, index: number) => {
+            // Find the actual item in dataToUse by reference or key
+            const itemInDataToUse = dataToUse.find((d: T) => {
+              if (d === item) return true;
+              return getItemKey(d, -1) === getItemKey(item, -1);
+            });
+            
+            if (itemInDataToUse) {
+              // Find the index in dataToUse
+              const actualIndex = dataToUse.findIndex((d: T) => d === itemInDataToUse);
+              handleCellEdit(itemInDataToUse, columnKey, newValue, actualIndex >= 0 ? actualIndex : index);
+            } else {
+              // Fallback: use the original handleCellEdit
+              handleCellEdit(item, columnKey, newValue, index);
+            }
+          };
+          
+          const pasteTargetCells = [{ rowIndex: actualRowIndex, colKey: pasteTarget.colKey }];
+          const pasteTargetColKey = pasteTarget.colKey; // Store colKey to avoid null reference
+          
+          // Helper to select the pasted range after paste
+          const selectPastedRange = (pastedRows: number, pastedCols: number) => {
+            // Calculate the pasted range in sortedData
+            const startRowIndexInSorted = actualRowIndex;
+            const endRowIndexInSorted = Math.min(actualRowIndex + pastedRows - 1, dataForPaste.length - 1);
+            const startColIndex = sortedColumns.findIndex(c => String(c.key) === pasteTargetColKey);
+            const endColIndex = Math.min(startColIndex + pastedCols - 1, sortedColumns.length - 1);
+            
+            if (startColIndex >= 0 && endColIndex >= 0 && startRowIndexInSorted >= 0 && endRowIndexInSorted >= 0) {
+              const startColKey = String(sortedColumns[startColIndex].key);
+              const endColKey = String(sortedColumns[endColIndex].key);
+              
+              // Calculate indices in pagedData based on pagination
+              // actualRowIndex is the index in table.sorted
+              // To get index in table.paged, we need to subtract the offset from current page
+              const pageStartIndex = (table.currentPage - 1) * table.itemsPerPage;
+              const startPagedIndex = startRowIndexInSorted - pageStartIndex;
+              const endPagedIndex = endRowIndexInSorted - pageStartIndex;
+              
+              // Only select if the range is within the current page
+              if (startPagedIndex >= 0 && endPagedIndex >= 0 && 
+                  startPagedIndex < table.paged.length && 
+                  endPagedIndex < table.paged.length) {
+                // Use double requestAnimationFrame to ensure data updates and DOM render are complete
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => {
+                    // Set selection range for pasted cells directly
+                    // Clear copied state to show solid border (like normal selection)
+                    cellSelection.setCopied(false);
+                    // Use setSelectionRange to set the range directly
+                    cellSelection.setSelectionRange(
+                      { rowIndex: startPagedIndex, colKey: startColKey },
+                      { rowIndex: endPagedIndex, colKey: endColKey }
+                    );
+                    // Set focus to start cell
+                    cellSelection.setFocusedCell(startPagedIndex, startColKey);
+                  });
+                });
+              }
+            }
+          };
           
           // First try to paste from system clipboard (Excel, etc.)
           // If that fails or returns nothing, try internal clipboard
+          // Filter out row number column from columns passed to clipboard
+          const columnsForClipboard = sortedColumns.filter(col => String(col.key) !== '__rowNumber__').map(col => ({ key: col.key, label: col.label }));
+          
           clipboard.pasteFromSystemClipboard(
-            selectedCells,
-            dataToUse,
-            sortedColumns.map(col => ({ key: col.key, label: col.label })),
-            onCellEdit
+            pasteTargetCells,
+            dataForPaste,
+            columnsForClipboard,
+            handleCellEditForPaste
           ).then((success) => {
-            // If system clipboard paste didn't work, try internal clipboard
-            if (!success && clipboard.canPaste()) {
-              clipboard.pasteCells(selectedCells, dataToUse, sortedColumns.map(col => ({ key: col.key, label: col.label })), onCellEdit);
+            if (success) {
+              // Get clipboard data to determine pasted range
+              const clipboardData = clipboard.getClipboardData();
+              const pastedRows = clipboardData?.length || 1;
+              const pastedCols = clipboardData?.[0]?.length || 1;
+              // Use double requestAnimationFrame to ensure data updates and DOM render are complete
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  selectPastedRange(pastedRows, pastedCols);
+                });
+              });
+            } else if (clipboard.canPaste()) {
+              // Use internal clipboard
+              const clipboardData = clipboard.getClipboardData();
+              const pastedRows = clipboardData?.length || 1;
+              const pastedCols = clipboardData?.[0]?.length || 1;
+              clipboard.pasteCells(pasteTargetCells, dataForPaste, columnsForClipboard, handleCellEditForPaste);
+              // Use double requestAnimationFrame to ensure data updates and DOM render are complete
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  selectPastedRange(pastedRows, pastedCols);
+                });
+              });
             }
           }).catch(() => {
             // If system clipboard access failed, try internal clipboard
             if (clipboard.canPaste()) {
-              clipboard.pasteCells(selectedCells, dataToUse, sortedColumns.map(col => ({ key: col.key, label: col.label })), onCellEdit);
+              const clipboardData = clipboard.getClipboardData();
+              const pastedRows = clipboardData?.length || 1;
+              const pastedCols = clipboardData?.[0]?.length || 1;
+              clipboard.pasteCells(pasteTargetCells, dataForPaste, columnsForClipboard, handleCellEditForPaste);
+              // Use double requestAnimationFrame to ensure data updates and DOM render are complete
+              requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                  selectPastedRange(pastedRows, pastedCols);
+                });
+              });
             }
           });
         }
       }
-      // Delete key - Clear selected cells
+      // Delete key - Clear selected cells (skip row number column)
       else if (e.key === 'Delete' || e.key === 'Backspace') {
         const selectedCells = cellSelection.getSelectedCells();
-        if (selectedCells.length > 0 && onCellEdit) {
+        // Filter out row number column
+        const cellsWithoutRowNumber = selectedCells.filter(cell => cell.colKey !== '__rowNumber__');
+        if (cellsWithoutRowNumber.length > 0) {
           e.preventDefault();
-          const dataToUse = currentGroupBy ? table.filtered : data;
-          selectedCells.forEach(cell => {
-            const item = dataToUse[cell.rowIndex];
+          const dataForDelete = currentGroupBy ? table.filtered : dataToUse;
+          cellsWithoutRowNumber.forEach(cell => {
+            const item = dataForDelete[cell.rowIndex];
             if (item) {
-              // Find actual index in original data
-              const actualIndex = data.findIndex(d => d === item);
-              onCellEdit(item, cell.colKey as keyof T, '', actualIndex >= 0 ? actualIndex : cell.rowIndex);
+              // Find actual index in dataToUse
+              const actualIndex = dataToUse.findIndex(d => d === item);
+              handleCellEdit(item, cell.colKey as keyof T, '', actualIndex >= 0 ? actualIndex : cell.rowIndex);
             }
           });
         }
@@ -737,25 +1067,143 @@ export function ReactTabletify<T extends Record<string, any>>({
   const renderCell = React.useCallback((item: T, column: Column<T>, index: number) => {
     const isEditing = editingCell?.rowIndex === index && editingCell?.columnKey === column.key;
 
-    // If editing, show input
-    if (isEditing && column.editable && onCellEdit) {
+    // If editing, show input with save/cancel buttons (only if enableCellSelection is false)
+    if (isEditing && column.editable) {
+      // Excel-like mode: no buttons, auto-save on blur
+      if (enableCellSelection) {
+        return (
+          <input
+            ref={editInputRef}
+            type="text"
+            className="th-cell-edit-input th-cell-edit-input-excel"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onBlur={() => handleCellEditSave(item, column.key, index)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleCellEditSave(item, column.key, index);
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                handleCellEditCancel();
+              }
+              // Allow all other keys including Space, Delete, Backspace, etc.
+              // Only stop propagation for navigation keys to prevent table-level handlers
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
+                  e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+                  e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
+                e.stopPropagation();
+              }
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              // Allow normal text selection when clicking on input
+              // Don't force selection
+            }}
+            onFocus={(e) => {
+              // Focus cursor at the end of the value when input gets focus
+              const input = e.target as HTMLInputElement;
+              if (input) {
+                // Use setTimeout to ensure selection happens after focus
+                setTimeout(() => {
+                  const length = input.value.length;
+                  input.setSelectionRange(length, length);
+                }, 0);
+              }
+            }}
+            onMouseDown={(e) => {
+              // Prevent default to allow selection
+              e.stopPropagation();
+            }}
+          />
+        );
+      }
+      
+      // Normal mode: show buttons
       return (
-        <input
-          ref={editInputRef}
-          type="text"
-          className="th-cell-edit-input"
-          value={editValue}
-          onChange={(e) => setEditValue(e.target.value)}
-          onBlur={() => handleCellEditSave(item, column.key, index)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              handleCellEditSave(item, column.key, index);
-            } else if (e.key === 'Escape') {
-              handleCellEditCancel();
-            }
-          }}
-          onClick={(e) => e.stopPropagation()}
-        />
+        <div className="th-cell-edit-container">
+          <input
+            ref={editInputRef}
+            type="text"
+            className="th-cell-edit-input"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleCellEditSave(item, column.key, index);
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                handleCellEditCancel();
+              }
+              // Allow all other keys including Space, Delete, Backspace, etc.
+              // Only stop propagation for navigation keys to prevent table-level handlers
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
+                  e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+                  e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
+                e.stopPropagation();
+              }
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              // Allow normal text selection when clicking on input
+              // Don't force selection
+            }}
+            onFocus={(e) => {
+              // Focus cursor at the end of the value when input gets focus
+              const input = e.target as HTMLInputElement;
+              if (input) {
+                // Use setTimeout to ensure selection happens after focus
+                setTimeout(() => {
+                  const length = input.value.length;
+                  input.setSelectionRange(length, length);
+                }, 0);
+              }
+            }}
+            onMouseDown={(e) => {
+              // Prevent default to allow selection
+              e.stopPropagation();
+            }}
+          />
+          <div className="th-cell-edit-buttons">
+            <button
+              type="button"
+              className="th-cell-edit-button th-cell-edit-save"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleCellEditSave(item, column.key, index);
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              title="Save"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="12" height="12">
+                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="th-cell-edit-button th-cell-edit-cancel"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleCellEditCancel();
+              }}
+              onMouseDown={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+              }}
+              title="Cancel"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="12" height="12">
+                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+              </svg>
+            </button>
+          </div>
+        </div>
       );
     }
 
@@ -818,7 +1266,7 @@ export function ReactTabletify<T extends Record<string, any>>({
   /**
    * Determine display state
    */
-  const hasData = data.length > 0;
+  const hasData = dataToUse.length > 0;
   const showEmpty = !loading && !hasData;
   const showTable = !loading && hasData;
 
@@ -966,7 +1414,14 @@ export function ReactTabletify<T extends Record<string, any>>({
               resizingColumn={resizingColumn}
               onRenderHeader={onRenderHeader}
               onColumnHeaderClick={onColumnHeaderClick}
-              onHeaderMouseEnter={callout.handleHeaderMouseEnter}
+              onHeaderMouseEnter={(key: string) => {
+                // Skip row number column
+                if (key === '__rowNumber__') return;
+                // Check if column has showCallout enabled
+                const column = sortedColumns.find(col => String(col.key) === key);
+                if (column && column.showCallout === false) return;
+                callout.handleHeaderMouseEnter(key);
+              }}
               onHeaderMouseLeave={callout.handleHeaderMouseLeave}
               onCalloutMouseEnter={callout.handleCalloutMouseEnter}
               onCalloutMouseLeave={callout.handleCalloutMouseLeave}
@@ -975,40 +1430,64 @@ export function ReactTabletify<T extends Record<string, any>>({
               onColumnDrop={handleColumnDrop}
               onResizeStart={handleResizeStart}
               onSortAsc={(col) => {
+                            // Skip row number column
+                            if (String(col.key) === '__rowNumber__') return;
                             if (col.sortable !== false) {
                               table.handleSort(col.key, "asc");
                             }
                           }}
               onSortDesc={(col) => {
+                            // Skip row number column
+                            if (String(col.key) === '__rowNumber__') return;
                             if (col.sortable !== false) {
                               table.handleSort(col.key, "desc");
                             }
                           }}
               onFilter={(col) => {
+                            // Skip row number column
+                            if (String(col.key) === '__rowNumber__') return;
                             if (col.filterable !== false) {
                               handleOpenFilter(col.key);
                             }
                           }}
               onClearFilter={(col) => {
+                            // Skip row number column
+                            if (String(col.key) === '__rowNumber__') return;
                             if (col.filterable !== false) {
                               table.setFilter(String(col.key), []);
-                }
-              }}
-              onPinLeft={(col) => handleColumnPin(col.key, 'left')}
-              onPinRight={(col) => handleColumnPin(col.key, 'right')}
-              onUnpin={(col) => handleColumnPin(col.key, null)}
+                            }
+                          }}
+              onPinLeft={(col) => {
+                            // Skip row number column
+                            if (String(col.key) === '__rowNumber__') return;
+                            handleColumnPin(col.key, 'left');
+                          }}
+              onPinRight={(col) => {
+                            // Skip row number column
+                            if (String(col.key) === '__rowNumber__') return;
+                            handleColumnPin(col.key, 'right');
+                          }}
+              onUnpin={(col) => {
+                            // Skip row number column
+                            if (String(col.key) === '__rowNumber__') return;
+                            handleColumnPin(col.key, null);
+                          }}
               onToggleVisibility={(col) => {
+                            // Skip row number column
+                            if (String(col.key) === '__rowNumber__') return;
                             if (enableColumnVisibility) {
                               handleToggleColumnVisibility(col.key);
                             }
                           }}
               onGroupBy={(col) => {
+                            // Skip row number column
+                            if (String(col.key) === '__rowNumber__') return;
                             if (currentGroupBy === col.key) {
                               setInternalGroupBy(undefined);
                             } else {
                               setInternalGroupBy(col.key);
                             }
-              }}
+                          }}
               currentGroupBy={currentGroupBy}
               enableColumnVisibility={enableColumnVisibility || false}
               enableGroupBy={true}
@@ -1031,7 +1510,7 @@ export function ReactTabletify<T extends Record<string, any>>({
               isCopied={cellSelection.isCopied}
             />
             <TableBody
-              data={data}
+              data={dataToUse}
               columns={sortedColumns}
               paginatedGroups={paginatedGroups || undefined}
               currentGroupBy={currentGroupBy}
