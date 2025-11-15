@@ -53,6 +53,7 @@ interface TableRowProps<T extends Record<string, any>> {
         isLeftCol?: boolean;
         isRightCol?: boolean;
         isCopied?: boolean;
+        isFocused?: boolean;
     };
     isRowAboveRange?: boolean;
     isColumnInRange?: (colKey: string) => boolean;

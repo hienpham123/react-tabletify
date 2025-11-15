@@ -11,11 +11,16 @@ interface UseCellSelectionReturn {
     selectedRange: CellRange | null;
     isSelecting: boolean;
     isCopied: boolean;
+    focusedCell: CellPosition | null;
     startSelection: (rowIndex: number, colKey: string, isShift: boolean) => void;
     updateSelection: (rowIndex: number, colKey: string) => void;
     endSelection: () => void;
     clearSelection: () => void;
+    clearFocus: () => void;
     setCopied: (copied: boolean) => void;
+    setFocusedCell: (rowIndex: number, colKey: string) => void;
+    setSelectionRange: (start: CellPosition, end: CellPosition) => void;
+    moveFocus: (direction: 'up' | 'down' | 'left' | 'right', extendSelection?: boolean) => CellPosition | null;
     isCellSelected: (rowIndex: number, colKey: string) => boolean;
     getSelectedCells: () => CellPosition[];
     getSelectedRange: () => CellRange | null;

@@ -26,6 +26,9 @@ interface TableCellProps<T extends Record<string, any>> {
     isLeftColInRange?: boolean;
     isRightColInRange?: boolean;
     isCopied?: boolean;
+    isFocused?: boolean;
+    rowIndex?: number;
+    colKey?: string;
     onMouseDown?: (e: React.MouseEvent) => void;
     onMouseEnter?: (e: React.MouseEvent) => void;
     onMouseUp?: (e: React.MouseEvent) => void;
@@ -34,5 +37,5 @@ interface TableCellProps<T extends Record<string, any>> {
 /**
  * TableCell - Renders a single table cell
  */
-export declare function TableCell<T extends Record<string, any>>({ column, item, index, resizedWidth, pinPosition, leftOffset, rightOffset, lastLeftPinnedColumnKey, firstRightPinnedColumnKey, showTooltip, onDoubleClick, renderCell, getCellText, isSelected, isRangeStart, isRangeEnd, isInRange, isTopRow, isBottomRow, isLeftCol, isRightCol, isInRangeColumn, isLeftColInRange, isRightColInRange, isCopied, onMouseDown, onMouseEnter, onMouseUp, enableCellSelection, }: TableCellProps<T>): import("react/jsx-runtime").JSX.Element;
+export declare function TableCell<T extends Record<string, any>>({ column, item, index, resizedWidth, pinPosition, leftOffset, rightOffset, lastLeftPinnedColumnKey, firstRightPinnedColumnKey, showTooltip, onDoubleClick, renderCell, getCellText, isSelected, isRangeStart, isRangeEnd, isInRange, isTopRow, isBottomRow, isLeftCol, isRightCol, isInRangeColumn, isLeftColInRange, isRightColInRange, isCopied, isFocused, rowIndex, colKey, onMouseDown, onMouseEnter, onMouseUp, enableCellSelection, }: TableCellProps<T>): import("react/jsx-runtime").JSX.Element;
 export {};

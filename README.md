@@ -684,6 +684,13 @@ const themeStyles = applyTheme(theme);
 
 ## Changelog
 
+### Version 0.6.1
+- ✅ Enhanced Excel-like inline editing - seamless editing when `enableCellSelection={true}` (no border, auto-save on blur)
+- ✅ Added text wrapping support - automatic text wrapping and row height adjustment when `showTooltip={false}`
+- ✅ Improved cell editing UX - cursor positioned at end of text when editing starts
+- ✅ Fixed Space key handling during cell editing
+- ✅ Conditional text display - ellipsis with tooltip when `showTooltip={true}`, full text with wrapping when `showTooltip={false}`
+
 ### Version 0.6.0
 - ✅ Added Excel-like Cell Selection - Select multiple cells, copy, cut, paste, and delete
 - ✅ Support for range selection (click and drag)

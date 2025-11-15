@@ -42,6 +42,8 @@ export interface Column<T extends Record<string, any>> {
     editable?: boolean;
     /** Pin position for the column ('left' | 'right' | null) */
     pinned?: 'left' | 'right' | null;
+    /** Whether to show callout menu when hovering over header (default: true) */
+    showCallout?: boolean;
 }
 /**
  * Selection mode for the table
@@ -489,6 +491,8 @@ export interface ReactTabletifyProps<T extends Record<string, any>> {
 export interface UseTableReturn<T extends Record<string, any>> {
     /** Filtered data (after applying filters and search) */
     filtered: T[];
+    /** Sorted data (after applying filters, search, and sorting) */
+    sorted: T[];
     /** Paginated data (current page items) */
     paged: T[];
     /** Current page number (1-indexed) */
