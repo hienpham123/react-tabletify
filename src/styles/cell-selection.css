@@ -34,10 +34,10 @@
 
 /* Add border-bottom to cells in row above the range - only for cells in columns that are in range */
 /* Only apply border-bottom, NOT border-left or border-right */
+/* Only show border when there's an active selection (not just when copied) */
 .th-table.enable-cell-selection tbody tr.th-row-above-range td[data-in-range-column="true"] {
   border-bottom: 1px solid var(--th-color-focus, #0078d4) !important;
-  border-left: 1px solid var(--th-color-row-border, #f1f1f1) !important;
-  border-right: 1px solid var(--th-color-row-border, #f1f1f1) !important;
+
 }
 
 /* Add border-bottom to header cells when range starts from first row - only for cells in columns that are in range */

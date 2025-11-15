@@ -47,6 +47,7 @@ interface TableRowProps<T extends Record<string, any>> {
   onMenuToggle: (item: T, index: number) => void;
   onMenuDismiss: () => void;
   enableCellSelection?: boolean;
+  cellSelectionIndex?: number; // Index in paged data for cell selection operations
   isCellSelected?: (rowIndex: number, colKey: string) => boolean;
   getCellRangeInfo?: (rowIndex: number, colKey: string) => { isStart: boolean; isEnd: boolean; isInRange: boolean; isTopRow?: boolean; isBottomRow?: boolean; isLeftCol?: boolean; isRightCol?: boolean; isCopied?: boolean };
   isRowAboveRange?: boolean;
@@ -96,6 +97,7 @@ export function TableRow<T extends Record<string, any>>({
   onMenuToggle,
   onMenuDismiss,
   enableCellSelection = false,
+  cellSelectionIndex,
   isCellSelected,
   getCellRangeInfo,
   isRowAboveRange = false,
@@ -168,8 +170,10 @@ export function TableRow<T extends Record<string, any>>({
           const leftOffset = pinPosition === 'left' ? getLeftOffset(col, sortedIndex) : 0;
           const rightOffset = pinPosition === 'right' ? getRightOffset(col, sortedIndex) : 0;
 
-          const cellIsSelected = enableCellSelection && isCellSelected ? isCellSelected(index, colKeyStr) : false;
-          const rangeInfo = enableCellSelection && getCellRangeInfo ? getCellRangeInfo(index, colKeyStr) : { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false };
+          // Use cellSelectionIndex (index in paged data) for cell selection operations, fallback to index if not provided
+          const cellIndex = cellSelectionIndex !== undefined ? cellSelectionIndex : index;
+          const cellIsSelected = enableCellSelection && isCellSelected ? isCellSelected(cellIndex, colKeyStr) : false;
+          const rangeInfo = enableCellSelection && getCellRangeInfo ? getCellRangeInfo(cellIndex, colKeyStr) : { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false };
           const isCopied = rangeInfo.isCopied ?? false;
           // For row above range, check if this column is in range and get column range info
           const columnRangeInfo = enableCellSelection && isRowAboveRange && getColumnRangeInfo ? getColumnRangeInfo(colKeyStr) : { isInRange: false, isLeftCol: false, isRightCol: false };
@@ -204,9 +208,9 @@ export function TableRow<T extends Record<string, any>>({
               isLeftColInRange={columnRangeInfo.isLeftCol}
               isRightColInRange={columnRangeInfo.isRightCol}
               isCopied={isCopied}
-              onMouseDown={enableCellSelection && onCellMouseDown ? (e) => onCellMouseDown(index, colKeyStr, e) : undefined}
-              onMouseEnter={enableCellSelection && onCellMouseEnter ? (e) => onCellMouseEnter(index, colKeyStr, e) : undefined}
-              onMouseUp={enableCellSelection && onCellMouseUp ? (e) => onCellMouseUp(index, colKeyStr, e) : undefined}
+              onMouseDown={enableCellSelection && onCellMouseDown ? (e) => onCellMouseDown(cellIndex, colKeyStr, e) : undefined}
+              onMouseEnter={enableCellSelection && onCellMouseEnter ? (e) => onCellMouseEnter(cellIndex, colKeyStr, e) : undefined}
+              onMouseUp={enableCellSelection && onCellMouseUp ? (e) => onCellMouseUp(cellIndex, colKeyStr, e) : undefined}
             />
           );
         })}

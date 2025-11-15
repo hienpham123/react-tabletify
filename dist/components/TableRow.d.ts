@@ -42,6 +42,7 @@ interface TableRowProps<T extends Record<string, any>> {
     onMenuToggle: (item: T, index: number) => void;
     onMenuDismiss: () => void;
     enableCellSelection?: boolean;
+    cellSelectionIndex?: number;
     isCellSelected?: (rowIndex: number, colKey: string) => boolean;
     getCellRangeInfo?: (rowIndex: number, colKey: string) => {
         isStart: boolean;
@@ -67,5 +68,5 @@ interface TableRowProps<T extends Record<string, any>> {
 /**
  * TableRow - Renders a single table row with cells
  */
-export declare function TableRow<T extends Record<string, any>>({ item, index, itemKey, columns, selectionMode, isSelected, isActive, isFocused, isDragging, isDragOver, canDrag, columnWidths, pinnedColumns, lastLeftPinnedColumnKey, firstRightPinnedColumnKey, showTooltip, onItemClick, onItemContextMenu, onCheckboxChange, onCellEditStart, onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd, renderCell, getCellText, getLeftOffset, getRightOffset, isDraggingState, rowActions, openMenuKey, onMenuToggle, onMenuDismiss, enableCellSelection, isCellSelected, getCellRangeInfo, isRowAboveRange, isColumnInRange, getColumnRangeInfo, onCellMouseDown, onCellMouseEnter, onCellMouseUp, }: TableRowProps<T>): import("react/jsx-runtime").JSX.Element;
+export declare function TableRow<T extends Record<string, any>>({ item, index, itemKey, columns, selectionMode, isSelected, isActive, isFocused, isDragging, isDragOver, canDrag, columnWidths, pinnedColumns, lastLeftPinnedColumnKey, firstRightPinnedColumnKey, showTooltip, onItemClick, onItemContextMenu, onCheckboxChange, onCellEditStart, onDragStart, onDragOver, onDragLeave, onDrop, onDragEnd, renderCell, getCellText, getLeftOffset, getRightOffset, isDraggingState, rowActions, openMenuKey, onMenuToggle, onMenuDismiss, enableCellSelection, cellSelectionIndex, isCellSelected, getCellRangeInfo, isRowAboveRange, isColumnInRange, getColumnRangeInfo, onCellMouseDown, onCellMouseEnter, onCellMouseUp, }: TableRowProps<T>): import("react/jsx-runtime").JSX.Element;
 export {};

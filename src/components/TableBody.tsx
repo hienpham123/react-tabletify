@@ -152,6 +152,9 @@ export function TableBody<T extends Record<string, any>>({
                   const dataIndex = data.findIndex(d => d === row);
                   const rowIndexForKey = dataIndex >= 0 ? dataIndex : filteredData.findIndex(d => d === row);
                   const rowIndexForSelection = dataIndex >= 0 ? dataIndex : (rowIndexForKey >= 0 ? rowIndexForKey : i);
+                  // For cell selection, use index in paged data (same as useCellSelection uses table.paged)
+                  const rowIndexInPagedData = pagedData.findIndex(d => d === row);
+                  const rowIndexForCellSelection = rowIndexInPagedData >= 0 ? rowIndexInPagedData : i;
                   const itemKey = getItemKey(row, rowIndexForSelection);
                   const isSelected = selectedItems.has(itemKey);
                   const isActive = dataIndex >= 0 && activeItemIndex === dataIndex;
@@ -207,9 +210,10 @@ export function TableBody<T extends Record<string, any>>({
                       onMenuToggle={onMenuToggle}
                       onMenuDismiss={onMenuDismiss}
                       enableCellSelection={enableCellSelection}
+                      cellSelectionIndex={rowIndexForCellSelection}
                       isCellSelected={isCellSelected}
                       getCellRangeInfo={getCellRangeInfo}
-                      isRowAboveRange={isRowAboveRange ? isRowAboveRange(rowIndexForSelection) : false}
+                      isRowAboveRange={isRowAboveRange ? isRowAboveRange(rowIndexForCellSelection) : false}
                       isColumnInRange={isColumnInRange}
                       getColumnRangeInfo={getColumnRangeInfo}
                       onCellMouseDown={onCellMouseDown}
@@ -279,6 +283,7 @@ export function TableBody<T extends Record<string, any>>({
               onMenuToggle={onMenuToggle}
               onMenuDismiss={onMenuDismiss}
               enableCellSelection={enableCellSelection}
+              cellSelectionIndex={i}
               isCellSelected={isCellSelected}
               getCellRangeInfo={getCellRangeInfo}
               isRowAboveRange={isRowAboveRange ? isRowAboveRange(i) : false}
