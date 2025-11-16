@@ -19,6 +19,7 @@
   "files": [
     "dist",
     "README.md",
+    "LICENSE",
     "package.json",
     "CUSTOMIZATION_OPTIONS.md",
     "FEATURES_ROADMAP.md",
@@ -38,16 +39,16 @@
     "grouping",
     "selection"
   ],
-  "author": "",
+  "author": "Hie Ho",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "https://github.com/hienpham123/react-tabletify.git"
   },
   "bugs": {
-    "url": ""
+    "url": "https://github.com/hienpham123/react-tabletify/issues"
   },
-  "homepage": "",
+  "homepage": "https://github.com/hienpham123/react-tabletify#readme",
   "peerDependencies": {
     "react": ">=16.8.0",
     "react-dom": ">=16.8.0"

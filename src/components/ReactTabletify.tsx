@@ -148,7 +148,7 @@ export function ReactTabletify<T extends Record<string, any>>({
 
   // Use internal data if no onCellEdit is provided (for automatic data management)
   // Otherwise use the data prop (parent manages data)
-  const dataToUse = !onCellEdit ? internalData : data;
+  const dataToUse = internalData;
 
   // Temporary: use dataToUse for initial table setup, will be updated after useRowReorder
   const table = useTable<T>(dataToUse, effectiveItemsPerPage);
@@ -280,10 +280,6 @@ export function ReactTabletify<T extends Record<string, any>>({
 
   // Cell edit handler - updates internal state or calls onCellEdit callback
   const handleCellEdit = React.useCallback((item: T, columnKey: keyof T, newValue: any, index: number) => {
-    if (onCellEdit) {
-      // Call parent's onCellEdit callback if provided
-      onCellEdit(item, columnKey, newValue, index);
-    } else {
       // If no onCellEdit callback, automatically update internal state
       // Note: index might be from pagedData, so we need to find the actual item in dataToUse
       setInternalData(prev => {
@@ -297,8 +293,8 @@ export function ReactTabletify<T extends Record<string, any>>({
         }
         return newData;
       });
-    }
-  }, [onCellEdit]);
+      onCellEdit?.(item, columnKey, newValue, index);
+  }, [internalData]);
 
   // Inline editing hook
   const {

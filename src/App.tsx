@@ -266,6 +266,9 @@ export default function App() {
           console.log('Row reordered:', { draggedItem, fromIndex, toIndex });
           setData(newData);
         }}
+        onCellEdit={(item, key, newValue, index) => {
+          console.log('Cell edited:', { item, key, newValue, index });
+        }}
         theme={getCurrentTheme()}
         // showTooltip={false}
         onSelectionChanged={(selected) => console.log('Selected items:', selected)}

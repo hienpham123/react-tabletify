@@ -1,5 +1,10 @@
 # ReactTabletify made by **Hie Ho** ⚡
 
+[![npm version](https://img.shields.io/npm/v/react-tabletify)](https://www.npmjs.com/package/react-tabletify)
+[![npm downloads](https://img.shields.io/npm/dm/react-tabletify)](https://www.npmjs.com/package/react-tabletify)
+[![GitHub stars](https://img.shields.io/github/stars/hienpham123/react-tabletify)](https://github.com/hienpham123/react-tabletify)
+[![License](https://img.shields.io/npm/l/react-tabletify)](https://github.com/hienpham123/react-tabletify/blob/main/LICENSE)
+
 A fast, fully customizable React data table built purely with HTML and CSS.
 
 ## Features
