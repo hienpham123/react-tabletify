@@ -488,9 +488,28 @@
 /* Cell edit container */
 .th-cell-edit-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 4px;
   width: 100%;
+  position: relative;
+  align-items: flex-start;
+}
+
+/* Wrapper for Excel-like mode */
+.th-cell-edit-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  position: relative;
+}
+
+/* Input wrapper for normal mode */
+.th-cell-edit-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
   position: relative;
 }
 
@@ -511,6 +530,29 @@
 .th-cell-edit-input:focus {
   border-color: var(--th-color-focus, #107c10);
   box-shadow: none;
+}
+
+/* Error state for input */
+.th-cell-edit-input-error {
+  border-color: var(--th-color-error, #d13438) !important;
+  background-color: #fff4f4 !important;
+}
+
+.th-cell-edit-input-error:focus {
+  border-color: var(--th-color-error, #d13438) !important;
+  box-shadow: 0 0 0 1px var(--th-color-error, #d13438) !important;
+}
+
+/* Error message */
+.th-cell-edit-error-message {
+  font-size: 11px;
+  color: var(--th-color-error, #d13438);
+  margin-top: 2px;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 /* Excel-like inline editing: no border, fit cell height seamlessly */

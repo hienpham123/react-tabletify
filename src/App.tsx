@@ -160,6 +160,16 @@ export default function App() {
             resizable: true,
             editable: true,
             showCallout: false,
+            validate: (value, item) => {
+              const num = Number(value);
+              if(!value) {
+                return "Age is required";
+              }
+              if (isNaN(num) || num < 18 || num > 100) {
+                return "Age must be between 18 and 100";
+              }
+              return null;
+            },
           },
           {
             key: "role",
@@ -196,7 +206,19 @@ export default function App() {
             sortable: true,
             filterable: false,
             resizable: true,
-            editable: true
+            editable: true,
+            validate: (value, item) => {
+              // Remove $ and commas for validation
+              const cleanValue = String(value).replace(/[$,]/g, '');
+              const num = Number(cleanValue);
+              if (isNaN(num) || num < 0) {
+                return "Salary must be a positive number";
+              }
+              if (num > 1000000) {
+                return "Salary cannot exceed 1,000,000";
+              }
+              return null;
+            },
           },
           {
             key: "location",
@@ -245,7 +267,15 @@ export default function App() {
             width: "220px",
             sortable: true,
             filterable: true,
-            resizable: true
+            resizable: true,
+            editable: true,
+            validate: (value, item) => {
+              const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+              if (!emailRegex.test(String(value))) {
+                return "Please enter a valid email address";
+              }
+              return null;
+            },
           },
           {
             key: "phone",
@@ -261,7 +291,7 @@ export default function App() {
         // groupBy="department"
         // selectionMode="multiple"
         // enableRowReorder={true}
-        enableCellSelection={true}
+        // enableCellSelection={true}
         onRowReorder={(newData, draggedItem, fromIndex, toIndex) => {
           console.log('Row reordered:', { draggedItem, fromIndex, toIndex });
           setData(newData);
@@ -283,16 +313,16 @@ export default function App() {
           }
           return String(item[key]);
         }}
-        enableExport={true}
-        exportFormat="both" // hoặc 'csv' hoặc 'excel'
-        exportFileName="my-data"
-        onBeforeExport={(data, columns) => {
-          // Transform data nếu cần
-          return { data, columns };
-        }}
-        onAfterExport={(format, filename) => {
-          console.log(`Exported ${filename}.${format}`);
-        }}
+        // enableExport={true}
+        // exportFormat="both" // hoặc 'csv' hoặc 'excel'
+        // exportFileName="my-data"
+        // onBeforeExport={(data, columns) => {
+        //   // Transform data nếu cần
+        //   return { data, columns };
+        // }}
+        // onAfterExport={(format, filename) => {
+        //   console.log(`Exported ${filename}.${format}`);
+        // }}
         // rowActions={(item, index) => [
         //   {
         //     key: 'edit',

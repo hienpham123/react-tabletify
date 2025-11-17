@@ -43,6 +43,43 @@ td:has(.th-cell-edit-input-excel) .th-cell-edit-input-excel {
   line-height: inherit;
 }
 
+/* Validation error state for Excel mode */
+td:has(.th-cell-edit-input-excel.th-cell-edit-input-error),
+th:has(.th-cell-edit-input-excel.th-cell-edit-input-error) {
+  background-color: #fff4f4 !important;
+}
+
+.th-cell-edit-input-excel.th-cell-edit-input-error {
+  background-color: #fff4f4 !important;
+  border: 1px solid var(--th-color-error, #d13438) !important;
+  box-shadow: 0 0 0 1px var(--th-color-error, #d13438) !important;
+}
+
+/* Error message wrapper for Excel mode */
+.th-cell-edit-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.th-cell-edit-wrapper .th-cell-edit-error-message {
+  position: absolute;
+  bottom: -18px;
+  left: 0;
+  right: 0;
+  font-size: 11px;
+  color: var(--th-color-error, #d13438);
+  background-color: #fff;
+  padding: 2px 4px;
+  border: 1px solid var(--th-color-error, #d13438);
+  border-radius: 2px;
+  z-index: 10;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
 /* Copied cells - dashed border */
 .th-cell-copied.th-cell-selected {
   border: 1px dashed var(--th-color-focus, #0078d4) !important;

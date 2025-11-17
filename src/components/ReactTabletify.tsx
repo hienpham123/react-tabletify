@@ -278,8 +278,27 @@ export function ReactTabletify<T extends Record<string, any>>({
   // Header callout hook (after resize to get resizingColumn state)
   const callout = useHeaderCallout(resizingColumn);
 
+  // Helper function to validate a value for a column
+  const validateCellValue = React.useCallback((value: any, item: T, columnKey: keyof T): string | null => {
+    const column = columns.find(col => col.key === columnKey);
+    if (column?.validate) {
+      return column.validate(value, item, columnKey) || null;
+    }
+    return null;
+  }, [columns]);
+
   // Cell edit handler - updates internal state or calls onCellEdit callback
+  // This is used for paste operations - validation is handled separately for inline editing
   const handleCellEdit = React.useCallback((item: T, columnKey: keyof T, newValue: any, index: number) => {
+      // Validate the value before editing (for paste operations)
+      const error = validateCellValue(newValue, item, columnKey);
+      if (error) {
+        // If validation fails during paste, we could show a notification or skip the edit
+        // For now, we'll skip invalid values during paste to prevent bad data
+        console.warn(`Validation failed for column ${String(columnKey)}: ${error}`);
+        return;
+      }
+
       // If no onCellEdit callback, automatically update internal state
       // Note: index might be from pagedData, so we need to find the actual item in dataToUse
       setInternalData(prev => {
@@ -294,7 +313,7 @@ export function ReactTabletify<T extends Record<string, any>>({
         return newData;
       });
       onCellEdit?.(item, columnKey, newValue, index);
-  }, [internalData]);
+  }, [internalData, validateCellValue, onCellEdit]);
 
   // Inline editing hook
   const {
@@ -302,10 +321,11 @@ export function ReactTabletify<T extends Record<string, any>>({
     editValue,
     editInputRef,
     setEditValue,
+    validationError,
     handleCellEditStart: handleCellEditStartOriginal,
     handleCellEditSave,
     handleCellEditCancel,
-  } = useInlineEditing(handleCellEdit);
+  } = useInlineEditing(handleCellEdit, columns);
 
   // Wrap handleCellEditStart to skip row number column
   const handleCellEditStart = React.useCallback((item: T, column: { key: keyof T; editable?: boolean }, rowIndex: number) => {
@@ -1062,105 +1082,132 @@ export function ReactTabletify<T extends Record<string, any>>({
   // Render cell content
   const renderCell = React.useCallback((item: T, column: Column<T>, index: number) => {
     const isEditing = editingCell?.rowIndex === index && editingCell?.columnKey === column.key;
+    const hasError = isEditing && validationError !== null;
 
     // If editing, show input with save/cancel buttons (only if enableCellSelection is false)
     if (isEditing && column.editable) {
       // Excel-like mode: no buttons, auto-save on blur
       if (enableCellSelection) {
         return (
-          <input
-            ref={editInputRef}
-            type="text"
-            className="th-cell-edit-input th-cell-edit-input-excel"
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onBlur={() => handleCellEditSave(item, column.key, index)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleCellEditSave(item, column.key, index);
-              } else if (e.key === 'Escape') {
-                e.preventDefault();
-                handleCellEditCancel();
-              }
-              // Allow all other keys including Space, Delete, Backspace, etc.
-              // Only stop propagation for navigation keys to prevent table-level handlers
-              if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
-                  e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
-                  e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
+          <div className="th-cell-edit-wrapper">
+            <input
+              ref={editInputRef}
+              type="text"
+              className={`th-cell-edit-input th-cell-edit-input-excel ${hasError ? 'th-cell-edit-input-error' : ''}`}
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={() => {
+                const saved = handleCellEditSave(item, column.key, index);
+                // If validation failed, keep editing mode and focus back
+                if (saved === false && editInputRef.current) {
+                  setTimeout(() => {
+                    editInputRef.current?.focus();
+                  }, 0);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const saved = handleCellEditSave(item, column.key, index);
+                  // If validation failed, keep focus
+                  if (saved === false && editInputRef.current) {
+                    editInputRef.current.focus();
+                  }
+                } else if (e.key === 'Escape') {
+                  e.preventDefault();
+                  handleCellEditCancel();
+                }
+                // Allow all other keys including Space, Delete, Backspace, etc.
+                // Only stop propagation for navigation keys to prevent table-level handlers
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
+                    e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+                    e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
+                  e.stopPropagation();
+                }
+              }}
+              onClick={(e) => {
                 e.stopPropagation();
-              }
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              // Allow normal text selection when clicking on input
-              // Don't force selection
-            }}
-            onFocus={(e) => {
-              // Focus cursor at the end of the value when input gets focus
-              const input = e.target as HTMLInputElement;
-              if (input) {
-                // Use setTimeout to ensure selection happens after focus
-                setTimeout(() => {
-                  const length = input.value.length;
-                  input.setSelectionRange(length, length);
-                }, 0);
-              }
-            }}
-            onMouseDown={(e) => {
-              // Prevent default to allow selection
-              e.stopPropagation();
-            }}
-          />
+                // Allow normal text selection when clicking on input
+                // Don't force selection
+              }}
+              onFocus={(e) => {
+                // Focus cursor at the end of the value when input gets focus
+                const input = e.target as HTMLInputElement;
+                if (input) {
+                  // Use setTimeout to ensure selection happens after focus
+                  setTimeout(() => {
+                    const length = input.value.length;
+                    input.setSelectionRange(length, length);
+                  }, 0);
+                }
+              }}
+              onMouseDown={(e) => {
+                // Prevent default to allow selection
+                e.stopPropagation();
+              }}
+            />
+            {hasError && (
+              <div className="th-cell-edit-error-message">{validationError}</div>
+            )}
+          </div>
         );
       }
       
       // Normal mode: show buttons
       return (
         <div className="th-cell-edit-container">
-          <input
-            ref={editInputRef}
-            type="text"
-            className="th-cell-edit-input"
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.preventDefault();
-                handleCellEditSave(item, column.key, index);
-              } else if (e.key === 'Escape') {
-                e.preventDefault();
-                handleCellEditCancel();
-              }
-              // Allow all other keys including Space, Delete, Backspace, etc.
-              // Only stop propagation for navigation keys to prevent table-level handlers
-              if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
-                  e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
-                  e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
+          <div className="th-cell-edit-input-wrapper">
+            <input
+              ref={editInputRef}
+              type="text"
+              className={`th-cell-edit-input ${hasError ? 'th-cell-edit-input-error' : ''}`}
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const saved = handleCellEditSave(item, column.key, index);
+                  // If validation failed, keep focus
+                  if (saved === false && editInputRef.current) {
+                    editInputRef.current.focus();
+                  }
+                } else if (e.key === 'Escape') {
+                  e.preventDefault();
+                  handleCellEditCancel();
+                }
+                // Allow all other keys including Space, Delete, Backspace, etc.
+                // Only stop propagation for navigation keys to prevent table-level handlers
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
+                    e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+                    e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
+                  e.stopPropagation();
+                }
+              }}
+              onClick={(e) => {
                 e.stopPropagation();
-              }
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              // Allow normal text selection when clicking on input
-              // Don't force selection
-            }}
-            onFocus={(e) => {
-              // Focus cursor at the end of the value when input gets focus
-              const input = e.target as HTMLInputElement;
-              if (input) {
-                // Use setTimeout to ensure selection happens after focus
-                setTimeout(() => {
-                  const length = input.value.length;
-                  input.setSelectionRange(length, length);
-                }, 0);
-              }
-            }}
-            onMouseDown={(e) => {
-              // Prevent default to allow selection
-              e.stopPropagation();
-            }}
-          />
+                // Allow normal text selection when clicking on input
+                // Don't force selection
+              }}
+              onFocus={(e) => {
+                // Focus cursor at the end of the value when input gets focus
+                const input = e.target as HTMLInputElement;
+                if (input) {
+                  // Use setTimeout to ensure selection happens after focus
+                  setTimeout(() => {
+                    const length = input.value.length;
+                    input.setSelectionRange(length, length);
+                  }, 0);
+                }
+              }}
+              onMouseDown={(e) => {
+                // Prevent default to allow selection
+                e.stopPropagation();
+              }}
+            />
+            {hasError && (
+              <div className="th-cell-edit-error-message">{validationError}</div>
+            )}
+          </div>
           <div className="th-cell-edit-buttons">
             <button
               type="button"
@@ -1168,7 +1215,11 @@ export function ReactTabletify<T extends Record<string, any>>({
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
-                handleCellEditSave(item, column.key, index);
+                const saved = handleCellEditSave(item, column.key, index);
+                // If validation failed, keep focus
+                if (saved === false && editInputRef.current) {
+                  editInputRef.current.focus();
+                }
               }}
               onMouseDown={(e) => {
                 e.stopPropagation();
@@ -1213,7 +1264,7 @@ export function ReactTabletify<T extends Record<string, any>>({
     }
     // Default render
     return String(item[column.key] ?? '');
-  }, [onRenderCell, editingCell, editValue, handleCellEditSave, handleCellEditCancel]);
+  }, [onRenderCell, editingCell, editValue, validationError, handleCellEditSave, handleCellEditCancel]);
 
   /**
    * Get and apply theme

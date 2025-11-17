@@ -38,6 +38,7 @@ A fast, fully customizable React data table built purely with HTML and CSS.
 - ✅ **Excel-like Cell Selection** - Select multiple cells, copy, cut, paste, and delete (Ctrl+C, Ctrl+X, Ctrl+V, Delete)
 - ✅ **Excel-like Inline Editing** - Seamless inline editing when `enableCellSelection={true}` (no border, auto-save on blur)
 - ✅ **Text Wrapping** - Automatic text wrapping and row height adjustment when `showTooltip={false}`
+- ✅ **Cell Validation** - Real-time validation for editable cells with custom validation functions
 
 ## Installation
 
@@ -313,6 +314,42 @@ useEffect(() => {
   }}
 />
 // Double-click a cell to edit
+```
+
+### With Cell Validation
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns.map(col => ({
+    ...col,
+    editable: col.key === 'email' || col.key === 'age',
+    // Add validation function
+    validate: (value, item, columnKey) => {
+      if (columnKey === 'email') {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(String(value))) {
+          return 'Please enter a valid email address';
+        }
+      }
+      if (columnKey === 'age') {
+        const num = Number(value);
+        if (isNaN(num) || num < 18 || num > 100) {
+          return 'Age must be between 18 and 100';
+        }
+      }
+      return null; // Return null if valid
+    },
+  }))}
+  onCellEdit={(item, columnKey, newValue, index) => {
+    // Update your data (only called if validation passes)
+    updateUser(index, columnKey, newValue);
+  }}
+/>
+// Validation runs in real-time as you type
+// Error message appears below the input
+// Save is prevented if validation fails
+// Works with both inline editing modes (with/without buttons)
 ```
 
 ### With Column Pinning
@@ -688,6 +725,15 @@ const themeStyles = applyTheme(theme);
 ```
 
 ## Changelog
+
+### Version 0.6.2
+- ✅ Added Cell Validation - Real-time validation for editable cells
+- ✅ Custom validation functions per column - return error message string or null
+- ✅ Validation runs in real-time as user types (onChange)
+- ✅ Visual error feedback - red border and error message below input
+- ✅ Prevents save when validation fails - keeps focus and shows error
+- ✅ Works with both inline editing modes (Excel-like and with buttons)
+- ✅ Validation also applies to copy/paste operations - invalid values are skipped
 
 ### Version 0.6.1
 - ✅ Enhanced Excel-like inline editing - seamless editing when `enableCellSelection={true}` (no border, auto-save on blur)
