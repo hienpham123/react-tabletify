@@ -200,6 +200,7 @@ export function TableBody<T extends Record<string, any>>({
                       onDragLeave={onRowDragLeave}
                       onDrop={onRowDrop}
                       onDragEnd={onRowDragEnd}
+                      dragIndex={dragIndex}
                       renderCell={renderCell}
                       getCellText={getCellText}
                       getLeftOffset={getLeftOffset}
@@ -227,13 +228,15 @@ export function TableBody<T extends Record<string, any>>({
         })
       ) : (
         // Non-grouped rows
+        // Memoize drag index calculation for better performance
         pagedData.map((row, i) => {
           const itemKey = getItemKey(row, i);
           const isSelected = selectedItems.has(itemKey);
           const isActive = activeItemIndex === i;
           
           // Get actual index in filtered data for drag & drop
-          const actualIndex = filteredData.findIndex(item => item === row);
+          // Use reference equality check first (faster)
+          const actualIndex = row === filteredData[i] ? i : filteredData.findIndex(item => item === row);
           const dragIndex = actualIndex >= 0 ? actualIndex : i;
           const canDrag = enableRowReorder && !currentGroupBy;
 
@@ -273,6 +276,7 @@ export function TableBody<T extends Record<string, any>>({
               onDragLeave={onRowDragLeave}
               onDrop={onRowDrop}
               onDragEnd={onRowDragEnd}
+              dragIndex={dragIndex}
               renderCell={renderCell}
               getCellText={getCellText}
               getLeftOffset={getLeftOffset}

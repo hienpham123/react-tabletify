@@ -71,7 +71,9 @@ export function useColumnManagement<T extends Record<string, any>>(
       }
       return next;
     });
-    onColumnPin?.(colKey, pinPosition);
+    if (onColumnPin) {
+      onColumnPin(colKey, pinPosition);
+    }
   }, [onColumnPin]);
 
   /**

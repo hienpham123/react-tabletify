@@ -68,11 +68,11 @@ export function useCellSelection<T extends Record<string, any>>(
     return {
       start: {
         rowIndex: startRow,
-        colKey: String(columns[Math.max(0, minColIndex)]?.key || start.colKey),
+        colKey: String((columns[Math.max(0, minColIndex)] && columns[Math.max(0, minColIndex)].key) || start.colKey),
       },
       end: {
         rowIndex: endRow,
-        colKey: String(columns[Math.min(columns.length - 1, maxColIndex)]?.key || end.colKey),
+        colKey: String((columns[Math.min(columns.length - 1, maxColIndex)] && columns[Math.min(columns.length - 1, maxColIndex)].key) || end.colKey),
       },
     };
   }, [columns]);

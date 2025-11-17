@@ -41,7 +41,15 @@ export default {
       minimize: true,
       inject: false,
     }),
-    terser(),
+    terser({
+      compress: {
+        drop_console: false, // Keep console for debugging
+        passes: 2, // Multiple passes for better optimization
+      },
+      format: {
+        comments: false,
+      },
+    }),
   ],
   external: ['react', 'react-dom'],
 };

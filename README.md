@@ -1,4 +1,4 @@
-# ReactTabletify made by **Hie Ho** ⚡
+# ReactTabletify
 
 [![npm version](https://img.shields.io/npm/v/react-tabletify)](https://www.npmjs.com/package/react-tabletify)
 [![npm downloads](https://img.shields.io/npm/dm/react-tabletify)](https://www.npmjs.com/package/react-tabletify)
@@ -45,6 +45,32 @@ A fast, fully customizable React data table built purely with HTML and CSS.
 ```bash
 npm install react-tabletify
 ```
+
+### Requirements
+
+- **React**: >= 16.8.0 (Hooks support required)
+- **React DOM**: >= 16.8.0
+- **Node.js**: >= 12.0.0 (for build process)
+
+### Browser Support
+
+- ✅ Chrome (last 2 versions)
+- ✅ Firefox (last 2 versions)
+- ✅ Safari (last 2 versions)
+- ✅ Edge (last 2 versions)
+- ✅ IE 11 (with polyfills - see [COMPATIBILITY.md](./COMPATIBILITY.md))
+
+### Compatibility
+
+ReactTabletify is compiled to ES5 for maximum compatibility and works with:
+- ✅ React 16.8+ (Class and Functional components)
+- ✅ React 17.x
+- ✅ React 18.x
+- ✅ React 19.x
+- ✅ TypeScript 3.5+
+- ✅ Both CommonJS and ESM builds included
+
+See [COMPATIBILITY.md](./COMPATIBILITY.md) for detailed compatibility information and performance tips.
 
 ## Usage
 
@@ -724,7 +750,48 @@ const theme = getTheme('dark'); // or custom theme object
 const themeStyles = applyTheme(theme);
 ```
 
+## Performance & Compatibility
+
+ReactTabletify is optimized for performance and maximum compatibility:
+
+- ✅ **ES5 Compatible** - Compiled to ES5 for maximum browser support
+- ✅ **React 16.8+** - Works with React 16.8, 17.x, 18.x, and 19.x
+- ✅ **No Modern JS Features** - No optional chaining or nullish coalescing (compatible with older projects)
+- ✅ **Memoized Components** - TableCell and TableRow are memoized for better performance
+- ✅ **Debounced Validation** - Cell validation is debounced to improve typing performance
+- ✅ **Throttled Events** - Scroll and drag events are throttled for smooth performance
+- ✅ **Optimized Rendering** - Only re-renders when necessary
+
+### For Large Datasets
+
+- **Always use pagination** for datasets > 100 rows
+- **Use server-side processing** for datasets > 10,000 rows
+- **Memoize callbacks** and data transformations
+- **Disable unused features** to improve performance
+
+See [PERFORMANCE.md](./PERFORMANCE.md) for detailed performance optimization guide.
+
+### Browser & Project Compatibility
+
+- ✅ Works with React 16.8+ (Class and Functional components)
+- ✅ Compatible with TypeScript 3.5+
+- ✅ Both CommonJS and ESM builds included
+- ✅ IE 11 support (with polyfills)
+
+See [COMPATIBILITY.md](./COMPATIBILITY.md) for detailed compatibility information.
+
 ## Changelog
+
+### Version 0.6.3
+- ✅ **Performance Optimizations** - Memoized TableCell and TableRow components
+- ✅ **Debounced Validation** - Cell validation debounced to 150ms for better typing performance
+- ✅ **Throttled Scroll Events** - Scroll events throttled with requestAnimationFrame
+- ✅ **Optimized Drag & Drop** - Improved drag & drop performance with throttling and memoization
+- ✅ **ES5 Compatibility** - Removed optional chaining and nullish coalescing for maximum compatibility
+- ✅ **React 16.8+ Support** - Fully compatible with React 16.8, 17.x, 18.x, and 19.x
+- ✅ **Performance Documentation** - Added PERFORMANCE.md and COMPATIBILITY.md guides
+- ✅ **Fixed Drag & Drop with Pagination** - Drag & drop now works correctly across pages
+- ✅ **Improved Inline Editing** - Fixed memoization issues that prevented inline editing
 
 ### Version 0.6.2
 - ✅ Added Cell Validation - Real-time validation for editable cells

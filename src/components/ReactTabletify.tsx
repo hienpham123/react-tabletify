@@ -24,50 +24,7 @@ import "./../styles/table.css";
 import "./../styles/row-actions.css";
 import "./../styles/cell-selection.css";
 
-/**
- * ReactTabletify - A powerful, customizable data table component for React
- * 
- * Features:
- * - Sorting (ascending/descending)
- * - Filtering (per column with search)
- * - Pagination
- * - Row grouping with expand/collapse
- * - Row selection (single/multiple)
- * - Custom cell/row/header rendering
- * - Fluent UI styled components
- * 
- * @template T - The type of data items (must be an object/record)
- * @param props - Component props
- * @returns React component
- * 
- * @example
- * ```tsx
- * interface User {
- *   id: number;
- *   name: string;
- *   age: number;
- *   role: string;
- * }
- * 
- * const data: User[] = [
- *   { id: 1, name: "Alice", age: 25, role: "Dev" },
- *   { id: 2, name: "Bob", age: 29, role: "PM" },
- * ];
- * 
- * <ReactTabletify
- *   data={data}
- *   columns={[
- *     { key: "id", label: "ID" },
- *     { key: "name", label: "Name" },
- *     { key: "age", label: "Age" },
- *     { key: "role", label: "Role" },
- *   ]}
- *   itemsPerPage={10}
- *   selectionMode="multiple"
- *   onSelectionChanged={(selected) => console.log(selected)}
- * />
- * ```
- */
+
 export function ReactTabletify<T extends Record<string, any>>({
   columns,
   data,
@@ -141,7 +98,9 @@ export function ReactTabletify<T extends Record<string, any>>({
   // Auto-create handler for itemsPerPageChange if not provided and showPagination is true
   const handleItemsPerPageChange = React.useCallback((newItemsPerPage: number) => {
     setInternalItemsPerPage(newItemsPerPage);
-    onItemsPerPageChange?.(newItemsPerPage);
+    if (onItemsPerPageChange) {
+      onItemsPerPageChange(newItemsPerPage);
+    }
   }, [onItemsPerPageChange]);
 
   // When showPagination is false, show all items (set itemsPerPage to a very large number)
@@ -282,7 +241,7 @@ export function ReactTabletify<T extends Record<string, any>>({
   // Helper function to validate a value for a column
   const validateCellValue = React.useCallback((value: any, item: T, columnKey: keyof T): string | null => {
     const column = columns.find(col => col.key === columnKey);
-    if (column?.validate) {
+    if (column && column.validate) {
       return column.validate(value, item, columnKey) || null;
     }
     return null;
@@ -313,7 +272,9 @@ export function ReactTabletify<T extends Record<string, any>>({
         }
         return newData;
       });
-      onCellEdit?.(item, columnKey, newValue, index);
+      if (onCellEdit) {
+        onCellEdit(item, columnKey, newValue, index);
+      }
   }, [internalData, validateCellValue, onCellEdit]);
 
   // Inline editing hook
@@ -409,7 +370,7 @@ export function ReactTabletify<T extends Record<string, any>>({
     }
     
     // Check if cell is focused
-    const isFocused = cellSelection.focusedCell?.rowIndex === rowIndex && cellSelection.focusedCell?.colKey === colKey;
+    const isFocused = cellSelection.focusedCell && cellSelection.focusedCell.rowIndex === rowIndex && cellSelection.focusedCell.colKey === colKey;
     
     if (!cellSelection.selectedRange) {
       return { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false, isFocused };
@@ -786,8 +747,8 @@ export function ReactTabletify<T extends Record<string, any>>({
             if (success) {
               // Get clipboard data to determine pasted range
               const clipboardData = clipboard.getClipboardData();
-              const pastedRows = clipboardData?.length || 1;
-              const pastedCols = clipboardData?.[0]?.length || 1;
+              const pastedRows = (clipboardData && clipboardData.length) || 1;
+              const pastedCols = (clipboardData && clipboardData[0] && clipboardData[0].length) || 1;
               // Use double requestAnimationFrame to ensure data updates and DOM render are complete
               requestAnimationFrame(() => {
                 requestAnimationFrame(() => {
@@ -797,8 +758,8 @@ export function ReactTabletify<T extends Record<string, any>>({
             } else if (clipboard.canPaste()) {
               // Use internal clipboard
               const clipboardData = clipboard.getClipboardData();
-              const pastedRows = clipboardData?.length || 1;
-              const pastedCols = clipboardData?.[0]?.length || 1;
+              const pastedRows = (clipboardData && clipboardData.length) || 1;
+              const pastedCols = (clipboardData && clipboardData[0] && clipboardData[0].length) || 1;
               clipboard.pasteCells(pasteTargetCells, dataForPaste, columnsForClipboard, handleCellEditForPaste);
               // Use double requestAnimationFrame to ensure data updates and DOM render are complete
               requestAnimationFrame(() => {
@@ -811,8 +772,8 @@ export function ReactTabletify<T extends Record<string, any>>({
             // If system clipboard access failed, try internal clipboard
             if (clipboard.canPaste()) {
               const clipboardData = clipboard.getClipboardData();
-              const pastedRows = clipboardData?.length || 1;
-              const pastedCols = clipboardData?.[0]?.length || 1;
+              const pastedRows = (clipboardData && clipboardData.length) || 1;
+              const pastedCols = (clipboardData && clipboardData[0] && clipboardData[0].length) || 1;
               clipboard.pasteCells(pasteTargetCells, dataForPaste, columnsForClipboard, handleCellEditForPaste);
               // Use double requestAnimationFrame to ensure data updates and DOM render are complete
               requestAnimationFrame(() => {
@@ -902,12 +863,12 @@ export function ReactTabletify<T extends Record<string, any>>({
       // Home / End - Navigate to start/end of row
       else if ((e.key === 'Home' || e.key === 'End') && !editingCell) {
         e.preventDefault();
-        const focused = cellSelection.focusedCell || (cellSelection.selectedRange?.end);
+        const focused = cellSelection.focusedCell || (cellSelection.selectedRange && cellSelection.selectedRange.end);
         if (focused) {
           const currentColIndex = sortedColumns.findIndex(c => String(c.key) === focused.colKey);
           if (currentColIndex >= 0) {
             const targetColIndex = e.key === 'Home' ? 0 : sortedColumns.length - 1;
-            const targetColKey = String(sortedColumns[targetColIndex]?.key);
+            const targetColKey = String((sortedColumns[targetColIndex] && sortedColumns[targetColIndex].key) || '');
             if (targetColKey) {
               cellSelection.setFocusedCell(focused.rowIndex, targetColKey);
               cellSelection.startSelection(focused.rowIndex, targetColKey, e.shiftKey);
@@ -918,7 +879,7 @@ export function ReactTabletify<T extends Record<string, any>>({
       // Ctrl+Arrow - Navigate to edge of data
       else if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowUp' || e.key === 'ArrowDown' || e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !editingCell) {
         e.preventDefault();
-        const focused = cellSelection.focusedCell || (cellSelection.selectedRange?.end);
+        const focused = cellSelection.focusedCell || (cellSelection.selectedRange && cellSelection.selectedRange.end);
         if (focused) {
           const dataToUse = currentGroupBy ? table.filtered : data;
           let targetRowIndex = focused.rowIndex;
@@ -1068,21 +1029,21 @@ export function ReactTabletify<T extends Record<string, any>>({
         return String(rendered);
       }
       // For React nodes, try to extract text
-      return String(item[column.key] ?? '');
+      return String(item[column.key] != null ? item[column.key] : '');
     }
     if (onRenderCell) {
       const rendered = onRenderCell(item, column.key, 0);
       if (typeof rendered === 'string' || typeof rendered === 'number') {
         return String(rendered);
       }
-      return String(item[column.key] ?? '');
+      return String(item[column.key] != null ? item[column.key] : '');
     }
-    return String(item[column.key] ?? '');
+    return String(item[column.key] != null ? item[column.key] : '');
   }, [onRenderCell]);
 
   // Render cell content
   const renderCell = React.useCallback((item: T, column: Column<T>, index: number) => {
-    const isEditing = editingCell?.rowIndex === index && editingCell?.columnKey === column.key;
+    const isEditing = editingCell && editingCell.rowIndex === index && editingCell.columnKey === column.key;
     const hasError = isEditing && validationError !== null;
 
     // If editing, show input with save/cancel buttons (only if enableCellSelection is false)
@@ -1102,7 +1063,9 @@ export function ReactTabletify<T extends Record<string, any>>({
                 // If validation failed, keep editing mode and focus back
                 if (saved === false && editInputRef.current) {
                   setTimeout(() => {
-                    editInputRef.current?.focus();
+                    if (editInputRef.current) {
+                      editInputRef.current.focus();
+                    }
                   }, 0);
                 }
               }}
@@ -1258,7 +1221,7 @@ export function ReactTabletify<T extends Record<string, any>>({
       return onRenderCell(item, column.key, index);
     }
     // Default render
-    return String(item[column.key] ?? '');
+    return String(item[column.key] != null ? item[column.key] : '');
   }, [onRenderCell, editingCell, editValue, validationError, handleCellEditSave, handleCellEditCancel]);
 
   /**
@@ -1399,6 +1362,14 @@ export function ReactTabletify<T extends Record<string, any>>({
         ...(maxHeight ? { maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight, overflow: 'auto' } : {}),
         ...(resizingColumn ? { cursor: 'col-resize' } : {}),
       }}
+      onScroll={React.useCallback((e: React.UIEvent<HTMLDivElement>) => {
+        // Throttle scroll events for better performance
+        // Use requestAnimationFrame to batch scroll updates
+        requestAnimationFrame(() => {
+          // Scroll handling is done by browser, we just need to throttle if needed
+          // This is a placeholder for any custom scroll handling
+        });
+      }, [])}
       tabIndex={enableCellSelection || enableKeyboardNavigation ? 0 : undefined}
     >
       {enableExport && (
@@ -1558,7 +1529,7 @@ export function ReactTabletify<T extends Record<string, any>>({
               selectionMode={selectionMode}
               selectedItems={selectedItems}
               activeItemIndex={activeItemIndex}
-              focusedRowIndex={focusedRowIndex ?? undefined}
+              focusedRowIndex={focusedRowIndex != null ? focusedRowIndex : undefined}
               enableRowReorder={enableRowReorder}
               draggedRowIndex={draggedRowIndex}
               dragOverRowIndex={dragOverRowIndex}

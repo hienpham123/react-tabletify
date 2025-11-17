@@ -24,10 +24,13 @@ export function useColumnResize<T extends Record<string, any>>(
     e.preventDefault();
     e.stopPropagation();
     const colKeyStr = String(colKey);
-    const th = anchorRefs.current?.[colKeyStr]?.parentElement as HTMLTableCellElement;
+    const anchorRef = anchorRefs.current && anchorRefs.current[colKeyStr];
+    const th = anchorRef && anchorRef.parentElement as HTMLTableCellElement;
     if (!th) return;
-
-    onResizeStart?.();
+    
+    if (onResizeStart) {
+      onResizeStart();
+    }
 
     const startWidth = th.offsetWidth;
     const startX = e.clientX;

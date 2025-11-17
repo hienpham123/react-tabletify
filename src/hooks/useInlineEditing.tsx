@@ -25,7 +25,7 @@ export function useInlineEditing<T extends Record<string, any>>(
   const handleCellEditStart = React.useCallback((item: T, column: { key: keyof T; editable?: boolean }, rowIndex: number) => {
     if (column.editable !== true) return;
     setEditingCell({ rowIndex, columnKey: column.key });
-    setEditValue(String(item[column.key] ?? ''));
+    setEditValue(String(item[column.key] != null ? item[column.key] : ''));
     setCurrentItem(item); // Store item for real-time validation
     setValidationError(null); // Clear any previous validation errors
   }, []);
@@ -85,20 +85,39 @@ export function useInlineEditing<T extends Record<string, any>>(
     }
   }, [editingCell]);
 
+  // Debounce timer for validation
+  const validationTimerRef = React.useRef<NodeJS.Timeout | null>(null);
+
   // Real-time validation when edit value changes (user is typing)
+  // Debounced to improve performance
   React.useEffect(() => {
     if (editingCell && currentItem) {
-      const column = columns?.find(col => col.key === editingCell.columnKey);
-      
-      // Validate if validation function is provided
-      if (column?.validate) {
-        const error = column.validate(editValue, currentItem, editingCell.columnKey);
-        setValidationError(error || null);
-      } else {
-        // No validation function, clear any previous errors
-        setValidationError(null);
+      // Clear previous timer
+      if (validationTimerRef.current) {
+        clearTimeout(validationTimerRef.current);
       }
+
+      // Debounce validation to avoid running on every keystroke
+      validationTimerRef.current = setTimeout(() => {
+        const column = columns?.find(col => col.key === editingCell.columnKey);
+        
+        // Validate if validation function is provided
+        if (column?.validate) {
+          const error = column.validate(editValue, currentItem, editingCell.columnKey);
+          setValidationError(error || null);
+        } else {
+          // No validation function, clear any previous errors
+          setValidationError(null);
+        }
+      }, 150); // 150ms debounce
     }
+
+    // Cleanup timer on unmount
+    return () => {
+      if (validationTimerRef.current) {
+        clearTimeout(validationTimerRef.current);
+      }
+    };
   }, [editValue, editingCell, currentItem, columns]);
 
   return {

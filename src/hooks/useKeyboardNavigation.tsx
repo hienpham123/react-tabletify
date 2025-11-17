@@ -66,25 +66,33 @@ export function useKeyboardNavigation<T extends Record<string, any>>(
             const item = currentItems[focusedRowIndex];
             const itemKey = getItemKey(item, focusedRowIndex);
             if (selectionMode === 'single') {
-              onSelectionChange?.(new Set([itemKey]));
+              if (onSelectionChange) {
+                onSelectionChange(new Set([itemKey]));
+              }
             } else {
               // Toggle selection for multiple mode
               // This will be handled by the parent component
-              onSelectionChange?.(new Set([itemKey]));
+              if (onSelectionChange) {
+                onSelectionChange(new Set([itemKey]));
+              }
             }
           }
           break;
         case 'Escape':
           e.preventDefault();
           setFocusedRowIndex(null);
-          onSelectionChange?.(new Set());
+          if (onSelectionChange) {
+            onSelectionChange(new Set());
+          }
           break;
       }
     };
 
     tableRef.current.addEventListener('keydown', handleKeyDown);
     return () => {
-      tableRef.current?.removeEventListener('keydown', handleKeyDown);
+      if (tableRef.current) {
+        tableRef.current.removeEventListener('keydown', handleKeyDown);
+      }
     };
   }, [enableKeyboardNavigation, loading, focusedRowIndex, selectionMode, currentItems, getItemKey, onSelectionChange, tableRef]);
 

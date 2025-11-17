@@ -38,8 +38,9 @@ interface TableCellProps<T extends Record<string, any>> {
 
 /**
  * TableCell - Renders a single table cell
+ * Memoized to prevent unnecessary re-renders
  */
-export function TableCell<T extends Record<string, any>>({
+function TableCellComponent<T extends Record<string, any>>({
   column,
   item,
   index,
@@ -124,5 +125,46 @@ export function TableCell<T extends Record<string, any>>({
       {renderCell(item, column, index)}
     </td>
   );
-}
+};
+
+// Memoize TableCell to prevent unnecessary re-renders
+// IMPORTANT: renderCell callback changes when editingCell changes (for inline editing)
+// So we MUST compare renderCell to allow re-render when editing starts/stops
+export const TableCell = React.memo(TableCellComponent, (prevProps, nextProps) => {
+  // Only re-render if these props change
+  // We compare renderCell by reference - when editingCell changes, renderCell changes
+  // and TableCell will re-render to show/hide the input
+  const propsEqual = (
+    prevProps.item === nextProps.item &&
+    prevProps.index === nextProps.index &&
+    prevProps.column.key === nextProps.column.key &&
+    prevProps.resizedWidth === nextProps.resizedWidth &&
+    prevProps.pinPosition === nextProps.pinPosition &&
+    prevProps.leftOffset === nextProps.leftOffset &&
+    prevProps.rightOffset === nextProps.rightOffset &&
+    prevProps.showTooltip === nextProps.showTooltip &&
+    prevProps.isSelected === nextProps.isSelected &&
+    prevProps.isFocused === nextProps.isFocused &&
+    prevProps.isRangeStart === nextProps.isRangeStart &&
+    prevProps.isRangeEnd === nextProps.isRangeEnd &&
+    prevProps.isInRange === nextProps.isInRange &&
+    prevProps.isTopRow === nextProps.isTopRow &&
+    prevProps.isBottomRow === nextProps.isBottomRow &&
+    prevProps.isLeftCol === nextProps.isLeftCol &&
+    prevProps.isRightCol === nextProps.isRightCol &&
+    prevProps.isInRangeColumn === nextProps.isInRangeColumn &&
+    prevProps.isLeftColInRange === nextProps.isLeftColInRange &&
+    prevProps.isRightColInRange === nextProps.isRightColInRange &&
+    prevProps.isCopied === nextProps.isCopied &&
+    prevProps.enableCellSelection === nextProps.enableCellSelection &&
+    prevProps.renderCell === nextProps.renderCell
+    // Note: onMouseDown, onMouseEnter, onMouseUp are not compared as they are
+    // created fresh each render and don't affect visual rendering
+    // onDoubleClick is also not compared for the same reason
+  );
+  
+  // Always allow re-render if renderCell changes (for inline editing)
+  // onDoubleClick is created fresh each render, so we don't compare it
+  return propsEqual;
+}) as typeof TableCellComponent;
 

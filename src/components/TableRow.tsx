@@ -31,6 +31,7 @@ interface TableRowProps<T extends Record<string, any>> {
   onDragLeave: (e: React.DragEvent<HTMLTableRowElement>) => void;
   onDrop: (e: React.DragEvent<HTMLTableRowElement>, index: number) => void;
   onDragEnd: (e: React.DragEvent<HTMLTableRowElement>) => void;
+  dragIndex?: number; // Index in filteredData (not pagedData) for drag & drop
   renderCell: (item: T, column: Column<T>, index: number) => React.ReactNode;
   getCellText?: (item: T, column: Column<T>) => string;
   getLeftOffset: (column: Column<T>, index: number) => number;
@@ -87,6 +88,7 @@ export function TableRow<T extends Record<string, any>>({
   onDragLeave,
   onDrop,
   onDragEnd,
+  dragIndex,
   renderCell,
   getCellText,
   getLeftOffset,
@@ -107,7 +109,8 @@ export function TableRow<T extends Record<string, any>>({
   onCellMouseEnter,
   onCellMouseUp,
 }: TableRowProps<T>) {
-  const rowClassName = [
+  // Memoize className calculation to avoid recalculation on every render
+  const rowClassName = React.useMemo(() => [
     isSelected ? 'hh-row-selected' : '',
     // Disable row active/focused styling when cell selection is enabled
     !enableCellSelection && isActive ? 'hh-row-active' : '',
@@ -116,7 +119,16 @@ export function TableRow<T extends Record<string, any>>({
     isDragging ? 'hh-row-dragging' : '',
     isDragOver ? 'hh-row-drag-over' : '',
     enableCellSelection && isRowAboveRange ? 'hh-row-above-range' : '',
-  ].filter(Boolean).join(' ');
+  ].filter(Boolean).join(' '), [
+    isSelected,
+    enableCellSelection,
+    isActive,
+    isFocused,
+    canDrag,
+    isDragging,
+    isDragOver,
+    isRowAboveRange,
+  ]);
 
   const actions = rowActions ? rowActions(item, index) : [];
   // Use a more unique key that includes both itemKey and index
@@ -130,10 +142,10 @@ export function TableRow<T extends Record<string, any>>({
         key={itemKey}
         className={rowClassName}
         draggable={canDrag}
-        onDragStart={(e) => onDragStart(e, index)}
-        onDragOver={(e) => onDragOver(e, index)}
+        onDragStart={(e) => onDragStart(e, dragIndex !== undefined ? dragIndex : index)}
+        onDragOver={(e) => onDragOver(e, dragIndex !== undefined ? dragIndex : index)}
         onDragLeave={onDragLeave}
-        onDrop={(e) => onDrop(e, index)}
+        onDrop={(e) => onDrop(e, dragIndex !== undefined ? dragIndex : index)}
         onDragEnd={onDragEnd}
         onClick={(ev) => {
           if (!isDraggingState) {
@@ -174,8 +186,8 @@ export function TableRow<T extends Record<string, any>>({
           const cellIndex = cellSelectionIndex !== undefined ? cellSelectionIndex : index;
           const cellIsSelected = enableCellSelection && isCellSelected ? isCellSelected(cellIndex, colKeyStr) : false;
           const rangeInfo = enableCellSelection && getCellRangeInfo ? getCellRangeInfo(cellIndex, colKeyStr) : { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false, isFocused: false };
-          const isCopied = rangeInfo.isCopied ?? false;
-          const isFocused = rangeInfo.isFocused ?? false;
+          const isCopied = rangeInfo.isCopied != null ? rangeInfo.isCopied : false;
+          const isFocused = rangeInfo.isFocused != null ? rangeInfo.isFocused : false;
           // For row above range, check if this column is in range and get column range info
           const columnRangeInfo = enableCellSelection && isRowAboveRange && getColumnRangeInfo ? getColumnRangeInfo(colKeyStr) : { isInRange: false, isLeftCol: false, isRightCol: false };
           const isInRangeColumn = columnRangeInfo.isInRange;
