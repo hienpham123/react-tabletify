@@ -1,41 +1,41 @@
-.th-filter-panel {
+.hh-filter-panel {
   position: fixed;
   top: 0;
   right: 0;
   width: 320px;
   height: 100%;
-  background: var(--th-color-surface, #ffffff);
-  box-shadow: var(--th-shadow-panel, -2px 0 8px rgba(0, 0, 0, 0.15), -1px 0 2px rgba(0, 0, 0, 0.1));
+  background: var(--hh-color-surface, #ffffff);
+  box-shadow: var(--hh-shadow-panel, -2px 0 8px rgba(0, 0, 0, 0.15), -1px 0 2px rgba(0, 0, 0, 0.1));
   transform: translateX(100%);
-  transition: transform var(--th-transition-duration, 0.3s) var(--th-transition-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+  transition: transform var(--hh-transition-duration, 0.3s) var(--hh-transition-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
   z-index: 999;
   display: flex;
   flex-direction: column;
-  font-family: var(--th-typography-font-family, "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto", "Helvetica Neue", sans-serif);
+  font-family: var(--hh-typography-font-family, "Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, "Roboto", "Helvetica Neue", sans-serif);
 }
 
-.th-filter-panel.open {
+.hh-filter-panel.open {
   transform: translateX(0);
 }
 
-.th-filter-header {
+.hh-filter-header {
   padding: 10px 20px;
-  background: var(--th-color-surface, #ffffff);
-  border-bottom: 1px solid var(--th-color-border, #edebe9);
+  background: var(--hh-color-surface, #ffffff);
+  border-bottom: 1px solid var(--hh-color-border, #edebe9);
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: var(--th-typography-font-size, 16px);
+  font-size: var(--hh-typography-font-size, 16px);
 }
 
-.th-filter-header strong {
-  font-size: var(--th-typography-font-size, 15px);
-  font-weight: var(--th-typography-font-weight-bold, 600);
-  color: var(--th-color-text, #323130);
-  line-height: var(--th-typography-line-height, 20px);
+.hh-filter-header strong {
+  font-size: var(--hh-typography-font-size, 15px);
+  font-weight: var(--hh-typography-font-weight-bold, 600);
+  color: var(--hh-color-text, #323130);
+  line-height: var(--hh-typography-line-height, 20px);
 }
 
-.th-filter-close {
+.hh-filter-close {
   background: transparent;
   border: none;
   cursor: pointer;
@@ -51,92 +51,92 @@
   flex-shrink: 0;
 }
 
-.th-filter-close:hover {
+.hh-filter-close:hover {
   background-color: #f3f2f1;
   color: #323130;
 }
 
-.th-filter-close:active {
+.hh-filter-close:active {
   background-color: #edebe9;
 }
 
-.th-filter-close:focus {
-  outline: 2px solid var(--th-color-focus, #107c10);
+.hh-filter-close:focus {
+  outline: 2px solid var(--hh-color-focus, #107c10);
   outline-offset: -2px;
 }
 
-.th-filter-close:focus:not(:focus-visible) {
+.hh-filter-close:focus:not(:focus-visible) {
   outline: none;
 }
 
-.th-filter-close svg {
+.hh-filter-close svg {
   width: 16px;
   height: 16px;
 }
 
-.th-filter-content {
+.hh-filter-content {
   flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
 }
 
-.th-filter-search {
+.hh-filter-search {
   padding: 12px 20px;
   border-bottom: 1px solid #edebe9;
   flex-shrink: 0;
 }
 
-.th-filter-search-input {
+.hh-filter-search-input {
   width: 100%;
   height: 32px;
   padding: 0 8px;
-  border: 1px solid var(--th-color-border, #605e5c);
-  border-radius: var(--th-border-radius-button, 2px);
-  font-size: var(--th-typography-font-size, 14px);
+  border: 1px solid var(--hh-color-border, #605e5c);
+  border-radius: var(--hh-border-radius-button, 2px);
+  font-size: var(--hh-typography-font-size, 14px);
   font-family: inherit;
-  color: var(--th-color-text, #323130);
-  background: var(--th-color-background, #ffffff);
+  color: var(--hh-color-text, #323130);
+  background: var(--hh-color-background, #ffffff);
   box-sizing: border-box;
-  transition: border-color var(--th-transition-duration, 0.1s) var(--th-transition-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
-  line-height: var(--th-typography-line-height, 20px);
+  transition: border-color var(--hh-transition-duration, 0.1s) var(--hh-transition-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+  line-height: var(--hh-typography-line-height, 20px);
 }
 
-.th-filter-search-input::placeholder {
+.hh-filter-search-input::placeholder {
   color: #605e5c;
 }
 
-.th-filter-search-input:hover {
+.hh-filter-search-input:hover {
   border-color: #323130;
 }
 
-.th-filter-search-input:focus {
+.hh-filter-search-input:focus {
   outline: none;
-  border-color: var(--th-color-focus, #107c10);
+  border-color: var(--hh-color-focus, #107c10);
   border-width: 2px;
   padding: 0 7px;
 }
 
-.th-filter-search-input:disabled {
+.hh-filter-search-input:disabled {
   background: #f3f2f1;
   border-color: #edebe9;
   color: #a19f9d;
   cursor: not-allowed;
 }
 
-.th-filter-options-list {
+.hh-filter-options-list {
   flex: 1;
   overflow-y: auto;
 }
 
-.th-filter-no-results {
+.hh-filter-no-results {
   padding: 16px 20px;
   text-align: center;
   color: #605e5c;
   font-size: 14px;
 }
 
-.th-filter-option {
+.hh-filter-option {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -146,11 +146,11 @@
   box-sizing: border-box;
 }
 
-.th-filter-option:hover {
+.hh-filter-option:hover {
   background-color: #f3f2f1;
 }
 
-.th-filter-option input[type="checkbox"] {
+.hh-filter-option input[type="checkbox"] {
   width: 20px;
   height: 20px;
   cursor: pointer;
@@ -166,16 +166,16 @@
   transition: all 0.1s cubic-bezier(0.1, 0.9, 0.2, 1);
 }
 
-.th-filter-option input[type="checkbox"]:hover {
+.hh-filter-option input[type="checkbox"]:hover {
   border-color: #323130;
 }
 
-.th-filter-option input[type="checkbox"]:checked {
-  background: var(--th-color-primary, #107c10);
-  border-color: var(--th-color-primary, #107c10);
+.hh-filter-option input[type="checkbox"]:checked {
+  background: var(--hh-color-primary, #107c10);
+  border-color: var(--hh-color-primary, #107c10);
 }
 
-.th-filter-option input[type="checkbox"]:checked::after {
+.hh-filter-option input[type="checkbox"]:checked::after {
   content: "";
   position: absolute;
   left: 5px;
@@ -187,23 +187,23 @@
   transform: rotate(45deg);
 }
 
-.th-filter-option input[type="checkbox"]:focus {
-  outline: 2px solid var(--th-color-focus, #107c10);
+.hh-filter-option input[type="checkbox"]:focus {
+  outline: 2px solid var(--hh-color-focus, #107c10);
   outline-offset: 2px;
 }
 
-.th-filter-option input[type="checkbox"]:focus:not(:focus-visible) {
+.hh-filter-option input[type="checkbox"]:focus:not(:focus-visible) {
   outline: none;
 }
 
-.th-filter-option input[type="checkbox"]:disabled {
+.hh-filter-option input[type="checkbox"]:disabled {
   background: #f3f2f1;
   border-color: #edebe9;
   cursor: not-allowed;
   opacity: 0.6;
 }
 
-.th-filter-option label {
+.hh-filter-option label {
   cursor: pointer;
   font-size: 14px;
   color: #323130;
@@ -213,7 +213,7 @@
   font-weight: 400;
 }
 
-.th-filter-footer {
+.hh-filter-footer {
   padding: 16px 20px;
   border-top: 1px solid #edebe9;
   display: flex;
@@ -222,7 +222,7 @@
   background: #ffffff;
 }
 
-.th-btn {
+.hh-btn {
   padding: 0 16px;
   height: 32px;
   border: 1px solid #8a8886;
@@ -240,38 +240,38 @@
   justify-content: center;
 }
 
-.th-btn:hover {
+.hh-btn:hover {
   background-color: #f3f2f1;
   border-color: #323130;
   color: #201f1e;
 }
 
-.th-btn:active {
+.hh-btn:active {
   background-color: #edebe9;
 }
 
-.th-btn:focus {
+.hh-btn:focus {
   outline: 1px solid #6ABE28;
   outline-offset: -1px;
 }
 
-.th-btn.primary {
-  background: var(--th-color-primary, #107c10);
+.hh-btn.primary {
+  background: var(--hh-color-primary, #107c10);
   color: #ffffff;
-  border-color: var(--th-color-primary, #107c10);
+  border-color: var(--hh-color-primary, #107c10);
 }
 
-.th-btn.primary:hover {
-  background: var(--th-color-primary, #0b6e0b);
-  border-color: var(--th-color-primary, #0b6e0b);
+.hh-btn.primary:hover {
+  background: var(--hh-color-primary, #0b6e0b);
+  border-color: var(--hh-color-primary, #0b6e0b);
 }
 
-.th-btn.primary:active {
-  background: var(--th-color-primary, #0a5d0a);
-  border-color: var(--th-color-primary, #0a5d0a);
+.hh-btn.primary:active {
+  background: var(--hh-color-primary, #0a5d0a);
+  border-color: var(--hh-color-primary, #0a5d0a);
 }
 
-.th-btn.primary:focus {
+.hh-btn.primary:focus {
   outline: 1px solid #ffffff;
   outline-offset: -1px;
 }

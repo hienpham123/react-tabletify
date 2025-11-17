@@ -98,7 +98,7 @@ describe('RowActionsCell', () => {
     );
 
     const button = screen.getByLabelText('Row actions');
-    expect(button).toHaveClass('th-row-actions-button-active');
+    expect(button).toHaveClass('hh-row-actions-button-active');
   });
 
   it('renders empty cell when no actions provided', () => {

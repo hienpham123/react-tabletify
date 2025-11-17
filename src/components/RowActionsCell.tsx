@@ -24,15 +24,15 @@ export function RowActionsCell<T extends Record<string, any>>({
   buttonRef,
 }: RowActionsCellProps<T>) {
   if (!actions || actions.length === 0) {
-    return <td className="th-row-actions-column"></td>;
+    return <td className="hh-row-actions-column"></td>;
   }
 
   return (
-    <td className="th-row-actions-column">
+    <td className="hh-row-actions-column">
       <button
         ref={buttonRef}
         type="button"
-        className={`th-row-actions-button ${isMenuOpen ? 'th-row-actions-button-active' : ''}`}
+        className={`hh-row-actions-button ${isMenuOpen ? 'hh-row-actions-button-active' : ''}`}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

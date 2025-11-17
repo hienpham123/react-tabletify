@@ -686,11 +686,11 @@ const [theme, setTheme] = useState<'light' | 'dark' | TableTheme>('light');
 
 You can override the default styles by targeting the CSS classes:
 
-- `.th-table` - Main table container
-- `.th-header-cell` - Column headers
-- `.th-filter-panel` - Filter panel
-- `.th-callout` - Header callout menu
-- `.th-pagination` - Pagination controls
+- `.hh-table` - Main table container
+- `.hh-header-cell` - Column headers
+- `.hh-filter-panel` - Filter panel
+- `.hh-callout` - Header callout menu
+- `.hh-pagination` - Pagination controls
 
 ## TypeScript
 

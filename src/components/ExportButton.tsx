@@ -71,9 +71,9 @@ export function ExportButton<T extends Record<string, any>>({
 
   if (format === 'both') {
     return (
-      <div className="th-export-buttons">
+      <div className="hh-export-buttons">
         <button
-          className="th-export-button"
+          className="hh-export-button"
           onClick={() => handleExport('csv')}
           disabled={isExporting}
           title="Export to CSV"
@@ -84,7 +84,7 @@ export function ExportButton<T extends Record<string, any>>({
           <span>CSV</span>
         </button>
         <button
-          className="th-export-button"
+          className="hh-export-button"
           onClick={() => handleExport('excel')}
           disabled={isExporting}
           title="Export to Excel"
@@ -100,7 +100,7 @@ export function ExportButton<T extends Record<string, any>>({
 
   return (
     <button
-      className="th-export-button"
+      className="hh-export-button"
       onClick={() => handleExport(format)}
       disabled={isExporting}
       title={`Export to ${format === 'csv' ? 'CSV' : 'Excel'}`}

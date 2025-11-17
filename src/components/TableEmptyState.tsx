@@ -19,9 +19,9 @@ export function TableEmptyState({
   }
 
   return (
-    <div className="th-empty-state">
-      <div className="th-empty-icon">📋</div>
-      <div className="th-empty-message">{emptyMessage || 'No data available'}</div>
+    <div className="hh-empty-state">
+      <div className="hh-empty-icon">📋</div>
+      <div className="hh-empty-message">{emptyMessage || 'No data available'}</div>
     </div>
   );
 }

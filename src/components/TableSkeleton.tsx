@@ -24,18 +24,18 @@ export function TableSkeleton<T extends Record<string, any>>({
   }
 
   return (
-    <div className="th-loading-skeleton">
-      <div className="th-skeleton-header">
-        {selectionMode !== 'none' && <div className="th-skeleton-cell" style={{ width: '48px' }} />}
+    <div className="hh-loading-skeleton">
+      <div className="hh-skeleton-header">
+        {selectionMode !== 'none' && <div className="hh-skeleton-cell" style={{ width: '48px' }} />}
         {columns.map((col, i) => (
-          <div key={i} className="th-skeleton-cell" style={{ width: col.width || '150px' }} />
+          <div key={i} className="hh-skeleton-cell" style={{ width: col.width || '150px' }} />
         ))}
       </div>
       {Array.from({ length: itemsPerPage }).map((_, i) => (
-        <div key={i} className="th-skeleton-row">
-          {selectionMode !== 'none' && <div className="th-skeleton-cell" style={{ width: '48px' }} />}
+        <div key={i} className="hh-skeleton-row">
+          {selectionMode !== 'none' && <div className="hh-skeleton-cell" style={{ width: '48px' }} />}
           {columns.map((col, j) => (
-            <div key={j} className="th-skeleton-cell" style={{ width: col.width || '150px' }} />
+            <div key={j} className="hh-skeleton-cell" style={{ width: col.width || '150px' }} />
           ))}
         </div>
       ))}

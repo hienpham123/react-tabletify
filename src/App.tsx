@@ -149,6 +149,10 @@ export default function App() {
             filterable: true,
             resizable: true,
             editable: true,
+            settingsable: true,
+            totalsable: true,
+            groupable: true,
+            showCallout: true,
           },
           {
             key: "age",

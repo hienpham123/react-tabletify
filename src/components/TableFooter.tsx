@@ -36,10 +36,10 @@ export function TableFooter<T extends Record<string, any>>({
   }
 
   return (
-    <tfoot className="th-totals-sticky">
-      <tr className="th-totals-row">
+    <tfoot className="hh-totals-sticky">
+      <tr className="hh-totals-row">
         {selectionMode !== 'none' && (
-          <td className="th-selection-column"></td>
+          <td className="hh-selection-column"></td>
         )}
         {columns.map((col) => {
           const colKeyStr = String(col.key);
@@ -59,9 +59,9 @@ export function TableFooter<T extends Record<string, any>>({
           };
           
           const cellClassName = [
-            pinPosition ? `th-cell-pinned th-pinned-${pinPosition}` : '',
-            pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : '',
-            pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : '',
+            pinPosition ? `hh-cell-pinned hh-pinned-${pinPosition}` : '',
+            pinPosition === 'left' && col.key === lastLeftPinnedColumnKey ? 'hh-pinned-last-left' : '',
+            pinPosition === 'right' && col.key === firstRightPinnedColumnKey ? 'hh-pinned-first-right' : '',
           ].filter(Boolean).join(' ');
 
           let cellContent: React.ReactNode = '';

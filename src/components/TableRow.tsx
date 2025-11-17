@@ -108,14 +108,14 @@ export function TableRow<T extends Record<string, any>>({
   onCellMouseUp,
 }: TableRowProps<T>) {
   const rowClassName = [
-    isSelected ? 'th-row-selected' : '',
+    isSelected ? 'hh-row-selected' : '',
     // Disable row active/focused styling when cell selection is enabled
-    !enableCellSelection && isActive ? 'th-row-active' : '',
-    !enableCellSelection && isFocused ? 'th-row-focused' : '',
-    canDrag ? 'th-row-draggable' : '',
-    isDragging ? 'th-row-dragging' : '',
-    isDragOver ? 'th-row-drag-over' : '',
-    enableCellSelection && isRowAboveRange ? 'th-row-above-range' : '',
+    !enableCellSelection && isActive ? 'hh-row-active' : '',
+    !enableCellSelection && isFocused ? 'hh-row-focused' : '',
+    canDrag ? 'hh-row-draggable' : '',
+    isDragging ? 'hh-row-dragging' : '',
+    isDragOver ? 'hh-row-drag-over' : '',
+    enableCellSelection && isRowAboveRange ? 'hh-row-above-range' : '',
   ].filter(Boolean).join(' ');
 
   const actions = rowActions ? rowActions(item, index) : [];

@@ -80,7 +80,7 @@ export function RowActionsMenu<T extends Record<string, any>>({
   return (
     <div
       ref={menuRef}
-      className="th-row-actions-menu"
+      className="hh-row-actions-menu"
       style={{
         position: 'fixed',
         top: `${positionTop}px`,
@@ -93,16 +93,16 @@ export function RowActionsMenu<T extends Record<string, any>>({
       {actions.map((action) => (
         <button
           key={action.key}
-          className={`th-row-actions-menu-item ${action.disabled ? 'th-row-actions-menu-item-disabled' : ''}`}
+          className={`hh-row-actions-menu-item ${action.disabled ? 'hh-row-actions-menu-item-disabled' : ''}`}
           onClick={() => handleActionClick(action)}
           disabled={action.disabled}
         >
           {action.icon && (
-            <span className="th-row-actions-menu-icon">
+            <span className="hh-row-actions-menu-icon">
               {action.icon}
             </span>
           )}
-          <span className="th-row-actions-menu-text">
+          <span className="hh-row-actions-menu-text">
             {action.label}
           </span>
         </button>

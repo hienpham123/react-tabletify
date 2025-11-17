@@ -68,7 +68,7 @@ export function useRowSelection<T extends Record<string, any>>(
    */
   const handleItemClick = React.useCallback((item: T, index: number, ev: React.MouseEvent) => {
     // Don't trigger if clicking on checkbox
-    if ((ev.target as HTMLElement).closest('.th-selection-checkbox')) {
+    if ((ev.target as HTMLElement).closest('.hh-selection-checkbox')) {
       return;
     }
 

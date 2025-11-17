@@ -42,8 +42,9 @@ interface TableHeaderCellProps<T extends Record<string, any>> {
   onGroupBy: () => void;
   isGrouped: boolean;
   enableColumnVisibility: boolean;
-  enableGroupBy: boolean;
-  enableTotals: boolean;
+  groupable?: boolean;
+  settingsable?: boolean;
+  totalsable?: boolean;
   onTotalsChange: (value: 'none' | 'count') => void;
   totalsValue: 'none' | 'count';
   onDismiss: () => void;
@@ -97,8 +98,9 @@ export function TableHeaderCell<T extends Record<string, any>>({
   onGroupBy,
   isGrouped,
   enableColumnVisibility,
-  enableGroupBy,
-  enableTotals,
+  groupable,
+  settingsable,
+  totalsable,
   onTotalsChange,
   totalsValue,
   onDismiss,
@@ -122,15 +124,15 @@ export function TableHeaderCell<T extends Record<string, any>>({
   };
 
   const headerClassName = column.className
-    ? `th-header-cell ${pinPosition ? `th-header-pinned th-pinned-${pinPosition}` : ''} ${column.className}`
-    : pinPosition ? `th-header-cell th-header-pinned th-pinned-${pinPosition}` : 'th-header-cell';
+    ? `hh-header-cell ${pinPosition ? `hh-header-pinned hh-pinned-${pinPosition}` : ''} ${column.className}`
+    : pinPosition ? `hh-header-cell hh-header-pinned hh-pinned-${pinPosition}` : 'hh-header-cell';
 
   const thClassName = [
-    isDragOver ? 'th-drag-over' : '',
-    pinPosition ? `th-pinned-${pinPosition}` : '',
-    pinPosition === 'left' && column.key === lastLeftPinnedColumnKey ? 'th-pinned-last-left' : '',
-    pinPosition === 'right' && column.key === firstRightPinnedColumnKey ? 'th-pinned-first-right' : '',
-    enableCellSelection && isCopied ? 'th-cell-copied' : '',
+    isDragOver ? 'hh-drag-over' : '',
+    pinPosition ? `hh-pinned-${pinPosition}` : '',
+    pinPosition === 'left' && column.key === lastLeftPinnedColumnKey ? 'hh-pinned-last-left' : '',
+    pinPosition === 'right' && column.key === firstRightPinnedColumnKey ? 'hh-pinned-first-right' : '',
+    enableCellSelection && isCopied ? 'hh-cell-copied' : '',
   ].filter(Boolean).join(' ');
 
   return (
@@ -161,19 +163,19 @@ export function TableHeaderCell<T extends Record<string, any>>({
           onMouseLeave={onHeaderMouseLeave}
           onClick={(ev) => onColumnHeaderClick?.(column, ev)}
         >
-          <span className="th-header-label">
+          <span className="hh-header-label">
             {column.label}
             {column.showCallout !== false && (
-              <span className="th-header-chevron-icon" role="presentation" aria-hidden="true">
+              <span className="hh-header-chevron-icon" role="presentation" aria-hidden="true">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" fill="currentColor">
                   <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z" />
                 </svg>
               </span>
             )}
           </span>
-          <div className="th-header-icons">
+          <div className="hh-header-icons">
             {pinPosition && (
-              <span className="th-header-pin-icon" title={`Pinned ${pinPosition}`}>
+              <span className="hh-header-pin-icon" title={`Pinned ${pinPosition}`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="14"
@@ -186,7 +188,7 @@ export function TableHeaderCell<T extends Record<string, any>>({
               </span>
             )}
             {hasFilter && (
-              <span className="th-header-filter-icon" title="Filtered" role="presentation" aria-hidden="true">
+              <span className="hh-header-filter-icon" title="Filtered" role="presentation" aria-hidden="true">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="14"
@@ -199,21 +201,21 @@ export function TableHeaderCell<T extends Record<string, any>>({
               </span>
             )}
             {sortKey === column.key && (
-              <span className="th-header-sort-icon">
+              <span className="hh-header-sort-icon">
                 {sortDir === "asc" ? (
-                  <span className="th-sort-arrow">↑</span>
+                  <span className="hh-sort-arrow">↑</span>
                 ) : (
-                  <span className="th-sort-arrow">↓</span>
+                  <span className="hh-sort-arrow">↓</span>
                 )}
               </span>
             )}
           </div>
-          <span className="th-header-action">⋮</span>
+          <span className="hh-header-action">⋮</span>
         </div>
       )}
       {column.resizable !== false && (
         <div
-          className="th-resize-handle"
+          className="hh-resize-handle"
           onMouseDown={(e) => onResizeStart(colKeyStr, e)}
           style={{
             cursor: 'col-resize',
@@ -240,7 +242,7 @@ export function TableHeaderCell<T extends Record<string, any>>({
           onToggleVisibility={onToggleVisibility}
           onGroupBy={onGroupBy}
           isGrouped={isGrouped}
-          onColumnSettings={(!!onUnpin || enableColumnVisibility) ? true : undefined}
+          onColumnSettings={settingsable ? (!!onUnpin || enableColumnVisibility) : undefined}
           onTotalsChange={onTotalsChange}
           totalsValue={totalsValue}
           columnLabel={column.label}
@@ -253,8 +255,9 @@ export function TableHeaderCell<T extends Record<string, any>>({
           pinned={pinPosition}
           visible={true}
           enableColumnVisibility={enableColumnVisibility}
-          enableGroupBy={enableGroupBy}
-          enableTotals={enableTotals}
+          groupable={groupable}
+          settingsable={settingsable}
+          totalsable={totalsable}
         />
       )}
     </th>

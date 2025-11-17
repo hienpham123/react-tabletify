@@ -25,12 +25,12 @@ export function SelectionCell({
   const isHeader = onSelectAll !== undefined;
 
   return (
-    <td className="th-selection-column">
-      <div className="th-selection-checkbox-wrapper">
+    <td className="hh-selection-column">
+      <div className="hh-selection-checkbox-wrapper">
         {selectionMode === 'multiple' ? (
           <input
             type="checkbox"
-            className="th-selection-checkbox"
+            className="hh-selection-checkbox"
             checked={checked}
             ref={(input) => {
               if (input && indeterminate !== undefined) {
@@ -48,11 +48,11 @@ export function SelectionCell({
           />
         ) : (
           isHeader ? (
-            <div className="th-selection-checkbox-wrapper"></div>
+            <div className="hh-selection-checkbox-wrapper"></div>
           ) : (
             <input
               type="radio"
-              className="th-selection-checkbox"
+              className="hh-selection-checkbox"
               checked={checked}
               onChange={(e) => onChange(e.target.checked)}
               onClick={(e) => e.stopPropagation()}

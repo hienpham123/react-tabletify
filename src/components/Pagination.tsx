@@ -40,11 +40,11 @@ export const Pagination: React.FC<PaginationProps> = ({
   }
 
   return (
-    <div className="th-pagination">
+    <div className="hh-pagination">
       <button
         onClick={() => goToPage(currentPage - 1)}
         disabled={currentPage === 1}
-        className="th-pagination-btn th-pagination-arrow"
+        className="hh-pagination-btn hh-pagination-arrow"
         aria-label="Previous page"
       >
         &lt;
@@ -52,10 +52,10 @@ export const Pagination: React.FC<PaginationProps> = ({
 
       {start > 1 && (
         <>
-          <button className="th-pagination-btn" onClick={() => goToPage(1)}>
+          <button className="hh-pagination-btn" onClick={() => goToPage(1)}>
             1
           </button>
-          {start > 2 && <span className="th-pagination-ellipsis">...</span>}
+          {start > 2 && <span className="hh-pagination-ellipsis">...</span>}
         </>
       )}
 
@@ -63,7 +63,7 @@ export const Pagination: React.FC<PaginationProps> = ({
         <button
           key={p}
           onClick={() => goToPage(p)}
-          className={`th-pagination-btn ${p === currentPage ? 'th-page-active' : ''}`}
+          className={`hh-pagination-btn ${p === currentPage ? 'hh-page-active' : ''}`}
         >
           {p}
         </button>
@@ -71,8 +71,8 @@ export const Pagination: React.FC<PaginationProps> = ({
 
       {end < totalPages && (
         <>
-          {end < totalPages - 1 && <span className="th-pagination-ellipsis">...</span>}
-          <button className="th-pagination-btn" onClick={() => goToPage(totalPages)}>
+          {end < totalPages - 1 && <span className="hh-pagination-ellipsis">...</span>}
+          <button className="hh-pagination-btn" onClick={() => goToPage(totalPages)}>
             {totalPages}
           </button>
         </>
@@ -81,19 +81,19 @@ export const Pagination: React.FC<PaginationProps> = ({
       <button
         onClick={() => goToPage(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="th-pagination-btn th-pagination-arrow"
+        className="hh-pagination-btn hh-pagination-arrow"
         aria-label="Next page"
       >
         &gt;
       </button>
 
       {itemsPerPageOptions && onItemsPerPageChange && (
-        <div className="th-pagination-items-per-page">
-          <label htmlFor="th-items-per-page-select" style={{ marginRight: '8px' }}>
+        <div className="hh-pagination-items-per-page">
+          <label htmlFor="hh-items-per-page-select" style={{ marginRight: '8px' }}>
             Rows per page:
           </label>
           <select
-            id="th-items-per-page-select"
+            id="hh-items-per-page-select"
             value={itemsPerPage}
             onChange={(e) => {
               const newItemsPerPage = Number(e.target.value);
@@ -101,7 +101,7 @@ export const Pagination: React.FC<PaginationProps> = ({
               // Reset to page 1 when changing items per page
               onPageChange(1);
             }}
-            className="th-pagination-select"
+            className="hh-pagination-select"
           >
             {itemsPerPageOptions.map((option) => (
               <option key={option} value={option}>

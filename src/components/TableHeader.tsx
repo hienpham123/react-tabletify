@@ -43,8 +43,6 @@ interface TableHeaderProps<T extends Record<string, any>> {
   onGroupBy: (column: Column<T>) => void;
   currentGroupBy?: keyof T;
   enableColumnVisibility: boolean;
-  enableGroupBy: boolean;
-  enableTotals: boolean;
   onTotalsChange: (column: Column<T>, value: 'none' | 'count') => void;
   columnTotals: Record<string, 'none' | 'count'>;
   getLeftOffset: (column: Column<T>, index: number) => number;
@@ -101,8 +99,6 @@ export function TableHeader<T extends Record<string, any>>({
   onGroupBy,
   currentGroupBy,
   enableColumnVisibility,
-  enableGroupBy,
-  enableTotals,
   onTotalsChange,
   columnTotals,
   getLeftOffset,
@@ -128,9 +124,9 @@ export function TableHeader<T extends Record<string, any>>({
           />
         )}
         {enableRowActions && (
-          <th className="th-row-actions-column">
-            <div className="th-header-cell">
-              <span className="th-header-label"></span>
+          <th className="hh-row-actions-column">
+            <div className="hh-header-cell">
+              <span className="hh-header-label"></span>
             </div>
           </th>
         )}
@@ -240,16 +236,21 @@ export function TableHeader<T extends Record<string, any>>({
                 }
               }}
               onGroupBy={() => {
-                onGroupBy(col);
-                dismissCallout();
+                if (col.groupable !== false) {
+                  onGroupBy(col);
+                  dismissCallout();
+                }
               }}
               isGrouped={currentGroupBy === col.key}
               enableColumnVisibility={enableColumnVisibility}
-              enableGroupBy={enableGroupBy}
-              enableTotals={enableTotals}
+              groupable={col.groupable}
+              settingsable={col.settingsable}
+              totalsable={col.totalsable}
               onTotalsChange={(value) => {
-                onTotalsChange(col, value);
-                dismissCallout();
+                if (col.totalsable !== false) {
+                  onTotalsChange(col, value);
+                  dismissCallout();
+                }
               }}
               totalsValue={columnTotals[colKeyStr] || 'none'}
               onDismiss={dismissCallout}

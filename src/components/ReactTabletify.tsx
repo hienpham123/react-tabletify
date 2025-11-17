@@ -1089,11 +1089,11 @@ export function ReactTabletify<T extends Record<string, any>>({
       // Excel-like mode: no buttons, auto-save on blur
       if (enableCellSelection) {
         return (
-          <div className="th-cell-edit-wrapper">
+          <div className="hh-cell-edit-wrapper">
             <input
               ref={editInputRef}
               type="text"
-              className={`th-cell-edit-input th-cell-edit-input-excel ${hasError ? 'th-cell-edit-input-error' : ''}`}
+              className={`hh-cell-edit-input hh-cell-edit-input-excel ${hasError ? 'hh-cell-edit-input-error' : ''}`}
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               onBlur={() => {
@@ -1147,7 +1147,7 @@ export function ReactTabletify<T extends Record<string, any>>({
               }}
             />
             {hasError && (
-              <div className="th-cell-edit-error-message">{validationError}</div>
+              <div className="hh-cell-edit-error-message">{validationError}</div>
             )}
           </div>
         );
@@ -1155,12 +1155,12 @@ export function ReactTabletify<T extends Record<string, any>>({
       
       // Normal mode: show buttons
       return (
-        <div className="th-cell-edit-container">
-          <div className="th-cell-edit-input-wrapper">
+        <div className="hh-cell-edit-container">
+          <div className="hh-cell-edit-input-wrapper">
             <input
               ref={editInputRef}
               type="text"
-              className={`th-cell-edit-input ${hasError ? 'th-cell-edit-input-error' : ''}`}
+              className={`hh-cell-edit-input ${hasError ? 'hh-cell-edit-input-error' : ''}`}
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               onKeyDown={(e) => {
@@ -1205,13 +1205,13 @@ export function ReactTabletify<T extends Record<string, any>>({
               }}
             />
             {hasError && (
-              <div className="th-cell-edit-error-message">{validationError}</div>
+              <div className="hh-cell-edit-error-message">{validationError}</div>
             )}
           </div>
-          <div className="th-cell-edit-buttons">
+          <div className="hh-cell-edit-buttons">
             <button
               type="button"
-              className="th-cell-edit-button th-cell-edit-save"
+              className="hh-cell-edit-button hh-cell-edit-save"
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -1233,7 +1233,7 @@ export function ReactTabletify<T extends Record<string, any>>({
             </button>
             <button
               type="button"
-              className="th-cell-edit-button th-cell-edit-cancel"
+              className="hh-cell-edit-button hh-cell-edit-cancel"
               onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
@@ -1397,7 +1397,7 @@ export function ReactTabletify<T extends Record<string, any>>({
   return (
     <div
       ref={tableRef}
-      className={`th-table ${className || ''} th-theme-${tableTheme.mode || 'light'} ${resizingColumn ? 'resizing' : ''} ${stickyHeader ? 'th-sticky-header' : ''} ${enableCellSelection ? 'enable-cell-selection' : ''}`}
+      className={`hh-table ${className || ''} hh-theme-${tableTheme.mode || 'light'} ${resizingColumn ? 'resizing' : ''} ${stickyHeader ? 'hh-sticky-header' : ''} ${enableCellSelection ? 'enable-cell-selection' : ''}`}
       style={{
         ...themeStyles,
         ...styles,
@@ -1407,7 +1407,7 @@ export function ReactTabletify<T extends Record<string, any>>({
       tabIndex={enableCellSelection || enableKeyboardNavigation ? 0 : undefined}
     >
       {enableExport && (
-        <div className="th-export-toolbar">
+        <div className="hh-export-toolbar">
           <ExportButton
             data={table.filtered}
             columns={sortedColumns}
@@ -1537,8 +1537,6 @@ export function ReactTabletify<T extends Record<string, any>>({
                           }}
               currentGroupBy={currentGroupBy}
               enableColumnVisibility={enableColumnVisibility || false}
-              enableGroupBy={true}
-              enableTotals={true}
               onTotalsChange={(col, value) => {
                             setColumnTotals(prev => ({
                               ...prev,

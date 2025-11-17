@@ -21,10 +21,10 @@ export function GroupHeaderRow({
   colSpan,
 }: GroupHeaderRowProps) {
   return (
-    <tr className="th-group-header">
-      <td colSpan={colSpan} className="th-group-header-cell">
+    <tr className="hh-group-header">
+      <td colSpan={colSpan} className="hh-group-header-cell">
         <button
-          className="th-group-toggle"
+          className="hh-group-toggle"
           onClick={onToggle}
           aria-expanded={isExpanded}
         >
@@ -45,10 +45,10 @@ export function GroupHeaderRow({
               fill="none"
             />
           </svg>
-          <span className="th-group-label">
+          <span className="hh-group-label">
             {groupLabel}: {groupKey}
           </span>
-          <span className="th-group-count">({rowCount})</span>
+          <span className="hh-group-count">({rowCount})</span>
         </button>
       </td>
     </tr>
