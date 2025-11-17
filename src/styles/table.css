@@ -488,11 +488,10 @@
 /* Cell edit container */
 .hh-cell-edit-container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   gap: 4px;
   width: 100%;
   position: relative;
-  align-items: flex-start;
 }
 
 /* Wrapper for Excel-like mode */
@@ -525,6 +524,7 @@
   background: var(--hh-color-surface, #ffffff);
   outline: none;
   box-sizing: border-box;
+  text-align: left;
 }
 
 .hh-cell-edit-input:focus {
@@ -553,6 +553,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+  text-align: left;
 }
 
 /* Excel-like inline editing: no border, fit cell height seamlessly */

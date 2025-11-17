@@ -1157,58 +1157,53 @@ export function ReactTabletify<T extends Record<string, any>>({
       // Normal mode: show buttons
       return (
         <div className="hh-cell-edit-container">
-          <div className="hh-cell-edit-input-wrapper">
-            <input
-              ref={editInputRef}
-              type="text"
-              className={`hh-cell-edit-input ${hasError ? 'hh-cell-edit-input-error' : ''}`}
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const saved = handleCellEditSave(item, column.key, index);
-                  // If validation failed, keep focus
-                  if (saved === false && editInputRef.current) {
-                    editInputRef.current.focus();
-                  }
-                } else if (e.key === 'Escape') {
-                  e.preventDefault();
-                  handleCellEditCancel();
+          <input
+            ref={editInputRef}
+            type="text"
+            className={`hh-cell-edit-input ${hasError ? 'hh-cell-edit-input-error' : ''}`}
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                const saved = handleCellEditSave(item, column.key, index);
+                // If validation failed, keep focus
+                if (saved === false && editInputRef.current) {
+                  editInputRef.current.focus();
                 }
-                // Allow all other keys including Space, Delete, Backspace, etc.
-                // Only stop propagation for navigation keys to prevent table-level handlers
-                if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
-                    e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
-                    e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
-                  e.stopPropagation();
-                }
-              }}
-              onClick={(e) => {
+              } else if (e.key === 'Escape') {
+                e.preventDefault();
+                handleCellEditCancel();
+              }
+              // Allow all other keys including Space, Delete, Backspace, etc.
+              // Only stop propagation for navigation keys to prevent table-level handlers
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
+                  e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+                  e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
                 e.stopPropagation();
-                // Allow normal text selection when clicking on input
-                // Don't force selection
-              }}
-              onFocus={(e) => {
-                // Focus cursor at the end of the value when input gets focus
-                const input = e.target as HTMLInputElement;
-                if (input) {
-                  // Use setTimeout to ensure selection happens after focus
-                  setTimeout(() => {
-                    const length = input.value.length;
-                    input.setSelectionRange(length, length);
-                  }, 0);
-                }
-              }}
-              onMouseDown={(e) => {
-                // Prevent default to allow selection
-                e.stopPropagation();
-              }}
-            />
-            {hasError && (
-              <div className="hh-cell-edit-error-message">{validationError}</div>
-            )}
-          </div>
+              }
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+              // Allow normal text selection when clicking on input
+              // Don't force selection
+            }}
+            onFocus={(e) => {
+              // Focus cursor at the end of the value when input gets focus
+              const input = e.target as HTMLInputElement;
+              if (input) {
+                // Use setTimeout to ensure selection happens after focus
+                setTimeout(() => {
+                  const length = input.value.length;
+                  input.setSelectionRange(length, length);
+                }, 0);
+              }
+            }}
+            onMouseDown={(e) => {
+              // Prevent default to allow selection
+              e.stopPropagation();
+            }}
+          />
           <div className="hh-cell-edit-buttons">
             <button
               type="button"
@@ -1247,6 +1242,9 @@ export function ReactTabletify<T extends Record<string, any>>({
               <CloseIcon width={12} height={12} />
             </button>
           </div>
+          {hasError && (
+            <div className="hh-cell-edit-error-message">{validationError}</div>
+          )}
         </div>
       );
     }
