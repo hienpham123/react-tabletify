@@ -29,6 +29,7 @@ export function RowActionsMenu<T extends Record<string, any>>({
   onMouseLeave,
 }: RowActionsMenuProps<T>) {
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const [positionTop, setPositionTop] = React.useState(0);
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -57,18 +58,26 @@ export function RowActionsMenu<T extends Record<string, any>>({
     };
   }, [onDismiss, anchorRef]);
 
+  React.useEffect(() => {
+    if (!anchorRef.current || !menuRef.current) return;
+    
+    const rect = anchorRef.current.getBoundingClientRect();
+    const menuHeight = menuRef.current.offsetHeight || (actions.length * 32 + 8); // Use actual height or fallback
+    const viewportHeight = window.innerHeight;
+    const spaceBelow = viewportHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // Position menu below button by default, or above if not enough space
+    if (spaceBelow < menuHeight && spaceAbove > spaceBelow) {
+      setPositionTop(rect.top - menuHeight - 4);
+    } else {
+      setPositionTop(rect.bottom + 4);
+    }
+  }, [actions.length, anchorRef]);
+
   if (!anchorRef.current || actions.length === 0) return null;
 
   const rect = anchorRef.current.getBoundingClientRect();
-  const menuHeight = actions.length * 32 + 8; // Approximate height
-  const viewportHeight = window.innerHeight;
-  const spaceBelow = viewportHeight - rect.bottom;
-  const spaceAbove = rect.top;
-
-  // Position menu below button by default, or above if not enough space
-  const positionTop = spaceBelow < menuHeight && spaceAbove > spaceBelow
-    ? rect.top - menuHeight - 4
-    : rect.bottom + 4;
 
   const handleActionClick = (action: RowAction) => {
     if (!action.disabled) {

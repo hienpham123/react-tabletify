@@ -15,6 +15,7 @@ export function useInlineEditing<T extends Record<string, any>>(
 ) {
   const [editingCell, setEditingCell] = React.useState<{ rowIndex: number; columnKey: keyof T } | null>(null);
   const [editValue, setEditValue] = React.useState<string>('');
+  const [originalValue, setOriginalValue] = React.useState<string>(''); // Store original value for cancel
   const [validationError, setValidationError] = React.useState<string | null>(null);
   const [currentItem, setCurrentItem] = React.useState<T | null>(null); // Store current item for validation
   const editInputRef = React.useRef<HTMLInputElement>(null);
@@ -24,8 +25,10 @@ export function useInlineEditing<T extends Record<string, any>>(
    */
   const handleCellEditStart = React.useCallback((item: T, column: { key: keyof T; editable?: boolean }, rowIndex: number) => {
     if (column.editable !== true) return;
+    const initialValue = String(item[column.key] != null ? item[column.key] : '');
     setEditingCell({ rowIndex, columnKey: column.key });
-    setEditValue(String(item[column.key] != null ? item[column.key] : ''));
+    setEditValue(initialValue);
+    setOriginalValue(initialValue); // Store original value for cancel
     setCurrentItem(item); // Store item for real-time validation
     setValidationError(null); // Clear any previous validation errors
   }, []);
@@ -33,13 +36,16 @@ export function useInlineEditing<T extends Record<string, any>>(
   /**
    * Save edited cell value
    */
-  const handleCellEditSave = React.useCallback((item: T, columnKey: keyof T, rowIndex: number) => {
+  const handleCellEditSave = React.useCallback((item: T, columnKey: keyof T, rowIndex: number, valueToSave?: any) => {
     // Find the column definition to check for validation
     const column = columns?.find(col => col.key === columnKey);
     
+    // Use provided valueToSave if available, otherwise use editValue from state
+    const valueToValidate = valueToSave != null ? String(valueToSave) : editValue;
+    
     // Validate if validation function is provided
-    if (column?.validate) {
-      const error = column.validate(editValue, item, columnKey);
+    if (column && column.validate) {
+      const error = column.validate(valueToValidate, item, columnKey);
       if (error) {
         // Validation failed - set error and don't save
         setValidationError(error);
@@ -50,7 +56,7 @@ export function useInlineEditing<T extends Record<string, any>>(
     // Validation passed or no validation - proceed with save
     setValidationError(null);
     if (onCellEdit) {
-      onCellEdit(item, columnKey, editValue, rowIndex);
+      onCellEdit(item, columnKey, valueToValidate, rowIndex);
     }
     setEditingCell(null);
     setEditValue('');
@@ -62,8 +68,11 @@ export function useInlineEditing<T extends Record<string, any>>(
    * Cancel editing
    */
   const handleCellEditCancel = React.useCallback(() => {
+    // Just close editing mode - original value is already in the data
+    // No need to restore editValue since we're closing
     setEditingCell(null);
     setEditValue('');
+    setOriginalValue('');
     setValidationError(null); // Clear validation error on cancel
     setCurrentItem(null); // Clear current item
   }, []);

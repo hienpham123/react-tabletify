@@ -41,7 +41,7 @@
 }
 
 .hh-pagination-btn:focus {
-  outline: 2px solid var(--hh-color-focus, #107c10);
+  outline: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
   outline-offset: 2px;
 }
 
@@ -95,11 +95,11 @@
 }
 
 .hh-pagination-select:hover {
-  border-color: var(--hh-color-focus, #107c10);
+  border-color: var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
 }
 
 .hh-pagination-select:focus {
   outline: none;
-  border-color: var(--hh-color-focus, #107c10);
+  border-color: var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
   box-shadow: 0 0 0 2px rgba(16, 124, 16, 0.1);
 }

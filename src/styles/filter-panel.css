@@ -61,7 +61,7 @@
 }
 
 .hh-filter-close:focus {
-  outline: 2px solid var(--hh-color-focus, #107c10);
+  outline: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
   outline-offset: -2px;
 }
 
@@ -112,7 +112,7 @@
 
 .hh-filter-search-input:focus {
   outline: none;
-  border-color: var(--hh-color-focus, #107c10);
+  border-color: var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
   border-width: 2px;
   padding: 0 7px;
 }
@@ -188,7 +188,7 @@
 }
 
 .hh-filter-option input[type="checkbox"]:focus {
-  outline: 2px solid var(--hh-color-focus, #107c10);
+  outline: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
   outline-offset: 2px;
 }
 

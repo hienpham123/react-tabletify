@@ -1,0 +1,183 @@
+/* Fluent UI Dropdown Styles */
+
+.hh-fluent-dropdown-container {
+  position: relative;
+  width: 100%;
+  display: inline-block;
+}
+
+.hh-fluent-dropdown-button {
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 8px;
+  border: 1px solid var(--hh-color-border, #605e5c);
+  border-radius: var(--hh-border-radius-button, 2px);
+  background: var(--hh-color-background, #ffffff);
+  color: var(--hh-color-text, #323130);
+  font-size: var(--hh-typography-font-size, 14px);
+  font-family: var(--hh-typography-font-family, "Segoe UI", system-ui, sans-serif);
+  line-height: var(--hh-typography-line-height, 20px);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  transition: border-color var(--hh-transition-duration, 0.1s) var(--hh-transition-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+  text-align: left;
+}
+
+.hh-fluent-dropdown-button:hover {
+  border-color: var(--hh-color-text, #323130);
+}
+
+.hh-fluent-dropdown-button:focus {
+  outline: none;
+  border-color: var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
+  border-width: 2px;
+  padding: 3px 7px;
+}
+
+.hh-fluent-dropdown-button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.hh-fluent-dropdown-button-excel {
+  border: none !important;
+  border-radius: 0 !important;
+  padding: inherit !important;
+  background: transparent !important;
+  font-size: inherit !important;
+  font-family: inherit !important;
+  line-height: inherit !important;
+  min-height: auto !important;
+  height: 100% !important;
+}
+
+.hh-fluent-dropdown-button-excel:hover {
+  border: none !important;
+}
+
+.hh-fluent-dropdown-button-excel:focus {
+  border: none !important;
+  padding: inherit !important;
+  outline: none !important;
+}
+
+.hh-fluent-dropdown-error {
+  border-color: var(--hh-color-error, #d13438) !important;
+  background-color: #fff4f4 !important;
+}
+
+.hh-fluent-dropdown-error:focus {
+  border-color: var(--hh-color-error, #d13438) !important;
+  box-shadow: 0 0 0 1px var(--hh-color-error, #d13438) !important;
+}
+
+.hh-fluent-dropdown-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--hh-color-text, #323130);
+}
+
+.hh-fluent-dropdown-text-placeholder {
+  color: var(--hh-color-placeholder, #605e5c);
+}
+
+.hh-fluent-dropdown-chevron {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: var(--hh-color-text, #323130);
+  transition: transform var(--hh-transition-duration, 0.1s) var(--hh-transition-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+  margin-left: 8px;
+}
+
+.hh-fluent-dropdown-chevron-open {
+  transform: rotate(180deg);
+}
+
+.hh-fluent-dropdown-list {
+  position: fixed;
+  margin-top: 2px;
+  background: var(--hh-color-surface, #ffffff);
+  border: 1px solid var(--hh-color-border, #e1dfdd);
+  box-shadow: var(--hh-shadow-callout, 0 3.2px 7.2px rgba(0, 0, 0, 0.132), 0 0.6px 1.8px rgba(0, 0, 0, 0.108));
+  border-radius: var(--hh-border-radius-button, 4px);
+  z-index: 9999;
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-family: var(--hh-typography-font-family, "Segoe UI", system-ui, sans-serif);
+  font-size: var(--hh-typography-font-size, 14px);
+  animation: hh-dropdown-fadeIn var(--hh-transition-duration, 0.167s) var(--hh-transition-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+  box-sizing: border-box;
+}
+
+@keyframes hh-dropdown-fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hh-fluent-dropdown-option {
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--hh-color-text, #323130);
+  transition: background-color var(--hh-transition-duration, 0.1s) var(--hh-transition-easing, cubic-bezier(0.1, 0.9, 0.2, 1));
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  line-height: var(--hh-typography-line-height, 20px);
+}
+
+.hh-fluent-dropdown-option:hover:not(.hh-fluent-dropdown-option-disabled) {
+  background-color: var(--hh-color-hover, #f3f2f1);
+  color: var(--hh-color-text, #201f1e);
+}
+
+.hh-fluent-dropdown-option-focused:not(.hh-fluent-dropdown-option-disabled) {
+  background-color: var(--hh-color-hover, #f3f2f1);
+  color: var(--hh-color-text, #201f1e);
+}
+
+.hh-fluent-dropdown-option-selected {
+  background-color: var(--hh-color-selected, #edebe9);
+  font-weight: 500;
+}
+
+.hh-fluent-dropdown-option-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: var(--hh-color-disabled, #a19f9d);
+}
+
+/* Scrollbar styling for dropdown list */
+.hh-fluent-dropdown-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.hh-fluent-dropdown-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.hh-fluent-dropdown-list::-webkit-scrollbar-thumb {
+  background: var(--hh-color-border, #c8c6c4);
+  border-radius: 4px;
+}
+
+.hh-fluent-dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: var(--hh-color-text, #605e5c);
+}
+

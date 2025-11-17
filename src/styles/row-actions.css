@@ -72,7 +72,7 @@
 }
 
 .hh-row-actions-button:focus {
-  outline: 2px solid var(--hh-color-focus, #107c10);
+  outline: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
   outline-offset: -2px;
 }
 
@@ -129,7 +129,7 @@
 }
 
 .hh-row-actions-menu-item:focus {
-  outline: 2px solid var(--hh-color-focus, #107c10);
+  outline: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
   outline-offset: -2px;
 }
 

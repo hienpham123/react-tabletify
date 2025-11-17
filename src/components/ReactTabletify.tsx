@@ -20,9 +20,13 @@ import { ExportButton } from "./ExportButton";
 import type { ReactTabletifyProps, Column } from "../types";
 import { getTheme, applyTheme } from "../utils/theme";
 import { CheckIcon, CloseIcon } from "../icons";
+import { FluentDropdown } from "./FluentDropdown";
+import { FluentDatePicker } from "./FluentDatePicker";
 import "./../styles/table.css";
 import "./../styles/row-actions.css";
 import "./../styles/cell-selection.css";
+import "./../styles/fluent-dropdown.css";
+import "./../styles/fluent-datepicker.css";
 
 
 export function ReactTabletify<T extends Record<string, any>>({
@@ -128,14 +132,14 @@ export function ReactTabletify<T extends Record<string, any>>({
 
   // Internal groupBy state (use prop if provided, otherwise use internal state)
   const [internalGroupBy, setInternalGroupBy] = React.useState<keyof T | undefined>(groupBy);
-  
+
   // Sync internalGroupBy when prop changes
   React.useEffect(() => {
     if (groupBy !== undefined) {
       setInternalGroupBy(groupBy);
     }
   }, [groupBy]);
-  
+
   // Use prop if provided, otherwise use internal state
   const currentGroupBy = groupBy !== undefined ? groupBy : internalGroupBy;
 
@@ -250,31 +254,31 @@ export function ReactTabletify<T extends Record<string, any>>({
   // Cell edit handler - updates internal state or calls onCellEdit callback
   // This is used for paste operations - validation is handled separately for inline editing
   const handleCellEdit = React.useCallback((item: T, columnKey: keyof T, newValue: any, index: number) => {
-      // Validate the value before editing (for paste operations)
-      const error = validateCellValue(newValue, item, columnKey);
-      if (error) {
-        // If validation fails during paste, we could show a notification or skip the edit
-        // For now, we'll skip invalid values during paste to prevent bad data
-        console.warn(`Validation failed for column ${String(columnKey)}: ${error}`);
-        return;
-      }
+    // Validate the value before editing (for paste operations)
+    const error = validateCellValue(newValue, item, columnKey);
+    if (error) {
+      // If validation fails during paste, we could show a notification or skip the edit
+      // For now, we'll skip invalid values during paste to prevent bad data
+      console.warn(`Validation failed for column ${String(columnKey)}: ${error}`);
+      return;
+    }
 
-      // If no onCellEdit callback, automatically update internal state
-      // Note: index might be from pagedData, so we need to find the actual item in dataToUse
-      setInternalData(prev => {
-        const newData = [...prev];
-        // Try to find the item by reference first (faster)
-        const itemIndex = newData.findIndex(d => d === item);
-        const actualIndex = itemIndex >= 0 ? itemIndex : index;
-        
-        if (actualIndex >= 0 && actualIndex < newData.length) {
-          newData[actualIndex] = { ...newData[actualIndex], [columnKey]: newValue };
-        }
-        return newData;
-      });
-      if (onCellEdit) {
-        onCellEdit(item, columnKey, newValue, index);
+    // If no onCellEdit callback, automatically update internal state
+    // Note: index might be from pagedData, so we need to find the actual item in dataToUse
+    setInternalData(prev => {
+      const newData = [...prev];
+      // Try to find the item by reference first (faster)
+      const itemIndex = newData.findIndex(d => d === item);
+      const actualIndex = itemIndex >= 0 ? itemIndex : index;
+
+      if (actualIndex >= 0 && actualIndex < newData.length) {
+        newData[actualIndex] = { ...newData[actualIndex], [columnKey]: newValue };
       }
+      return newData;
+    });
+    if (onCellEdit) {
+      onCellEdit(item, columnKey, newValue, index);
+    }
   }, [internalData, validateCellValue, onCellEdit]);
 
   // Inline editing hook
@@ -289,12 +293,14 @@ export function ReactTabletify<T extends Record<string, any>>({
     handleCellEditCancel,
   } = useInlineEditing(handleCellEdit, columns);
 
-  // Wrap handleCellEditStart to skip row number column
+  // Wrap handleCellEditStart to skip row number column and dismiss callout
   const handleCellEditStart = React.useCallback((item: T, column: { key: keyof T; editable?: boolean }, rowIndex: number) => {
     // Skip row number column
     if (String(column.key) === '__rowNumber__') return;
+    // Dismiss callout when starting cell edit
+    callout.dismissCallout();
     handleCellEditStartOriginal(item, column, rowIndex);
-  }, [handleCellEditStartOriginal]);
+  }, [callout, handleCellEditStartOriginal]);
 
   // Row drag & drop hook
   const {
@@ -368,38 +374,38 @@ export function ReactTabletify<T extends Record<string, any>>({
     if (!enableCellSelection) {
       return { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false, isFocused: false };
     }
-    
+
     // Check if cell is focused
     const isFocused = cellSelection.focusedCell && cellSelection.focusedCell.rowIndex === rowIndex && cellSelection.focusedCell.colKey === colKey;
-    
+
     if (!cellSelection.selectedRange) {
       return { isStart: false, isEnd: false, isInRange: false, isTopRow: false, isBottomRow: false, isLeftCol: false, isRightCol: false, isCopied: false, isFocused };
     }
-    
+
     const range = cellSelection.selectedRange;
     const startRow = Math.min(range.start.rowIndex, range.end.rowIndex);
     const endRow = Math.max(range.start.rowIndex, range.end.rowIndex);
-    
+
     // Find column indices
     const startColIndex = sortedColumns.findIndex(c => String(c.key) === range.start.colKey);
     const endColIndex = sortedColumns.findIndex(c => String(c.key) === range.end.colKey);
     const minColIndex = Math.min(startColIndex >= 0 ? startColIndex : 0, endColIndex >= 0 ? endColIndex : sortedColumns.length - 1);
     const maxColIndex = Math.max(startColIndex >= 0 ? startColIndex : 0, endColIndex >= 0 ? endColIndex : sortedColumns.length - 1);
     const currentColIndex = sortedColumns.findIndex(c => String(c.key) === colKey);
-    
+
     const isStart = range.start.rowIndex === rowIndex && range.start.colKey === colKey;
     const isEnd = range.end.rowIndex === rowIndex && range.end.colKey === colKey;
     const isInRange = cellSelection.isCellSelected(rowIndex, colKey);
-    
+
     // Check if cell is on the edge of the range
     const isTopRow = rowIndex === startRow;
     const isBottomRow = rowIndex === endRow;
     const isLeftCol = currentColIndex === minColIndex;
     const isRightCol = currentColIndex === maxColIndex;
-    
-    return { 
-      isStart, 
-      isEnd, 
+
+    return {
+      isStart,
+      isEnd,
       isInRange,
       isTopRow,
       isBottomRow,
@@ -468,7 +474,7 @@ export function ReactTabletify<T extends Record<string, any>>({
 
     const handleClickOutside = (e: MouseEvent) => {
       if (!tableRef.current) return;
-      
+
       const target = e.target as Node | null;
       if (target && !tableRef.current.contains(target)) {
         // Clear selection and focus when clicking outside table
@@ -491,7 +497,7 @@ export function ReactTabletify<T extends Record<string, any>>({
 
     const handleFocusOut = (e: FocusEvent) => {
       if (!tableRef.current) return;
-      
+
       // Check if the new focus target is outside the table
       const relatedTarget = e.relatedTarget as Node | null;
       if (relatedTarget && !tableRef.current.contains(relatedTarget)) {
@@ -517,10 +523,10 @@ export function ReactTabletify<T extends Record<string, any>>({
       // Only handle if table container or cells are focused
       const activeElement = document.activeElement;
       if (!tableRef.current || !activeElement) return;
-      
+
       // Check if active element is within the table
       const isInTable = tableRef.current.contains(activeElement);
-      
+
       // Don't handle if focus is outside table
       if (!isInTable) {
         return;
@@ -528,9 +534,9 @@ export function ReactTabletify<T extends Record<string, any>>({
 
       // Don't handle keyboard shortcuts if user is editing a cell (typing in input)
       // Check if active element is an input, textarea, or contenteditable
-      if (activeElement.tagName === 'INPUT' || 
-          activeElement.tagName === 'TEXTAREA' || 
-          activeElement.getAttribute('contenteditable') === 'true') {
+      if (activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.getAttribute('contenteditable') === 'true') {
         // Allow normal typing (including Space) in input fields
         // Only prevent shortcuts that might conflict
         if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'v')) {
@@ -613,10 +619,10 @@ export function ReactTabletify<T extends Record<string, any>>({
         const focused = cellSelection.focusedCell;
         const range = cellSelection.selectedRange;
         const selectedCells = cellSelection.getSelectedCells();
-        
+
         // Priority: focused cell > range start > first selected cell
         let pasteTarget: { rowIndex: number; colKey: string } | null = null;
-        
+
         if (focused) {
           pasteTarget = { rowIndex: focused.rowIndex, colKey: focused.colKey };
         } else if (range) {
@@ -625,19 +631,19 @@ export function ReactTabletify<T extends Record<string, any>>({
         } else if (selectedCells.length > 0) {
           pasteTarget = selectedCells[0];
         }
-        
+
         if (pasteTarget) {
           e.preventDefault();
           // Use table.sorted for paste (includes filter and sort) to ensure correct position
           // When grouped, use table.filtered; otherwise use table.sorted
           const dataForPaste = currentGroupBy ? table.filtered : table.sorted;
-          
+
           // Convert rowIndex from pagedData index to dataForPaste index
           // pasteTarget.rowIndex is the index in table.paged, we need to find the actual item
           // and then find its index in dataForPaste
           const pagedItem = table.paged[pasteTarget.rowIndex];
           let actualRowIndex = pasteTarget.rowIndex;
-          
+
           if (pagedItem) {
             // Find the item in dataForPaste
             const itemIndexInDataForPaste = dataForPaste.findIndex((item: T) => {
@@ -647,7 +653,7 @@ export function ReactTabletify<T extends Record<string, any>>({
               // This is a fallback for cases where items are cloned
               return getItemKey(item, -1) === getItemKey(pagedItem, -1);
             });
-            
+
             if (itemIndexInDataForPaste >= 0) {
               actualRowIndex = itemIndexInDataForPaste;
             } else {
@@ -669,7 +675,7 @@ export function ReactTabletify<T extends Record<string, any>>({
               actualRowIndex = dataForPaste.length - 1;
             }
           }
-          
+
           // Create a wrapper for onCellEdit that finds the item in dataToUse by reference/key
           const handleCellEditForPaste = (item: T, columnKey: keyof T, newValue: any, index: number) => {
             // Find the actual item in dataToUse by reference or key
@@ -677,7 +683,7 @@ export function ReactTabletify<T extends Record<string, any>>({
               if (d === item) return true;
               return getItemKey(d, -1) === getItemKey(item, -1);
             });
-            
+
             if (itemInDataToUse) {
               // Find the index in dataToUse
               const actualIndex = dataToUse.findIndex((d: T) => d === itemInDataToUse);
@@ -687,10 +693,10 @@ export function ReactTabletify<T extends Record<string, any>>({
               handleCellEdit(item, columnKey, newValue, index);
             }
           };
-          
+
           const pasteTargetCells = [{ rowIndex: actualRowIndex, colKey: pasteTarget.colKey }];
           const pasteTargetColKey = pasteTarget.colKey; // Store colKey to avoid null reference
-          
+
           // Helper to select the pasted range after paste
           const selectPastedRange = (pastedRows: number, pastedCols: number) => {
             // Calculate the pasted range in sortedData
@@ -698,22 +704,22 @@ export function ReactTabletify<T extends Record<string, any>>({
             const endRowIndexInSorted = Math.min(actualRowIndex + pastedRows - 1, dataForPaste.length - 1);
             const startColIndex = sortedColumns.findIndex(c => String(c.key) === pasteTargetColKey);
             const endColIndex = Math.min(startColIndex + pastedCols - 1, sortedColumns.length - 1);
-            
+
             if (startColIndex >= 0 && endColIndex >= 0 && startRowIndexInSorted >= 0 && endRowIndexInSorted >= 0) {
               const startColKey = String(sortedColumns[startColIndex].key);
               const endColKey = String(sortedColumns[endColIndex].key);
-              
+
               // Calculate indices in pagedData based on pagination
               // actualRowIndex is the index in table.sorted
               // To get index in table.paged, we need to subtract the offset from current page
               const pageStartIndex = (table.currentPage - 1) * table.itemsPerPage;
               const startPagedIndex = startRowIndexInSorted - pageStartIndex;
               const endPagedIndex = endRowIndexInSorted - pageStartIndex;
-              
+
               // Only select if the range is within the current page
-              if (startPagedIndex >= 0 && endPagedIndex >= 0 && 
-                  startPagedIndex < table.paged.length && 
-                  endPagedIndex < table.paged.length) {
+              if (startPagedIndex >= 0 && endPagedIndex >= 0 &&
+                startPagedIndex < table.paged.length &&
+                endPagedIndex < table.paged.length) {
                 // Use double requestAnimationFrame to ensure data updates and DOM render are complete
                 requestAnimationFrame(() => {
                   requestAnimationFrame(() => {
@@ -732,12 +738,12 @@ export function ReactTabletify<T extends Record<string, any>>({
               }
             }
           };
-          
+
           // First try to paste from system clipboard (Excel, etc.)
           // If that fails or returns nothing, try internal clipboard
           // Filter out row number column from columns passed to clipboard
           const columnsForClipboard = sortedColumns.filter(col => String(col.key) !== '__rowNumber__').map(col => ({ key: col.key, label: col.label }));
-          
+
           clipboard.pasteFromSystemClipboard(
             pasteTargetCells,
             dataForPaste,
@@ -813,12 +819,12 @@ export function ReactTabletify<T extends Record<string, any>>({
         // Only handle if not in editing mode
         if (!editingCell) {
           e.preventDefault();
-          const direction = e.key === 'ArrowUp' ? 'up' : 
-                           e.key === 'ArrowDown' ? 'down' : 
-                           e.key === 'ArrowLeft' ? 'left' : 'right';
+          const direction = e.key === 'ArrowUp' ? 'up' :
+            e.key === 'ArrowDown' ? 'down' :
+              e.key === 'ArrowLeft' ? 'left' : 'right';
           const extendSelection = e.shiftKey;
           const newPos = cellSelection.moveFocus(direction, extendSelection);
-          
+
           // Scroll cell into view if needed
           if (newPos && tableRef.current) {
             const cellElement = tableRef.current.querySelector(
@@ -835,7 +841,7 @@ export function ReactTabletify<T extends Record<string, any>>({
         e.preventDefault();
         const direction = e.shiftKey ? 'left' : 'right';
         const newPos = cellSelection.moveFocus(direction, false);
-        
+
         if (newPos && tableRef.current) {
           const cellElement = tableRef.current.querySelector(
             `[data-row-index="${newPos.rowIndex}"][data-col-key="${newPos.colKey}"]`
@@ -850,7 +856,7 @@ export function ReactTabletify<T extends Record<string, any>>({
         e.preventDefault();
         const direction = e.shiftKey ? 'up' : 'down';
         const newPos = cellSelection.moveFocus(direction, false);
-        
+
         if (newPos && tableRef.current) {
           const cellElement = tableRef.current.querySelector(
             `[data-row-index="${newPos.rowIndex}"][data-col-key="${newPos.colKey}"]`
@@ -884,7 +890,7 @@ export function ReactTabletify<T extends Record<string, any>>({
           const dataToUse = currentGroupBy ? table.filtered : data;
           let targetRowIndex = focused.rowIndex;
           let targetColIndex = sortedColumns.findIndex(c => String(c.key) === focused.colKey);
-          
+
           if (e.key === 'ArrowUp') {
             // Move to top of column
             targetRowIndex = 0;
@@ -898,12 +904,12 @@ export function ReactTabletify<T extends Record<string, any>>({
             // Move to rightmost column
             targetColIndex = sortedColumns.length - 1;
           }
-          
+
           const targetColKey = String(sortedColumns[targetColIndex]?.key);
           if (targetColKey) {
             cellSelection.setFocusedCell(targetRowIndex, targetColKey);
             cellSelection.startSelection(targetRowIndex, targetColKey, e.shiftKey);
-            
+
             // Scroll into view
             if (tableRef.current) {
               const cellElement = tableRef.current.querySelector(
@@ -1046,8 +1052,277 @@ export function ReactTabletify<T extends Record<string, any>>({
     const isEditing = editingCell && editingCell.rowIndex === index && editingCell.columnKey === column.key;
     const hasError = isEditing && validationError !== null;
 
-    // If editing, show input with save/cancel buttons (only if enableCellSelection is false)
+    // EDIT MODE: When double-clicked and cell is editable
     if (isEditing && column.editable) {
+      // Helper functions for custom edit component
+      const handleChange = (newValue: any) => {
+        setEditValue(String(newValue != null ? newValue : ''));
+      };
+
+      const handleBlur = () => {
+        // For custom edit components, don't auto-save on blur
+        // User must click Save button to save
+        // This prevents auto-save when dropdown closes or focus moves
+        // Just do nothing - let user control save via Save button
+      };
+
+      const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const saved = handleCellEditSave(item, column.key, index);
+          // If validation failed, keep focus
+          if (saved === false) {
+            const target = e.target as HTMLElement;
+            setTimeout(() => {
+              if (target) {
+                target.focus();
+              }
+            }, 0);
+          }
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          handleCellEditCancel();
+        }
+        // Allow all other keys including Space, Delete, Backspace, etc.
+        // Only stop propagation for navigation keys to prevent table-level handlers
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown' ||
+          e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+          e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
+          e.stopPropagation();
+        }
+      };
+
+      const handleSave = (valueToSave?: any) => {
+        // Pass valueToSave directly to handleCellEditSave
+        // This avoids the need to wait for state update
+        return handleCellEditSave(item, column.key, index, valueToSave);
+      };
+
+      const handleCancel = () => {
+        handleCellEditCancel();
+      };
+
+      // PRIORITY 1: If column has custom edit renderer (onRenderEditCell), use it
+      // This is for custom editors from external libraries (datepicker, etc.)
+      if (column.onRenderEditCell && typeof column.onRenderEditCell === 'function') {
+        const customEditComponent = column.onRenderEditCell(
+          item,
+          column.key,
+          editValue,
+          handleChange,
+          handleBlur,
+          handleKeyDown,
+          handleSave,
+          handleCancel,
+          hasError || false,
+          validationError,
+          enableCellSelection
+        );
+
+        // Always show buttons for custom edit components (dropdown, datepicker, etc.)
+        // This gives user control over save/cancel
+        return (
+          <div className="hh-cell-edit-container">
+            {customEditComponent}
+            <div className="hh-cell-edit-buttons">
+              <button
+                type="button"
+                className="hh-cell-edit-button hh-cell-edit-save"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  const saved = handleSave();
+                  // If validation failed, keep focus
+                  if (saved === false) {
+                    const wrapper = e.currentTarget.closest('.hh-cell-edit-container');
+                    if (wrapper) {
+                      const focusable = wrapper.querySelector('input, select, textarea, button, [tabindex]:not([tabindex="-1"])') as HTMLElement;
+                      if (focusable) {
+                        focusable.focus();
+                      }
+                    }
+                  }
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                title="Save"
+              >
+                <CheckIcon width={12} height={12} />
+              </button>
+              <button
+                type="button"
+                className="hh-cell-edit-button hh-cell-edit-cancel"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleCancel();
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                title="Cancel"
+              >
+                <CloseIcon width={12} height={12} />
+              </button>
+            </div>
+            {hasError && (
+              <div className="hh-cell-edit-error-message">{validationError}</div>
+            )}
+          </div>
+        );
+      }
+
+      // PRIORITY 2: If column has editor: 'select', render built-in dropdown
+      if (column.editor === 'select' && column.options && column.options.length > 0) {
+        const dropdownComponent = (
+          <FluentDropdown
+            key={`dropdown-${String(column.key)}`}
+            value={editValue || ''}
+            options={column.options}
+            placeholder="Select..."
+            onChange={handleChange}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            onSave={handleSave}
+            hasError={hasError || false}
+            enableCellSelection={enableCellSelection}
+            autoFocus
+            onDismissCallout={callout.dismissCallout}
+          />
+        );
+
+        // Always show buttons for dropdown editor
+        return (
+          <div className="hh-cell-edit-container">
+            {dropdownComponent}
+            <div className="hh-cell-edit-buttons">
+              <button
+                type="button"
+                className="hh-cell-edit-button hh-cell-edit-save"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  const saved = handleSave();
+                  // If validation failed, keep focus
+                  if (saved === false) {
+                    const wrapper = e.currentTarget.closest('.hh-cell-edit-container');
+                    if (wrapper) {
+                      const focusable = wrapper.querySelector('input, select, textarea, button, [tabindex]:not([tabindex="-1"])') as HTMLElement;
+                      if (focusable) {
+                        focusable.focus();
+                      }
+                    }
+                  }
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                title="Save"
+              >
+                <CheckIcon width={12} height={12} />
+              </button>
+              <button
+                type="button"
+                className="hh-cell-edit-button hh-cell-edit-cancel"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleCancel();
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                title="Cancel"
+              >
+                <CloseIcon width={12} height={12} />
+              </button>
+            </div>
+            {hasError && (
+              <div className="hh-cell-edit-error-message">{validationError}</div>
+            )}
+          </div>
+        );
+      }
+
+      // PRIORITY 3: If column has editor: 'date', render built-in date picker
+      if (column.editor === 'date') {
+        const datePickerComponent = (
+          <FluentDatePicker
+            key={`datepicker-${String(column.key)}`}
+            value={editValue || ''}
+            placeholder="Select date..."
+            onChange={handleChange}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+            onSave={handleSave}
+            hasError={hasError || false}
+            enableCellSelection={enableCellSelection}
+            autoFocus
+            onDismissCallout={callout.dismissCallout}
+          />
+        );
+
+        // Always show buttons for datepicker editor
+        return (
+          <div className="hh-cell-edit-container">
+            {datePickerComponent}
+            <div className="hh-cell-edit-buttons">
+              <button
+                type="button"
+                className="hh-cell-edit-button hh-cell-edit-save"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  const saved = handleSave();
+                  // If validation failed, keep focus
+                  if (saved === false) {
+                    const wrapper = e.currentTarget.closest('.hh-cell-edit-container');
+                    if (wrapper) {
+                      const focusable = wrapper.querySelector('input, select, textarea, button, [tabindex]:not([tabindex="-1"])') as HTMLElement;
+                      if (focusable) {
+                        focusable.focus();
+                      }
+                    }
+                  }
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                title="Save"
+              >
+                <CheckIcon width={12} height={12} />
+              </button>
+              <button
+                type="button"
+                className="hh-cell-edit-button hh-cell-edit-cancel"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  handleCancel();
+                }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                title="Cancel"
+              >
+                <CloseIcon width={12} height={12} />
+              </button>
+            </div>
+            {hasError && (
+              <div className="hh-cell-edit-error-message">{validationError}</div>
+            )}
+          </div>
+        );
+      }
+
+      // PRIORITY 4: Default input (existing logic)
       // Excel-like mode: no buttons, auto-save on blur
       if (enableCellSelection) {
         return (
@@ -1083,9 +1358,9 @@ export function ReactTabletify<T extends Record<string, any>>({
                 }
                 // Allow all other keys including Space, Delete, Backspace, etc.
                 // Only stop propagation for navigation keys to prevent table-level handlers
-                if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
-                    e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
-                    e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown' ||
+                  e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+                  e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
                   e.stopPropagation();
                 }
               }}
@@ -1116,7 +1391,7 @@ export function ReactTabletify<T extends Record<string, any>>({
           </div>
         );
       }
-      
+
       // Normal mode: show buttons
       return (
         <div className="hh-cell-edit-container">
@@ -1140,9 +1415,9 @@ export function ReactTabletify<T extends Record<string, any>>({
               }
               // Allow all other keys including Space, Delete, Backspace, etc.
               // Only stop propagation for navigation keys to prevent table-level handlers
-              if (e.key === 'ArrowUp' || e.key === 'ArrowDown' || 
-                  e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
-                  e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
+              if (e.key === 'ArrowUp' || e.key === 'ArrowDown' ||
+                e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+                e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
                 e.stopPropagation();
               }
             }}
@@ -1212,17 +1487,18 @@ export function ReactTabletify<T extends Record<string, any>>({
       );
     }
 
-    // Column-specific render
+    // DISPLAY MODE: Not editing - use onRenderCell for display
+    // PRIORITY 1: Column-specific onRenderCell
     if (column.onRenderCell) {
       return column.onRenderCell(item, column.key, index);
     }
-    // Global onRenderCell
+    // PRIORITY 2: Global onRenderCell
     if (onRenderCell) {
       return onRenderCell(item, column.key, index);
     }
-    // Default render
+    // PRIORITY 3: Default render
     return String(item[column.key] != null ? item[column.key] : '');
-  }, [onRenderCell, editingCell, editValue, validationError, handleCellEditSave, handleCellEditCancel]);
+  }, [onRenderCell, editingCell, editValue, validationError, handleCellEditSave, handleCellEditCancel, columns, enableCellSelection, setEditValue]);
 
   /**
    * Get and apply theme
@@ -1443,71 +1719,71 @@ export function ReactTabletify<T extends Record<string, any>>({
               onColumnDrop={handleColumnDrop}
               onResizeStart={handleResizeStart}
               onSortAsc={(col) => {
-                            // Skip row number column
-                            if (String(col.key) === '__rowNumber__') return;
-                            if (col.sortable !== false) {
-                              table.handleSort(col.key, "asc");
-                            }
-                          }}
+                // Skip row number column
+                if (String(col.key) === '__rowNumber__') return;
+                if (col.sortable !== false) {
+                  table.handleSort(col.key, "asc");
+                }
+              }}
               onSortDesc={(col) => {
-                            // Skip row number column
-                            if (String(col.key) === '__rowNumber__') return;
-                            if (col.sortable !== false) {
-                              table.handleSort(col.key, "desc");
-                            }
-                          }}
+                // Skip row number column
+                if (String(col.key) === '__rowNumber__') return;
+                if (col.sortable !== false) {
+                  table.handleSort(col.key, "desc");
+                }
+              }}
               onFilter={(col) => {
-                            // Skip row number column
-                            if (String(col.key) === '__rowNumber__') return;
-                            if (col.filterable !== false) {
-                              handleOpenFilter(col.key);
-                            }
-                          }}
+                // Skip row number column
+                if (String(col.key) === '__rowNumber__') return;
+                if (col.filterable !== false) {
+                  handleOpenFilter(col.key);
+                }
+              }}
               onClearFilter={(col) => {
-                            // Skip row number column
-                            if (String(col.key) === '__rowNumber__') return;
-                            if (col.filterable !== false) {
-                              table.setFilter(String(col.key), []);
-                            }
-                          }}
+                // Skip row number column
+                if (String(col.key) === '__rowNumber__') return;
+                if (col.filterable !== false) {
+                  table.setFilter(String(col.key), []);
+                }
+              }}
               onPinLeft={(col) => {
-                            // Skip row number column
-                            if (String(col.key) === '__rowNumber__') return;
-                            handleColumnPin(col.key, 'left');
-                          }}
+                // Skip row number column
+                if (String(col.key) === '__rowNumber__') return;
+                handleColumnPin(col.key, 'left');
+              }}
               onPinRight={(col) => {
-                            // Skip row number column
-                            if (String(col.key) === '__rowNumber__') return;
-                            handleColumnPin(col.key, 'right');
-                          }}
+                // Skip row number column
+                if (String(col.key) === '__rowNumber__') return;
+                handleColumnPin(col.key, 'right');
+              }}
               onUnpin={(col) => {
-                            // Skip row number column
-                            if (String(col.key) === '__rowNumber__') return;
-                            handleColumnPin(col.key, null);
-                          }}
+                // Skip row number column
+                if (String(col.key) === '__rowNumber__') return;
+                handleColumnPin(col.key, null);
+              }}
               onToggleVisibility={(col) => {
-                            // Skip row number column
-                            if (String(col.key) === '__rowNumber__') return;
-                            if (enableColumnVisibility) {
-                              handleToggleColumnVisibility(col.key);
-                            }
-                          }}
+                // Skip row number column
+                if (String(col.key) === '__rowNumber__') return;
+                if (enableColumnVisibility) {
+                  handleToggleColumnVisibility(col.key);
+                }
+              }}
               onGroupBy={(col) => {
-                            // Skip row number column
-                            if (String(col.key) === '__rowNumber__') return;
-                            if (currentGroupBy === col.key) {
-                              setInternalGroupBy(undefined);
-                            } else {
-                              setInternalGroupBy(col.key);
-                            }
-                          }}
+                // Skip row number column
+                if (String(col.key) === '__rowNumber__') return;
+                if (currentGroupBy === col.key) {
+                  setInternalGroupBy(undefined);
+                } else {
+                  setInternalGroupBy(col.key);
+                }
+              }}
               currentGroupBy={currentGroupBy}
               enableColumnVisibility={enableColumnVisibility || false}
               onTotalsChange={(col, value) => {
-                            setColumnTotals(prev => ({
-                              ...prev,
-                              [String(col.key)]: value
-                            }));
+                setColumnTotals(prev => ({
+                  ...prev,
+                  [String(col.key)]: value
+                }));
               }}
               columnTotals={columnTotals}
               getLeftOffset={getLeftOffset}

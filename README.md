@@ -39,6 +39,7 @@ A fast, fully customizable React data table built purely with HTML and CSS.
 - ✅ **Excel-like Inline Editing** - Seamless inline editing when `enableCellSelection={true}` (no border, auto-save on blur)
 - ✅ **Text Wrapping** - Automatic text wrapping and row height adjustment when `showTooltip={false}`
 - ✅ **Cell Validation** - Real-time validation for editable cells with custom validation functions
+- ✅ **Custom Edit Components** - Customize edit input (dropdown, datepicker, or any React component) when double-clicking to edit
 
 ## Installation
 
@@ -150,6 +151,7 @@ function App() {
 | `onColumnReorder` | `(order: (keyof T)[]) => void` | - | Callback when column order changes |
 | `showTooltip` | `boolean` | `true` | Show tooltip for truncated content |
 | `onCellEdit` | `(item, columnKey, newValue, index) => void` | - | Callback when cell is edited |
+| `onRenderEditCell` | `(item, columnKey, value, onChange, onBlur, onKeyDown, onSave, onCancel, hasError, validationError, enableCellSelection) => ReactNode` | - | Custom render function for editing cells (dropdown, datepicker, etc.) - defined per column |
 | `pinnedColumns` | `Record<string, 'left' \| 'right'>` | - | Initial pinned columns |
 | `onColumnPin` | `(columnKey, pinPosition) => void` | - | Callback when column is pinned/unpinned |
 | `maxHeight` | `string \| number` | - | Maximum height of table |
@@ -376,6 +378,91 @@ useEffect(() => {
 // Error message appears below the input
 // Save is prevented if validation fails
 // Works with both inline editing modes (with/without buttons)
+```
+
+### With Built-in Editor Types
+
+You can use built-in editor types for common use cases (dropdown, datepicker):
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns.map(col => {
+    if (col.key === 'role') {
+      return {
+        ...col,
+        editable: true,
+        editor: 'select', // Built-in dropdown editor
+        options: ['Dev', 'PM', 'Tester', 'Designer', 'Manager'], // Options for dropdown
+      };
+    }
+    if (col.key === 'joinDate') {
+      return {
+        ...col,
+        editable: true,
+        editor: 'date', // Built-in date picker editor
+      };
+    }
+    return col;
+  })}
+  onCellEdit={(item, columnKey, newValue, index) => {
+    // Update your data
+    updateUser(index, columnKey, newValue);
+  }}
+/>
+// Double-click a cell to edit
+// Dropdown and datepicker automatically open when entering edit mode
+// Date picker supports direct text input in dd/mm/yyyy format
+// Calendar positions smartly (opens upward if space is limited)
+```
+
+### With Custom Edit Components
+
+For advanced use cases, you can customize the edit component for each column (e.g., custom dropdown, datepicker, or any React component):
+
+```tsx
+<ReactTabletify
+  data={users}
+  columns={columns.map(col => {
+    if (col.key === 'status') {
+      return {
+        ...col,
+        editable: true,
+        // Custom dropdown using external library (e.g., react-select)
+        onRenderEditCell: (item, columnKey, value, onChange, onBlur, onKeyDown, onSave, onCancel, hasError, validationError, enableCellSelection) => {
+          return (
+            <Select
+              value={value || ''}
+              onChange={(val) => onChange(val)}
+              options={statusOptions}
+              // ... other props
+            />
+          );
+        }
+      };
+    }
+    return col;
+  })}
+  onCellEdit={(item, columnKey, newValue, index) => {
+    // Update your data
+    updateUser(index, columnKey, newValue);
+  }}
+/>
+// Use onRenderEditCell for external library components
+// Built-in editors (editor: 'select' | 'date') are recommended for common use cases
+// onRenderEditCell receives:
+// - item: The data item
+// - columnKey: The column key
+// - value: Current value being edited
+// - onChange: Callback to update value (newValue: any) => void
+// - onBlur: Callback when component loses focus
+// - onKeyDown: Callback for keyboard events
+// - onSave: Callback to save (returns false if validation fails)
+// - onCancel: Callback to cancel editing
+// - hasError: Whether there is a validation error
+// - validationError: The validation error message (if any)
+// - enableCellSelection: Whether Excel-like mode is enabled
+// Return any React component (input, select, datepicker, custom component, etc.)
 ```
 
 ### With Column Pinning
@@ -781,6 +868,24 @@ See [PERFORMANCE.md](./PERFORMANCE.md) for detailed performance optimization gui
 See [COMPATIBILITY.md](./COMPATIBILITY.md) for detailed compatibility information.
 
 ## Changelog
+
+### Version 0.6.5
+- ✅ **Built-in Editor Types** - Added `editor: 'text' | 'select' | 'date'` prop to Column interface for common editor types
+- ✅ **Built-in Dropdown Editor** - Use `editor: 'select'` with `options` array for dropdown selection (Fluent UI styled)
+- ✅ **Built-in Date Picker Editor** - Use `editor: 'date'` for date selection with calendar popup (Fluent UI styled)
+- ✅ **Auto-open on Double-click** - Dropdown and datepicker automatically open when double-clicking to edit
+- ✅ **Direct Date Input** - Date picker supports direct text input in `dd/mm/yyyy` format with auto-formatting
+- ✅ **Smart Calendar Positioning** - Calendar callout positions based on input field and opens upward if space is limited
+- ✅ **Improved Icon Layout** - Icon button no longer overlaps input text when column width is small
+- ✅ **Fixed Calendar Grid** - Corrected calendar day alignment and removed duplicate day issues
+- ✅ **Tooltip Prevention** - Table cell tooltips no longer appear when hovering over calendar/dropdown
+
+### Version 0.6.4
+- ✅ **Custom Edit Components** - Added `onRenderEditCell` prop to Column interface
+- ✅ **Flexible Editing** - Support for dropdown, datepicker, or any custom React component when editing cells
+- ✅ **Edit Component API** - Full control over edit component with onChange, onBlur, onKeyDown, onSave, onCancel callbacks
+- ✅ **Excel-like Support** - Custom edit components work with both normal mode (with buttons) and Excel-like mode (auto-save on blur)
+- ✅ **Validation Integration** - Custom edit components receive validation error state and messages
 
 ### Version 0.6.3
 - ✅ **Performance Optimizations** - Memoized TableCell and TableRow components

@@ -56,6 +56,8 @@
   line-height: var(--hh-typography-line-height, 20px);
   color: var(--hh-color-row-text, #323130);
   vertical-align: top;
+  position: relative;
+  overflow: visible;
 }
 
 /* When cell selection is enabled, add right border to all cells */
@@ -339,7 +341,7 @@
 }
 
 .hh-selection-checkbox:focus {
-  outline: 2px solid var(--hh-color-focus, #107c10);
+  outline: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
   outline-offset: 2px;
 }
 
@@ -401,7 +403,7 @@
 }
 
 .hh-group-toggle:focus {
-  outline: 2px solid var(--hh-color-focus, #107c10);
+  outline: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
   outline-offset: -2px;
 }
 
@@ -515,7 +517,7 @@
 .hh-cell-edit-input {
   width: 100%;
   height: 28px;
-  border: 1px solid var(--hh-color-focus, #107c10);
+  border: 1px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
   border-radius: var(--hh-border-radius-button, 2px);
   padding: 4px 8px;
   font-size: var(--hh-typography-font-size, 14px);
@@ -528,7 +530,7 @@
 }
 
 .hh-cell-edit-input:focus {
-  border-color: var(--hh-color-focus, #107c10);
+  border-color: var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
   box-shadow: none;
 }
 
@@ -614,16 +616,19 @@
 }
 
 .hh-cell-edit-save:hover {
-  background-color: var(--hh-color-primary-hover, #0d6b0d);
+  /* Use primary color with slight darkening effect via filter or opacity */
+  background-color: var(--hh-color-primary, #107c10);
+  opacity: 0.9;
+  filter: brightness(0.9);
 }
 
 .hh-cell-edit-cancel {
-  background-color: #d1d1d1;
-  color: #323130;
+  background-color: var(--hh-color-background-secondary, #f3f2f1);
+  color: var(--hh-color-text, #323130);
 }
 
 .hh-cell-edit-cancel:hover {
-  background-color: #b8b8b8;
+  background-color: var(--hh-color-background-hover, #edebe9);
 }
 
 /* --- Loading Skeleton --- */
@@ -711,7 +716,7 @@
 
 /* --- Keyboard Navigation - Focused Row --- */
 .hh-row-focused {
-  outline: 2px solid var(--hh-color-focus, #107c10);
+  outline: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
   outline-offset: -2px;
 }
 

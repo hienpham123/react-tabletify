@@ -40,6 +40,31 @@ export interface Column<T extends Record<string, any>> {
     align?: 'left' | 'center' | 'right';
     /** Whether the column is editable */
     editable?: boolean;
+    /** Editor type for editable columns: 'text' (default), 'select' (dropdown), 'date', or custom via onRenderEditCell */
+    editor?: 'text' | 'select' | 'date';
+    /** Options for 'select' editor type */
+    options?: Array<{
+        key: string;
+        text: string;
+        disabled?: boolean;
+    }>;
+    /**
+     * Custom render function for editing cells
+     * When provided, this will be used instead of the default input when editing
+     * @param item - The data item for this row
+     * @param columnKey - The key of the column being edited
+     * @param value - The current value being edited
+     * @param onChange - Callback to update the value: (newValue: any) => void
+     * @param onBlur - Callback when the edit component loses focus: () => void
+     * @param onKeyDown - Callback for keyboard events: (e: React.KeyboardEvent) => void
+     * @param onSave - Callback to save the value: () => boolean (returns false if validation fails)
+     * @param onCancel - Callback to cancel editing: () => void
+     * @param hasError - Whether there is a validation error
+     * @param validationError - The validation error message (if any)
+     * @param enableCellSelection - Whether Excel-like cell selection is enabled
+     * @returns React node to render as the edit component (e.g., input, select, datepicker)
+     */
+    onRenderEditCell?: (item: T, columnKey: keyof T, value: any, onChange: (newValue: any) => void, onBlur: () => void, onKeyDown: (e: React.KeyboardEvent) => void, onSave: (valueToSave?: any) => boolean | Promise<boolean>, onCancel: () => void, hasError: boolean, validationError: string | null, enableCellSelection: boolean) => React.ReactNode;
     /**
      * Validation function for editable columns
      * @param value - The new value being entered

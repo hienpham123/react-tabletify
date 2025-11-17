@@ -1,0 +1,353 @@
+/* Fluent UI DatePicker Styles */
+.hh-fluent-datepicker-container {
+  position: relative;
+  width: 100%;
+}
+
+.hh-fluent-datepicker-input-wrapper {
+  position: relative;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  min-width: 120px; /* Ensure minimum width for input + icon */
+}
+
+.hh-fluent-datepicker-input {
+  flex: 1;
+  min-height: 32px;
+  min-width: 0; /* Allow input to shrink below its content size */
+  padding: 4px 32px 4px 8px;
+  background-color: var(--hh-color-background, #ffffff);
+  border: 1px solid var(--hh-color-border, #d1d1d1);
+  border-radius: 2px;
+  font-size: 14px;
+  font-family: var(--hh-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
+  color: var(--hh-color-text, #323130);
+  transition: border-color 0.1s ease, background-color 0.1s ease;
+  box-sizing: border-box;
+  overflow: hidden; /* Prevent text from overlapping icon */
+  text-overflow: ellipsis;
+}
+
+.hh-fluent-datepicker-input:hover {
+  border-color: var(--hh-color-border-hover, #8a8886);
+}
+
+.hh-fluent-datepicker-input:focus {
+  outline: none;
+  border-color: var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
+  box-shadow: 0 0 0 1px var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
+}
+
+.hh-fluent-datepicker-input-excel {
+  border: none;
+  background: transparent;
+  padding: 0 28px 0 0;
+  min-height: auto;
+  overflow: hidden; /* Prevent text from overlapping icon */
+  text-overflow: ellipsis;
+}
+
+.hh-fluent-datepicker-input-excel:hover {
+  border: none;
+  background: transparent;
+}
+
+.hh-fluent-datepicker-input-excel:focus {
+  border: none;
+  box-shadow: none;
+  outline: 1px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
+  outline-offset: -1px;
+}
+
+.hh-fluent-datepicker-icon-button {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hh-color-text-secondary, #605e5c);
+  transition: color 0.1s ease;
+  flex-shrink: 0; /* Prevent icon from shrinking */
+  z-index: 1; /* Ensure icon is above input text */
+}
+
+.hh-fluent-datepicker-icon-button:hover {
+  color: var(--hh-color-text, #323130);
+}
+
+.hh-fluent-datepicker-icon-button:focus {
+  outline: none;
+  color: var(--hh-color-text, #323130);
+}
+
+.hh-fluent-datepicker-icon-button:active {
+  color: var(--hh-color-text, #323130);
+}
+
+.hh-fluent-datepicker-button {
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: var(--hh-color-background, #ffffff);
+  border: 1px solid var(--hh-color-border, #d1d1d1);
+  border-radius: 2px;
+  font-size: 14px;
+  font-family: var(--hh-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
+  color: var(--hh-color-text, #323130);
+  cursor: pointer;
+  transition: border-color 0.1s ease, background-color 0.1s ease;
+  box-sizing: border-box;
+}
+
+.hh-fluent-datepicker-button:hover {
+  border-color: var(--hh-color-border-hover, #8a8886);
+}
+
+.hh-fluent-datepicker-button:focus {
+  outline: none;
+  border-color: var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
+  box-shadow: 0 0 0 1px var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
+}
+
+.hh-fluent-datepicker-button-excel {
+  border: none;
+  background: transparent;
+  padding: 0;
+  min-height: auto;
+}
+
+.hh-fluent-datepicker-button-excel:hover {
+  border: none;
+  background: transparent;
+}
+
+.hh-fluent-datepicker-button-excel:focus {
+  border: none;
+  box-shadow: none;
+  outline: 1px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10));
+  outline-offset: -1px;
+}
+
+.hh-fluent-datepicker-error {
+  border-color: var(--hh-color-error, #a80000) !important;
+}
+
+.hh-fluent-datepicker-text {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hh-fluent-datepicker-text-placeholder {
+  color: var(--hh-color-text-placeholder, #605e5c);
+}
+
+.hh-fluent-datepicker-icon {
+  flex-shrink: 0;
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--hh-color-text-secondary, #605e5c);
+  transition: transform 0.1s ease;
+  user-select: none;
+}
+
+.hh-fluent-datepicker-icon svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.hh-fluent-datepicker-icon-open {
+  transform: rotate(180deg);
+}
+
+/* Calendar Popup */
+.hh-fluent-datepicker-calendar {
+  position: fixed;
+  background-color: var(--hh-color-background, #ffffff);
+  border: 1px solid var(--hh-color-border, #d1d1d1);
+  border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  padding: 8px;
+  box-sizing: border-box;
+  min-width: 240px;
+  max-width: 280px;
+  pointer-events: auto;
+}
+
+/* Prevent tooltip from table cell when hovering over calendar */
+.hh-fluent-datepicker-calendar * {
+  pointer-events: auto;
+}
+
+.hh-fluent-datepicker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--hh-color-border, #edebe9);
+}
+
+.hh-fluent-datepicker-nav-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  color: var(--hh-color-text, #323130);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 2px;
+  transition: background-color 0.1s ease;
+  min-width: 24px;
+  min-height: 24px;
+}
+
+.hh-fluent-datepicker-nav-button:hover {
+  background-color: var(--hh-color-background-hover, #f3f2f1);
+}
+
+.hh-fluent-datepicker-nav-button:active {
+  background-color: var(--hh-color-background-active, #edebe9);
+}
+
+.hh-fluent-datepicker-nav-button svg {
+  width: 12px;
+  height: 12px;
+  display: block;
+}
+
+.hh-fluent-datepicker-month-year {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--hh-color-text, #323130);
+  flex: 1;
+  text-align: center;
+  padding: 0 4px;
+}
+
+.hh-fluent-datepicker-today-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--hh-color-border, #edebe9);
+}
+
+.hh-fluent-datepicker-today-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--hh-color-primary, #0078d4);
+  border-radius: 2px;
+  transition: background-color 0.1s ease;
+}
+
+.hh-fluent-datepicker-today-button:hover {
+  background-color: var(--hh-color-background-hover, #f3f2f1);
+}
+
+.hh-fluent-datepicker-today-button:active {
+  background-color: var(--hh-color-background-active, #edebe9);
+}
+
+.hh-fluent-datepicker-days-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  margin-bottom: 4px;
+}
+
+.hh-fluent-datepicker-day-header {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--hh-color-text-secondary, #605e5c);
+  padding: 2px;
+}
+
+.hh-fluent-datepicker-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.hh-fluent-datepicker-day {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 12px;
+  color: var(--hh-color-text, #323130);
+  border-radius: 2px;
+  transition: background-color 0.1s ease, color 0.1s ease;
+  min-width: 28px;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hh-fluent-datepicker-day:hover:not(:disabled) {
+  background-color: var(--hh-color-background-hover, #f3f2f1);
+  color: var(--hh-color-text, #323130);
+}
+
+.hh-fluent-datepicker-day:active:not(:disabled) {
+  background-color: var(--hh-color-background-active, #edebe9);
+}
+
+.hh-fluent-datepicker-day:disabled {
+  color: var(--hh-color-text-disabled, #a19f9d);
+  cursor: not-allowed;
+}
+
+.hh-fluent-datepicker-day-today {
+  font-weight: 600;
+  border: 1px solid var(--hh-color-border, #d1d1d1);
+  background-color: transparent;
+}
+
+.hh-fluent-datepicker-day-selected {
+  background-color: var(--hh-color-primary, #0078d4) !important;
+  color: var(--hh-color-text-on-primary, #ffffff) !important;
+  font-weight: 600;
+  border: 1px solid var(--hh-color-primary, #0078d4) !important;
+}
+
+.hh-fluent-datepicker-day-selected:hover {
+  background-color: var(--hh-color-primary, #0078d4) !important;
+  opacity: 0.9;
+  filter: brightness(0.9);
+}
+
+/* When both today and selected */
+.hh-fluent-datepicker-day-today.hh-fluent-datepicker-day-selected {
+  background-color: var(--hh-color-primary, #0078d4) !important;
+  color: var(--hh-color-text-on-primary, #ffffff) !important;
+  border: 1px solid var(--hh-color-primary, #0078d4) !important;
+}
+
+.hh-fluent-datepicker-day-other-month {
+  color: var(--hh-color-text-disabled, #a19f9d);
+}
+

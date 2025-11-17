@@ -65,12 +65,63 @@ export function HeaderCallout({
     const calloutRef = React.useRef<HTMLDivElement>(null);
     const [hoveredSubmenu, setHoveredSubmenu] = React.useState<'column-settings' | 'totals' | null>(null);
     const submenuTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
+    
+    // Calculate initial position - use anchorRef.current if available, otherwise use default
+    const initialRect = anchorRef.current?.getBoundingClientRect();
+    const [calloutStyle, setCalloutStyle] = React.useState<React.CSSProperties>({
+        top: initialRect ? initialRect.bottom + 6 : 0,
+        left: initialRect ? initialRect.left : 0,
+        position: "fixed",
+    });
 
     React.useEffect(() => {
         return () => {
             if (submenuTimeoutRef.current) {
                 clearTimeout(submenuTimeoutRef.current);
             }
+        };
+    }, []);
+
+    React.useEffect(() => {
+        if (!calloutRef.current || !anchorRef.current) return;
+        
+        // Use setTimeout to ensure callout is rendered before calculating height
+        const updatePosition = () => {
+            if (!calloutRef.current || !anchorRef.current) return;
+            
+            const anchorRect = anchorRef.current.getBoundingClientRect();
+            const calloutRect = calloutRef.current.getBoundingClientRect();
+            const calloutHeight = calloutRect.height || 200; // Fallback height
+            
+            const viewportHeight = window.innerHeight;
+            const spaceBelow = viewportHeight - anchorRect.bottom;
+            const spaceAbove = anchorRect.top;
+            
+            // If not enough space below and more space above, open upward
+            if (spaceBelow < calloutHeight && spaceAbove > spaceBelow) {
+                setCalloutStyle({
+                    top: anchorRect.top - calloutHeight - 6,
+                    left: anchorRect.left,
+                    position: "fixed",
+                });
+            } else {
+                setCalloutStyle({
+                    top: anchorRect.bottom + 6,
+                    left: anchorRect.left,
+                    position: "fixed",
+                });
+            }
+        };
+        
+        setTimeout(updatePosition, 0);
+        
+        // Also update on scroll and resize
+        window.addEventListener('scroll', updatePosition, true);
+        window.addEventListener('resize', updatePosition);
+        
+        return () => {
+            window.removeEventListener('scroll', updatePosition, true);
+            window.removeEventListener('resize', updatePosition);
         };
     }, []);
 
@@ -95,11 +146,7 @@ export function HeaderCallout({
             <div
                 ref={calloutRef}
                 className="hh-callout"
-                style={{
-                    top: rect.bottom + 6,
-                    left: rect.left,
-                    position: "fixed",
-                }}
+                style={calloutStyle}
                 onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
             >
@@ -128,8 +175,8 @@ export function HeaderCallout({
                 {groupable && onGroupBy && (
                     <>
                         <hr className="hh-callout-divider" />
-                        <button 
-                            onClick={onGroupBy} 
+                        <button
+                            onClick={onGroupBy}
                             className={`hh-callout-item ${isGrouped ? 'hh-callout-item-selected' : ''}`}
                         >
                             <span className="hh-callout-text">Group by {columnLabel}</span>

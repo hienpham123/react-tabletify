@@ -182,7 +182,13 @@ export default function App() {
             sortable: true,
             filterable: true,
             resizable: true,
-            editable: true
+            editable: true,
+            editor: 'select',
+            options: roles.map(role => ({
+              key: role,
+              text: role,
+              disabled: false,
+            }))
           },
           {
             key: "department",
@@ -263,7 +269,9 @@ export default function App() {
             width: "130px",
             sortable: true,
             filterable: true,
-            resizable: true
+            resizable: true,
+            editable: true,
+            editor: 'date'
           },
           {
             key: "email",

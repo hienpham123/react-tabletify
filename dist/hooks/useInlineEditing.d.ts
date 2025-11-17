@@ -21,6 +21,6 @@ export declare function useInlineEditing<T extends Record<string, any>>(onCellEd
         key: keyof T;
         editable?: boolean;
     }, rowIndex: number) => void;
-    handleCellEditSave: (item: T, columnKey: keyof T, rowIndex: number) => boolean;
+    handleCellEditSave: (item: T, columnKey: keyof T, rowIndex: number, valueToSave?: any) => boolean;
     handleCellEditCancel: () => void;
 };
