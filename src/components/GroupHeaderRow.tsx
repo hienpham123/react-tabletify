@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ChevronRightIcon } from "../icons";
 
 interface GroupHeaderRowProps {
   groupKey: string;
@@ -28,23 +29,11 @@ export function GroupHeaderRow({
           onClick={onToggle}
           aria-expanded={isExpanded}
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            className={isExpanded ? "expanded" : ""}
-          >
-            <path
-              d="M6 4L10 8L6 12"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          </svg>
+          <ChevronRightIcon 
+            width={16} 
+            height={16} 
+            className={isExpanded ? "expanded" : ""} 
+          />
           <span className="hh-group-label">
             {groupLabel}: {groupKey}
           </span>

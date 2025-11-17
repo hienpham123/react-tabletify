@@ -1,4 +1,5 @@
 import * as React from "react";
+import { ThreeDotsIcon } from "../icons";
 
 interface RowActionsCellProps<T extends Record<string, any>> {
   item: T;
@@ -46,18 +47,7 @@ export function RowActionsCell<T extends Record<string, any>>({
         aria-haspopup="true"
         aria-expanded={isMenuOpen}
       >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 16 16"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-          style={{ display: 'block' }}
-        >
-          <circle cx="4" cy="8" r="1.5" fill="currentColor" />
-          <circle cx="8" cy="8" r="1.5" fill="currentColor" />
-          <circle cx="12" cy="8" r="1.5" fill="currentColor" />
-        </svg>
+        <ThreeDotsIcon width={16} height={16} style={{ display: 'block' }} />
       </button>
     </td>
   );

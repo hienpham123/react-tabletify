@@ -100,7 +100,7 @@ export function TableCell<T extends Record<string, any>>({
     enableCellSelection && isLeftCol ? 'hh-cell-range-left' : '',
     enableCellSelection && isRightCol ? 'hh-cell-range-right' : '',
     enableCellSelection && isCopied ? 'hh-cell-copied' : '',
-    showTooltip ? 'hh-cell-wihh-tooltip' : 'hh-cell-no-tooltip',
+    showTooltip ? 'hh-cell-with-tooltip' : 'hh-cell-no-tooltip',
   ].filter(Boolean).join(' ');
 
   const cellText = showTooltip && getCellText ? getCellText(item, column) : undefined;

@@ -140,7 +140,7 @@ export function HeaderCallout({
                 {((settingsable && onColumnSettings) || totalsable) && <hr className="hh-callout-divider" />}
                 {settingsable && onColumnSettings && (
                     <div
-                        className="hh-callout-item hh-callout-item-wihh-submenu"
+                        className="hh-callout-item hh-callout-item-with-submenu"
                         onMouseEnter={() => handleSubmenuEnter('column-settings')}
                         onMouseLeave={handleSubmenuLeave}
                     >
@@ -181,7 +181,7 @@ export function HeaderCallout({
                 )}
                 {totalsable && onTotalsChange && (
                     <div
-                        className="hh-callout-item hh-callout-item-wihh-submenu"
+                        className="hh-callout-item hh-callout-item-with-submenu"
                         onMouseEnter={() => handleSubmenuEnter('totals')}
                         onMouseLeave={handleSubmenuLeave}
                     >

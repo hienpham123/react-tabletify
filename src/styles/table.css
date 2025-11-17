@@ -72,7 +72,7 @@
 
 /* Table cells - conditional text wrapping based on showTooltip */
 /* When showTooltip=true: show ellipsis and tooltip */
-.hh-table td.hh-cell-wihh-tooltip {
+.hh-table td.hh-cell-with-tooltip {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

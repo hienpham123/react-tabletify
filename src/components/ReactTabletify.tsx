@@ -19,6 +19,7 @@ import { TableFooter } from "./TableFooter";
 import { ExportButton } from "./ExportButton";
 import type { ReactTabletifyProps, Column } from "../types";
 import { getTheme, applyTheme } from "../utils/theme";
+import { CheckIcon, CloseIcon } from "../icons";
 import "./../styles/table.css";
 import "./../styles/row-actions.css";
 import "./../styles/cell-selection.css";
@@ -1227,9 +1228,7 @@ export function ReactTabletify<T extends Record<string, any>>({
               }}
               title="Save"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="12" height="12">
-                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
-              </svg>
+              <CheckIcon width={12} height={12} />
             </button>
             <button
               type="button"
@@ -1245,9 +1244,7 @@ export function ReactTabletify<T extends Record<string, any>>({
               }}
               title="Cancel"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="12" height="12">
-                <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-              </svg>
+              <CloseIcon width={12} height={12} />
             </button>
           </div>
         </div>

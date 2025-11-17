@@ -1,6 +1,7 @@
 import * as React from "react";
 import { HeaderCallout } from "./HeaderCallout";
 import type { Column } from "../types";
+import { ChevronDownIcon, PinIcon, FilterIcon } from "../icons";
 
 interface TableHeaderCellProps<T extends Record<string, any>> {
   column: Column<T>;
@@ -167,37 +168,19 @@ export function TableHeaderCell<T extends Record<string, any>>({
             {column.label}
             {column.showCallout !== false && (
               <span className="hh-header-chevron-icon" role="presentation" aria-hidden="true">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" fill="currentColor">
-                  <path d="M1799 349l242 241-1017 1017L7 590l242-241 775 775 775-775z" />
-                </svg>
+                <ChevronDownIcon />
               </span>
             )}
           </span>
           <div className="hh-header-icons">
             {pinPosition && (
               <span className="hh-header-pin-icon" title={`Pinned ${pinPosition}`}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 2048 2048"
-                  fill="currentColor"
-                >
-                  <path d="M1990 748q-33 33-64 60t-66 47-73 29-89 11q-34 0-65-6l-379 379q13 38 19 78t6 80q0 65-13 118t-37 100-60 89-79 87l-386-386-568 569-136 45 45-136 569-568-386-386q44-44 86-79t89-59 100-38 119-13q40 0 80 6t78 19l379-379q-6-31-6-65 0-49 10-88t30-74 46-65 61-65l690 690z" />
-                </svg>
+                <PinIcon width={14} height={14} />
               </span>
             )}
             {hasFilter && (
               <span className="hh-header-filter-icon" title="Filtered" role="presentation" aria-hidden="true">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="14"
-                  height="14"
-                  viewBox="0 0 2048 2048"
-                  fill="currentColor"
-                >
-                  <path d="M2048 128v219l-768 768v805H768v-805L0 347V128h2048z" />
-                </svg>
+                <FilterIcon width={14} height={14} />
               </span>
             )}
             {sortKey === column.key && (

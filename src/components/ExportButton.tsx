@@ -1,6 +1,7 @@
 import * as React from "react";
 import { exportData } from "../utils/export";
 import type { Column } from "../types";
+import { ExportIcon } from "../icons";
 
 interface ExportButtonProps<T extends Record<string, any>> {
   data: T[];
@@ -78,9 +79,7 @@ export function ExportButton<T extends Record<string, any>>({
           disabled={isExporting}
           title="Export to CSV"
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 2h12v12H2V2zm1 1v10h10V3H3zm1 1h8v1H4V4zm0 2h8v1H4V6zm0 2h8v1H4V8zm0 2h5v1H4v-1z" fill="currentColor"/>
-          </svg>
+          <ExportIcon width={16} height={16} />
           <span>CSV</span>
         </button>
         <button
@@ -89,9 +88,7 @@ export function ExportButton<T extends Record<string, any>>({
           disabled={isExporting}
           title="Export to Excel"
         >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M2 2h12v12H2V2zm1 1v10h10V3H3zm1 1h8v1H4V4zm0 2h8v1H4V6zm0 2h8v1H4V8zm0 2h5v1H4v-1z" fill="currentColor"/>
-          </svg>
+          <ExportIcon width={16} height={16} />
           <span>Excel</span>
         </button>
       </div>
@@ -105,9 +102,7 @@ export function ExportButton<T extends Record<string, any>>({
       disabled={isExporting}
       title={`Export to ${format === 'csv' ? 'CSV' : 'Excel'}`}
     >
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M2 2h12v12H2V2zm1 1v10h10V3H3zm1 1h8v1H4V4zm0 2h8v1H4V6zm0 2h8v1H4V8zm0 2h5v1H4v-1z" fill="currentColor"/>
-      </svg>
+      <ExportIcon width={16} height={16} />
       <span>{format === 'csv' ? 'CSV' : 'Excel'}</span>
     </button>
   );
