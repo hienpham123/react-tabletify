@@ -36,6 +36,8 @@ interface TableCellProps<T extends Record<string, any>> {
 }
 /**
  * TableCell - Renders a single table cell
+ * Memoized to prevent unnecessary re-renders
  */
-export declare function TableCell<T extends Record<string, any>>({ column, item, index, resizedWidth, pinPosition, leftOffset, rightOffset, lastLeftPinnedColumnKey, firstRightPinnedColumnKey, showTooltip, onDoubleClick, renderCell, getCellText, isSelected, isRangeStart, isRangeEnd, isInRange, isTopRow, isBottomRow, isLeftCol, isRightCol, isInRangeColumn, isLeftColInRange, isRightColInRange, isCopied, isFocused, rowIndex, colKey, onMouseDown, onMouseEnter, onMouseUp, enableCellSelection, }: TableCellProps<T>): import("react/jsx-runtime").JSX.Element;
+declare function TableCellComponent<T extends Record<string, any>>({ column, item, index, resizedWidth, pinPosition, leftOffset, rightOffset, lastLeftPinnedColumnKey, firstRightPinnedColumnKey, showTooltip, onDoubleClick, renderCell, getCellText, isSelected, isRangeStart, isRangeEnd, isInRange, isTopRow, isBottomRow, isLeftCol, isRightCol, isInRangeColumn, isLeftColInRange, isRightColInRange, isCopied, isFocused, rowIndex, colKey, onMouseDown, onMouseEnter, onMouseUp, enableCellSelection, }: TableCellProps<T>): import("react/jsx-runtime").JSX.Element;
+export declare const TableCell: typeof TableCellComponent;
 export {};

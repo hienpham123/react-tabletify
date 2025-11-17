@@ -40,6 +40,20 @@ export interface Column<T extends Record<string, any>> {
     align?: 'left' | 'center' | 'right';
     /** Whether the column is editable */
     editable?: boolean;
+    /**
+     * Validation function for editable columns
+     * @param value - The new value being entered
+     * @param item - The data item for this row
+     * @param columnKey - The key of the column being edited
+     * @returns Error message string if validation fails, or null/undefined if valid
+     */
+    validate?: (value: any, item: T, columnKey: keyof T) => string | null | undefined;
+    /** Whether the column can be grouped */
+    groupable?: boolean;
+    /** Whether the column settings option is available */
+    settingsable?: boolean;
+    /** Whether the totals option is available */
+    totalsable?: boolean;
     /** Pin position for the column ('left' | 'right' | null) */
     pinned?: 'left' | 'right' | null;
     /** Whether to show callout menu when hovering over header (default: true) */

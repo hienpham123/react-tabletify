@@ -40,8 +40,6 @@ interface TableHeaderProps<T extends Record<string, any>> {
     onGroupBy: (column: Column<T>) => void;
     currentGroupBy?: keyof T;
     enableColumnVisibility: boolean;
-    enableGroupBy: boolean;
-    enableTotals: boolean;
     onTotalsChange: (column: Column<T>, value: 'none' | 'count') => void;
     columnTotals: Record<string, 'none' | 'count'>;
     getLeftOffset: (column: Column<T>, index: number) => number;
@@ -61,5 +59,5 @@ interface TableHeaderProps<T extends Record<string, any>> {
 /**
  * TableHeader - Renders the table header with all column headers
  */
-export declare function TableHeader<T extends Record<string, any>>({ columns, selectionMode, isAllSelected, isIndeterminate, onSelectAll, columnWidths, pinnedColumns, lastLeftPinnedColumnKey, firstRightPinnedColumnKey, stickyHeader, enableColumnReorder, dragOverColumn, sortKey, sortDir, filters, anchorRefs, calloutKey, resizingColumn, onRenderHeader, onColumnHeaderClick, onHeaderMouseEnter, onHeaderMouseLeave, onCalloutMouseEnter, onCalloutMouseLeave, onColumnDragStart, onColumnDragOver, onColumnDrop, onResizeStart, onSortAsc, onSortDesc, onFilter, onClearFilter, onPinLeft, onPinRight, onUnpin, onToggleVisibility, onGroupBy, currentGroupBy, enableColumnVisibility, enableGroupBy, enableTotals, onTotalsChange, columnTotals, getLeftOffset, getRightOffset, dismissCallout, enableRowActions, enableCellSelection, isRangeFromFirstRow, isColumnInRange, getColumnRangeInfo, isCopied, }: TableHeaderProps<T>): import("react/jsx-runtime").JSX.Element;
+export declare function TableHeader<T extends Record<string, any>>({ columns, selectionMode, isAllSelected, isIndeterminate, onSelectAll, columnWidths, pinnedColumns, lastLeftPinnedColumnKey, firstRightPinnedColumnKey, stickyHeader, enableColumnReorder, dragOverColumn, sortKey, sortDir, filters, anchorRefs, calloutKey, resizingColumn, onRenderHeader, onColumnHeaderClick, onHeaderMouseEnter, onHeaderMouseLeave, onCalloutMouseEnter, onCalloutMouseLeave, onColumnDragStart, onColumnDragOver, onColumnDrop, onResizeStart, onSortAsc, onSortDesc, onFilter, onClearFilter, onPinLeft, onPinRight, onUnpin, onToggleVisibility, onGroupBy, currentGroupBy, enableColumnVisibility, onTotalsChange, columnTotals, getLeftOffset, getRightOffset, dismissCallout, enableRowActions, enableCellSelection, isRangeFromFirstRow, isColumnInRange, getColumnRangeInfo, isCopied, }: TableHeaderProps<T>): import("react/jsx-runtime").JSX.Element;
 export {};
