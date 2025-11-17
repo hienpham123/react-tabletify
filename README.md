@@ -39,6 +39,7 @@ A fast, fully customizable React data table built purely with HTML and CSS.
 - ✅ **Excel-like Inline Editing** - Seamless inline editing when `enableCellSelection={true}` (no border, auto-save on blur)
 - ✅ **Text Wrapping** - Automatic text wrapping and row height adjustment when `showTooltip={false}`
 - ✅ **Cell Validation** - Real-time validation for editable cells with custom validation functions
+- ✅ **Built-in Editor Types** - Built-in dropdown (`editor: 'select'`) and date picker (`editor: 'date'`) editors with Fluent UI styling
 - ✅ **Custom Edit Components** - Customize edit input (dropdown, datepicker, or any React component) when double-clicking to edit
 
 ## Installation
