@@ -31,7 +31,7 @@ const generateMockData = () => {
     "Udo", "Vera", "Wren", "Ximena", "Yara", "Zoe"
   ];
 
-  for (let i = 1; i <= 10000; i++) {
+  for (let i = 1; i <= 5000; i++) {
     data.push({
       id: i,
       name: names[i % names.length] + ` ${Math.floor(i / names.length) + 1}`,
@@ -140,6 +140,12 @@ export default function App() {
         data={data}
         loading={loading}
         columns={[
+          {
+            key: "id",
+            label: "ID",
+            width: "100px",
+            showCallout: false,
+          },
           {
             key: "name",
             label: "Name",
@@ -302,8 +308,8 @@ export default function App() {
         // showPagination={false}
         // groupBy="department"
         // selectionMode="multiple"
-        enableRowReorder={true}
-        // enableCellSelection={true}
+        // enableRowReorder={true}
+        enableCellSelection={true}
         onRowReorder={(newData, draggedItem, fromIndex, toIndex) => {
           console.log('Row reordered:', { draggedItem, fromIndex, toIndex });
           setData(newData);

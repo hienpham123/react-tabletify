@@ -41,6 +41,8 @@ A fast, fully customizable React data table built purely with HTML and CSS.
 - ✅ **Cell Validation** - Real-time validation for editable cells with custom validation functions
 - ✅ **Built-in Editor Types** - Built-in dropdown (`editor: 'select'`) and date picker (`editor: 'date'`) editors with Fluent UI styling
 - ✅ **Custom Edit Components** - Customize edit input (dropdown, datepicker, or any React component) when double-clicking to edit
+- ✅ **Infinite Scroll** - SharePoint-like progressive loading with skeleton rows when `showPagination={false}` and `onLoadMore` callback
+- ✅ **Virtual Scrolling** - Optimized rendering for large datasets with automatic virtual scrolling
 
 ## Installation
 
@@ -167,6 +169,8 @@ function App() {
 | `onAfterExport` | `(format, filename) => void` | - | Callback after export |
 | `rowActions` | `(item, index) => Array<{key, label, icon?, onClick, disabled?}>` | - | Function that returns array of actions for each row |
 | `enableCellSelection` | `boolean` | `false` | Enable Excel-like cell selection (copy, cut, paste) |
+| `onLoadMore` | `(currentDataLength: number) => Promise<void> \| void` | - | Callback when user scrolls near the end (for infinite scroll). Called when scrolling within threshold. |
+| `hasMore` | `boolean` | `true` | Whether more data is available to load (for infinite scroll) |
 | `className` | `string` | - | Additional CSS class |
 | `styles` | `CSSProperties` | - | Inline styles |
 
@@ -626,6 +630,47 @@ const [data, setData] = useState(users);
 // When showTooltip={false}: Long content wraps to multiple lines, row height auto-adjusts
 ```
 
+### With Infinite Scroll (SharePoint-like)
+
+```tsx
+const [allData, setAllData] = useState<User[]>([]);
+const [loadedData, setLoadedData] = useState<User[]>([]);
+
+// Initial load
+useEffect(() => {
+  fetchInitialData().then(data => {
+    setAllData(data);
+    // Load first 50 items (SharePoint-like)
+    setLoadedData(data.slice(0, 50));
+  });
+}, []);
+
+// Load more when scrolling near the end
+const handleLoadMore = async (currentLength: number) => {
+  // Simulate API call
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // Load next 50 items
+  const nextBatch = allData.slice(currentLength, currentLength + 50);
+  setLoadedData(prev => [...prev, ...nextBatch]);
+};
+
+<ReactTabletify
+  data={loadedData}
+  columns={columns}
+  showPagination={false} // Disable pagination for infinite scroll
+  onLoadMore={handleLoadMore}
+  hasMore={loadedData.length < allData.length}
+  maxHeight="600px" // Set max height for scrollable container
+/>
+// When user scrolls near the end:
+// 1. Skeleton row appears (shimmer effect)
+// 2. Scroll is blocked during loading
+// 3. New data loads (50 items per batch)
+// 4. Skeleton disappears and scroll is re-enabled
+// 5. Viewport position is maintained (no jump)
+```
+
 ## Architecture
 
 ReactTabletify is built with a modular architecture using custom hooks for better code organization and maintainability:
@@ -869,6 +914,14 @@ See [PERFORMANCE.md](./PERFORMANCE.md) for detailed performance optimization gui
 See [COMPATIBILITY.md](./COMPATIBILITY.md) for detailed compatibility information.
 
 ## Changelog
+
+### Version 0.6.6
+- ✅ **Infinite Scroll** - SharePoint-like progressive loading when `showPagination={false}` with `onLoadMore` callback
+- ✅ **Skeleton Loading** - Shimmer skeleton row appears when loading more data
+- ✅ **Scroll Blocking** - Scroll is automatically blocked during data loading to prevent issues
+- ✅ **Virtual Scrolling Improvements** - Enhanced virtual scrolling with better range merging to prevent blank screens
+- ✅ **Viewport Stability** - Viewport position is maintained when new data loads (no jump to top/bottom)
+- ✅ **Automatic Virtual Scroll** - Virtual scrolling automatically enabled for large datasets when `showPagination={false}`
 
 ### Version 0.6.5
 - ✅ **Built-in Editor Types** - Added `editor: 'text' | 'select' | 'date'` prop to Column interface for common editor types

@@ -407,11 +407,25 @@ export interface ReactTabletifyProps<T extends Record<string, any>> {
    * @default false
    */
   loading?: boolean;
-
+  
   /** 
    * Custom loading component
    */
   onRenderLoading?: () => React.ReactNode;
+
+  /** 
+   * Callback fired when user scrolls near the end of the list (for infinite scroll)
+   * This is called when user scrolls within a threshold (e.g., 20 rows from the end)
+   * @param currentDataLength - Current number of items loaded
+   * @returns Promise that resolves when more data is loaded, or void if synchronous
+   */
+  onLoadMore?: (currentDataLength: number) => Promise<void> | void;
+
+  /** 
+   * Whether more data is available to load (for infinite scroll)
+   * @default true
+   */
+  hasMore?: boolean;
 
   /** 
    * Custom empty state message

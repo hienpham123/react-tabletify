@@ -29,7 +29,7 @@
 }
 
 .hh-filter-header strong {
-  font-size: var(--hh-typography-font-size, 15px);
+  font-size: 18px !important;
   font-weight: var(--hh-typography-font-weight-bold, 600);
   color: var(--hh-color-text, #323130);
   line-height: var(--hh-typography-line-height, 20px);
@@ -217,7 +217,6 @@
   padding: 16px 20px;
   border-top: 1px solid #edebe9;
   display: flex;
-  justify-content: flex-end;
   gap: 8px;
   background: #ffffff;
 }

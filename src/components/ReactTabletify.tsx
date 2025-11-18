@@ -74,6 +74,8 @@ export function ReactTabletify<T extends Record<string, any>>({
   onAfterExport,
   rowActions,
   enableCellSelection = false,
+  onLoadMore,
+  hasMore = true,
   ...otherProps
 }: ReactTabletifyProps<T>) {
   // Core table hook for sorting, filtering, pagination
@@ -86,7 +88,15 @@ export function ReactTabletify<T extends Record<string, any>>({
   // Update internal data when data prop changes
   React.useEffect(() => {
     setInternalData(data);
-  }, [data]);
+    // Reset loaded count when data changes
+    if (!showPagination) {
+      // SharePoint-like: load first 30 items initially
+      const INITIAL_LOAD_COUNT = 50;
+      setLoadedDataCount(Math.min(INITIAL_LOAD_COUNT, data.length));
+    } else {
+      setLoadedDataCount(data.length);
+    }
+  }, [data, showPagination]);
 
   // Update internalItemsPerPage when itemsPerPage prop changes
   React.useEffect(() => {
@@ -110,16 +120,312 @@ export function ReactTabletify<T extends Record<string, any>>({
   // When showPagination is false, show all items (set itemsPerPage to a very large number)
   const effectiveItemsPerPage = showPagination ? internalItemsPerPage : Number.MAX_SAFE_INTEGER;
 
+  // Virtual scrolling state
+  const [scrollTop, setScrollTop] = React.useState<number>(0);
+  const [containerHeight, setContainerHeight] = React.useState<number>(600); // Default height
+  const [isLoadingMore, setIsLoadingMore] = React.useState<boolean>(false);
+  const [isAtBottom, setIsAtBottom] = React.useState<boolean>(false);
+  const [shouldBlockScroll, setShouldBlockScroll] = React.useState<boolean>(false);
+
+  // Reset shouldBlockScroll when showPagination changes or component unmounts
+  React.useEffect(() => {
+    if (showPagination) {
+      setShouldBlockScroll(false);
+    }
+  }, [showPagination]);
+  // Initialize loadedDataCount: if no pagination, start with 30 items (SharePoint-like)
+  const [loadedDataCount, setLoadedDataCount] = React.useState<number>(
+    !showPagination ? Math.min(50, data.length) : data.length
+  );
+
   // Use internal data if no onCellEdit is provided (for automatic data management)
   // Otherwise use the data prop (parent manages data)
-  const dataToUse = internalData;
+  // For infinite scroll: only use loaded portion of data (SharePoint-like paging)
+  const dataToUse = React.useMemo(() => {
+    if (!showPagination) {
+      // For infinite scroll mode, only show loaded portion (like SharePoint paging)
+      return internalData.slice(0, loadedDataCount);
+    }
+    return internalData;
+  }, [internalData, loadedDataCount, showPagination]);
 
   // Temporary: use dataToUse for initial table setup, will be updated after useRowReorder
   const table = useTable<T>(dataToUse, effectiveItemsPerPage);
 
+  // Enable virtual scrolling when:
+  // 1. Pagination is disabled (showPagination = false) OR itemsPerPage is very large
+  // 2. There are many items (> 100)
+  // 3. No grouping is active
+  const shouldEnableVirtualScroll = React.useMemo(() => {
+    return (
+      (!showPagination || effectiveItemsPerPage >= 1000) &&
+      table.filtered.length > 100 &&
+      !groupBy
+    );
+  }, [showPagination, effectiveItemsPerPage, table.filtered.length, groupBy]);
+
   // Refs
   const anchorRefs = React.useRef<Record<string, HTMLDivElement>>({});
   const tableRef = React.useRef<HTMLDivElement>(null);
+  const tableBodyContainerRef = React.useRef<HTMLDivElement>(null);
+
+  // Handle infinite scroll when showPagination is false (independent of virtual scroll)
+  React.useEffect(() => {
+    if (showPagination) return;
+
+    const handleScroll = () => {
+      if (!tableBodyContainerRef.current || isLoadingMore) return;
+
+      const container = tableBodyContainerRef.current;
+      const scrollTop = container.scrollTop;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+
+      // Check if scrolled to the end
+      const ROW_HEIGHT = 48;
+      const SCROLL_THRESHOLD = ROW_HEIGHT * 2; // Trigger load more when within 2 rows from bottom
+      const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+      const atBottom = distanceFromBottom <= SCROLL_THRESHOLD;
+
+      // Check if there's more data to load
+      const hasMoreData = loadedDataCount < internalData.length;
+      if (hasMoreData && atBottom) {
+        // Save current scroll position before loading
+        const currentScrollTop = container.scrollTop;
+        const currentScrollHeight = container.scrollHeight;
+
+        // Set loading state first to show skeleton (scroll still works)
+        setIsLoadingMore(true);
+
+        // Load more data (SharePoint-like: fetch next page)
+        const loadMoreData = async () => {
+          // Wait a bit to ensure skeleton is rendered
+          await new Promise(resolve => setTimeout(resolve, 50));
+
+          // Now block scroll after skeleton is visible
+          setShouldBlockScroll(true);
+
+          // Also add event listeners as backup
+          const preventScroll = (e: Event) => {
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+          };
+
+          container.addEventListener('wheel', preventScroll, { passive: false });
+          container.addEventListener('touchmove', preventScroll, { passive: false });
+          container.addEventListener('scroll', preventScroll, { passive: false });
+
+          try {
+            const ITEMS_PER_PAGE = 50; // SharePoint-like: 30 items per page
+
+            if (onLoadMore) {
+              // If onLoadMore callback provided, call it
+              const result = onLoadMore(loadedDataCount);
+              if (result instanceof Promise) {
+                await result;
+              }
+
+              // Wait a bit for data to update if it's async
+              await new Promise(resolve => setTimeout(resolve, 100));
+
+              // Check if internalData was updated (parent added more data)
+              if (internalData.length > loadedDataCount) {
+                // Data was updated externally, use all available data
+                setLoadedDataCount(internalData.length);
+              } else {
+                // No external update, simulate loading from existing data
+                const nextCount = Math.min(loadedDataCount + ITEMS_PER_PAGE, internalData.length);
+                setLoadedDataCount(nextCount);
+              }
+            } else {
+              // No onLoadMore callback: automatically load from existing data
+              // Simulate API delay (SharePoint-like behavior)
+              await new Promise(resolve => setTimeout(resolve, 800));
+
+              const nextCount = Math.min(loadedDataCount + ITEMS_PER_PAGE, internalData.length);
+              setLoadedDataCount(nextCount);
+            }
+          } finally {
+            // Remove scroll prevention
+            container.removeEventListener('wheel', preventScroll);
+            container.removeEventListener('touchmove', preventScroll);
+            container.removeEventListener('scroll', preventScroll);
+
+            // Small delay to show skeleton before removing
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            // Unblock scroll first
+            setShouldBlockScroll(false);
+
+            // Then remove loading state
+            setIsLoadingMore(false);
+
+            // After loading, maintain exact scroll position (keep viewport items unchanged)
+            // Wait for DOM to update with new data
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                if (tableBodyContainerRef.current) {
+                  // Simply restore the exact same scroll position
+                  // This keeps the viewport items unchanged, new items are appended below
+                  tableBodyContainerRef.current.scrollTop = currentScrollTop;
+
+                  // Also update scrollTop state for virtual scrolling
+                  setScrollTop(currentScrollTop);
+                }
+              });
+            });
+          }
+        };
+
+        loadMoreData();
+      }
+    };
+
+    const container = tableBodyContainerRef.current;
+    if (container) {
+      container.addEventListener('scroll', handleScroll, { passive: true });
+      container.addEventListener('wheel', handleScroll, { passive: true });
+
+      return () => {
+        container.removeEventListener('scroll', handleScroll);
+        container.removeEventListener('wheel', handleScroll);
+      };
+    }
+  }, [showPagination, loadedDataCount, internalData.length, onLoadMore, isLoadingMore]);
+
+  // Measure container height and track scroll for virtual scrolling
+  React.useEffect(() => {
+    if (!shouldEnableVirtualScroll) return;
+
+    const updateHeight = () => {
+      // Try to get height from tableRef first (if has maxHeight)
+      if (tableRef.current) {
+        const height = tableRef.current.clientHeight;
+        if (height > 0) {
+          // Subtract header height if sticky header is enabled
+          const headerHeight = stickyHeader && tableRef.current.querySelector('thead')?.clientHeight || 0;
+          const availableHeight = height - headerHeight;
+          if (availableHeight > 0) {
+            setContainerHeight(availableHeight);
+            return;
+          }
+        }
+      }
+
+      // Fallback: use viewport height or a default value
+      const viewportHeight = window.innerHeight;
+      // Default to 600px or viewport height - 200px, whichever is smaller
+      const defaultHeight = Math.min(600, viewportHeight - 200);
+      setContainerHeight(defaultHeight);
+    };
+
+    const updateScroll = () => {
+      // Try tableBodyContainerRef first (the div wrapping the table)
+      if (tableBodyContainerRef.current) {
+        const scrollTop = tableBodyContainerRef.current.scrollTop;
+        const scrollHeight = tableBodyContainerRef.current.scrollHeight;
+        const clientHeight = tableBodyContainerRef.current.clientHeight;
+
+        if (scrollTop !== undefined) {
+          setScrollTop(scrollTop);
+
+          // Check if scrolled to the end (for virtual scroll tracking only)
+          // Note: Infinite scroll logic is handled in separate useEffect above
+          const ROW_HEIGHT = 48;
+          const SCROLL_THRESHOLD = ROW_HEIGHT * 2;
+          const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
+          const atBottom = distanceFromBottom <= SCROLL_THRESHOLD;
+          setIsAtBottom(atBottom);
+          return;
+        }
+      }
+
+      // Fallback to tableRef if it has scroll
+      if (tableRef.current && maxHeight) {
+        setScrollTop(tableRef.current.scrollTop);
+        return;
+      }
+
+      // Otherwise, use window scroll relative to table position
+      const tableElement = tableRef.current;
+      if (tableElement) {
+        const rect = tableElement.getBoundingClientRect();
+        const scrollY = window.scrollY || window.pageYOffset;
+        const headerHeight = stickyHeader ? (tableElement.querySelector('thead')?.clientHeight || 0) : 0;
+        // Calculate how much of the table is scrolled past
+        const relativeScroll = Math.max(0, scrollY + window.innerHeight - rect.top - headerHeight - containerHeight);
+        setScrollTop(relativeScroll);
+      }
+    };
+
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(() => {
+      updateHeight();
+      updateScroll();
+    });
+
+    // Throttle scroll updates for better performance (windowing approach)
+    // Use immediate update for better responsiveness and prevent blank screen
+    let scrollTimeout: number | null = null;
+    const handleScroll = () => {
+      // Update immediately to prevent blank screen
+      updateScroll();
+
+      // Also schedule a debounced update for performance
+      if (scrollTimeout !== null) {
+        cancelAnimationFrame(scrollTimeout);
+      }
+      scrollTimeout = requestAnimationFrame(() => {
+        // Additional update to ensure range is correct
+        updateScroll();
+      });
+    };
+
+    // Always listen to tableBodyContainerRef scroll if it exists
+    if (tableBodyContainerRef.current) {
+      tableBodyContainerRef.current.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    // Also listen to tableRef if it has scroll
+    if (maxHeight && tableRef.current) {
+      tableRef.current.addEventListener('scroll', handleScroll, { passive: true });
+    }
+
+    // Fallback: use window scroll if no scroll container
+    if (!maxHeight && !tableBodyContainerRef.current) {
+      window.addEventListener('scroll', handleScroll, true);
+      window.addEventListener('wheel', handleScroll, { passive: true });
+    }
+
+    // Also update on window resize
+    window.addEventListener('resize', updateHeight);
+
+    const resizeObserver = new ResizeObserver(() => {
+      requestAnimationFrame(() => {
+        updateHeight();
+        updateScroll();
+      });
+    });
+    if (tableRef.current) {
+      resizeObserver.observe(tableRef.current);
+    }
+
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+      if (tableBodyContainerRef.current) {
+        tableBodyContainerRef.current.removeEventListener('scroll', handleScroll);
+      }
+      if (maxHeight && tableRef.current) {
+        tableRef.current.removeEventListener('scroll', handleScroll);
+      }
+      if (!maxHeight && !tableBodyContainerRef.current) {
+        window.removeEventListener('scroll', handleScroll, true);
+        window.removeEventListener('wheel', handleScroll);
+      }
+      resizeObserver.disconnect();
+    };
+  }, [shouldEnableVirtualScroll, table.paged.length, stickyHeader, maxHeight]);
 
   // Track totals configuration for each column
   const [columnTotals, setColumnTotals] = React.useState<Record<string, 'none' | 'count'>>({});
@@ -1631,21 +1937,32 @@ export function ReactTabletify<T extends Record<string, any>>({
   return (
     <div
       ref={tableRef}
-      className={`hh-table ${className || ''} hh-theme-${tableTheme.mode || 'light'} ${resizingColumn ? 'resizing' : ''} ${stickyHeader ? 'hh-sticky-header' : ''} ${enableCellSelection ? 'enable-cell-selection' : ''}`}
+      className={`hh-table ${className || ''} hh-theme-${tableTheme.mode || 'light'} ${resizingColumn ? 'resizing' : ''} ${stickyHeader ? 'hh-sticky-header' : ''} ${enableCellSelection ? 'enable-cell-selection' : ''} ${!showPagination ? 'hh-table-no-pagination' : ''}`}
       style={{
         ...themeStyles,
         ...styles,
-        ...(maxHeight ? { maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight, overflow: 'auto' } : {}),
+        ...(maxHeight && showPagination ? { maxHeight: typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight, overflow: 'auto' } : {}),
         ...(resizingColumn ? { cursor: 'col-resize' } : {}),
+        ...(!showPagination ? {
+          overflow: 'hidden',
+          height: 'calc(100vh - 100px)',
+          maxHeight: 'calc(100vh - 100px)',
+          display: 'flex',
+          flexDirection: 'column'
+        } : {})
       }}
       onScroll={React.useCallback((e: React.UIEvent<HTMLDivElement>) => {
-        // Throttle scroll events for better performance
-        // Use requestAnimationFrame to batch scroll updates
-        requestAnimationFrame(() => {
-          // Scroll handling is done by browser, we just need to throttle if needed
-          // This is a placeholder for any custom scroll handling
-        });
-      }, [])}
+        if (shouldEnableVirtualScroll) {
+          const target = e.currentTarget;
+          setScrollTop(target.scrollTop);
+        }
+      }, [shouldEnableVirtualScroll])}
+      onWheel={React.useCallback((e: React.WheelEvent<HTMLDivElement>) => {
+        // Also track scroll from wheel events for virtual scrolling
+        if (shouldEnableVirtualScroll && tableRef.current) {
+          setScrollTop(tableRef.current.scrollTop);
+        }
+      }, [shouldEnableVirtualScroll])}
       tabIndex={enableCellSelection || enableKeyboardNavigation ? 0 : undefined}
     >
       {enableExport && (
@@ -1675,12 +1992,33 @@ export function ReactTabletify<T extends Record<string, any>>({
         />
       )}
       {showTable && (
-        <div style={{
-          overflowX: 'auto',
-          overflowY: stickyHeader && !maxHeight ? 'auto' : 'visible',
-          width: '100%',
-          ...(stickyHeader && !maxHeight ? { maxHeight: 'calc(100vh - 200px)' } : {})
-        }}>
+        <div
+          ref={tableBodyContainerRef}
+          style={{
+            width: '100%',
+            ...(!showPagination ? {
+              height: 'calc(100vh - 100px)',
+              maxHeight: 'calc(100vh - 100px)',
+              overflowX: 'auto',
+              overflowY: shouldBlockScroll ? 'hidden' : 'auto',
+              position: 'relative',
+              ...(shouldBlockScroll ? {
+                pointerEvents: 'none',
+                overscrollBehavior: 'none',
+                touchAction: 'none'
+              } : {})
+            } : {
+              overflowX: 'auto',
+              overflowY: shouldBlockScroll ? 'hidden' : (shouldEnableVirtualScroll ? 'auto' : (stickyHeader && !maxHeight ? 'auto' : 'visible')),
+              ...(shouldEnableVirtualScroll ? { maxHeight: maxHeight || 'calc(100vh - 100px)', height: maxHeight || 'calc(100vh - 100px)' } : {}),
+              ...(stickyHeader && !maxHeight && !shouldEnableVirtualScroll ? { maxHeight: 'calc(100vh - 200px)' } : {}),
+              ...(shouldBlockScroll ? {
+                pointerEvents: 'none',
+                overscrollBehavior: 'none',
+                touchAction: 'none'
+              } : {})
+            })
+          }}>
           <table>
             <TableHeader
               columns={sortedColumns}
@@ -1846,6 +2184,10 @@ export function ReactTabletify<T extends Record<string, any>>({
               onCellMouseDown={handleCellMouseDown}
               onCellMouseEnter={handleCellMouseEnter}
               onCellMouseUp={handleCellMouseUp}
+              enableVirtualScroll={shouldEnableVirtualScroll}
+              scrollTop={scrollTop}
+              containerHeight={containerHeight}
+              isLoadingMore={isLoadingMore}
             />
             <TableFooter
               columns={sortedColumns}

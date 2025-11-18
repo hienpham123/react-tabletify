@@ -8,6 +8,23 @@
   color: var(--hh-color-text, #323130);
 }
 
+/* When showPagination=false, table should be full height and contain scroll */
+.hh-table.hh-table-no-pagination {
+  height: calc(100vh - 100px) !important;
+  max-height: calc(100vh - 100px) !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Table body container in no-pagination mode */
+.hh-table-no-pagination > div:not(.hh-export-toolbar):not(.hh-table-empty) {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow-x: auto !important;
+  overflow-y: auto !important;
+}
+
 /* Keep col-resize cursor when resizing */
 .hh-table.resizing {
   cursor: col-resize !important;
@@ -634,6 +651,54 @@
 /* --- Loading Skeleton --- */
 .hh-loading-skeleton {
   padding: 12px;
+}
+
+/* Skeleton rows for infinite scroll loading (SharePoint-like shimmer effect) */
+.hh-skeleton-loading-row {
+  background: var(--hh-color-row-background, #ffffff) !important;
+  animation: skeleton-row-pulse 1.5s ease-in-out infinite;
+}
+
+.hh-skeleton-loading-row:nth-child(even) {
+  background: var(--hh-color-row-background-alternate, #f9f9f9) !important;
+}
+
+.hh-skeleton-loading-row td {
+  padding: 10px 12px !important;
+  border-bottom: 1px solid var(--hh-color-row-border, #f1f1f1) !important;
+}
+
+.hh-skeleton-loading-row .hh-skeleton-cell {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    #e8e8e8 25%,
+    #f0f0f0 50%,
+    #e8e8e8 75%,
+    #f0f0f0 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+  opacity: 0.7;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes skeleton-row-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.95;
+  }
 }
 
 .hh-skeleton-header {
