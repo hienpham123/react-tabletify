@@ -309,7 +309,7 @@ export default function App() {
         // groupBy="department"
         // selectionMode="multiple"
         // enableRowReorder={true}
-        enableCellSelection={true}
+        // enableCellSelection={true}
         onRowReorder={(newData, draggedItem, fromIndex, toIndex) => {
           console.log('Row reordered:', { draggedItem, fromIndex, toIndex });
           setData(newData);

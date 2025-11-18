@@ -651,29 +651,111 @@ export function ReactTabletify<T extends Record<string, any>>({
   // Cell selection handlers - skip row number column
   const handleCellMouseDown = React.useCallback((rowIndex: number, colKey: string, e: React.MouseEvent) => {
     if (!enableCellSelection) return;
+    // Only handle left mouse button (button === 0)
+    // Ignore right click (button === 2) and middle click (button === 1)
+    if (e.button !== 0) return;
     // Skip row number column
     if (colKey === '__rowNumber__') return;
     e.stopPropagation();
+    e.preventDefault(); // Prevent context menu on right click
     const isShift = e.shiftKey;
     cellSelection.startSelection(rowIndex, colKey, isShift);
     cellSelection.setFocusedCell(rowIndex, colKey);
     // Clear copied state when starting new selection
     cellSelection.setCopied(false);
+    // Focus table container to enable keyboard shortcuts (copy, paste, etc.)
+    if (tableRef.current && document.activeElement !== tableRef.current) {
+      tableRef.current.focus();
+    }
   }, [enableCellSelection, cellSelection]);
 
   const handleCellMouseEnter = React.useCallback((rowIndex: number, colKey: string, e: React.MouseEvent) => {
     if (!enableCellSelection || !cellSelection.isSelecting) return;
     // Skip row number column
     if (colKey === '__rowNumber__') return;
+    // Only update selection if left mouse button is pressed (buttons === 1)
+    // buttons: 0 = no button, 1 = left, 2 = right, 4 = middle
+    if (e.buttons !== 1) return;
     cellSelection.updateSelection(rowIndex, colKey);
   }, [enableCellSelection, cellSelection]);
 
   const handleCellMouseUp = React.useCallback((rowIndex: number, colKey: string, e: React.MouseEvent) => {
     if (!enableCellSelection) return;
+    // Only handle left mouse button (button === 0)
+    if (e.button !== 0) return;
     // Skip row number column
     if (colKey === '__rowNumber__') return;
     cellSelection.endSelection();
+    // Ensure table container has focus after selection ends to enable keyboard shortcuts
+    if (tableRef.current && document.activeElement !== tableRef.current) {
+      tableRef.current.focus();
+    }
   }, [enableCellSelection, cellSelection]);
+
+  // Document-level mousemove listener for better drag selection tracking
+  // This ensures selection continues even when mouse moves quickly or outside cells
+  React.useEffect(() => {
+    if (!enableCellSelection || !cellSelection.isSelecting) return;
+
+    const handleDocumentMouseMove = (e: MouseEvent) => {
+      // Only track if left mouse button is still pressed
+      if (e.buttons !== 1) {
+        cellSelection.endSelection();
+        return;
+      }
+
+      // Use elementFromPoint to find the element under cursor (more reliable than e.target)
+      const elementUnderCursor = document.elementFromPoint(e.clientX, e.clientY) as HTMLElement;
+      if (!elementUnderCursor) return;
+
+      // Find the closest cell element (td or th) - check both the element and its parents
+      let cellElement = elementUnderCursor.closest('td[data-row-index][data-col-key]') as HTMLElement;
+      
+      // If not found, try finding from parent elements (in case we're on a child element like span, div, etc.)
+      if (!cellElement) {
+        let parent = elementUnderCursor.parentElement;
+        while (parent && !cellElement) {
+          if (parent.matches && parent.matches('td[data-row-index][data-col-key]')) {
+            cellElement = parent as HTMLElement;
+            break;
+          }
+          parent = parent.parentElement;
+        }
+      }
+
+      if (!cellElement) return;
+
+      // Extract rowIndex and colKey from data attributes
+      const rowIndexStr = cellElement.getAttribute('data-row-index');
+      const colKey = cellElement.getAttribute('data-col-key');
+
+      if (rowIndexStr === null || !colKey) return;
+
+      const rowIndex = parseInt(rowIndexStr, 10);
+      if (isNaN(rowIndex)) return;
+
+      // Skip row number column
+      if (colKey === '__rowNumber__') return;
+
+      // Update selection
+      cellSelection.updateSelection(rowIndex, colKey);
+    };
+
+    const handleDocumentMouseUp = (e: MouseEvent) => {
+      // Only handle left mouse button
+      if (e.button !== 0) return;
+      cellSelection.endSelection();
+    };
+
+    // Add listeners to document for better tracking
+    document.addEventListener('mousemove', handleDocumentMouseMove);
+    document.addEventListener('mouseup', handleDocumentMouseUp);
+
+    return () => {
+      document.removeEventListener('mousemove', handleDocumentMouseMove);
+      document.removeEventListener('mouseup', handleDocumentMouseUp);
+    };
+  }, [enableCellSelection, cellSelection.isSelecting, cellSelection]);
 
   // Get cell range info for visual feedback
   const getCellRangeInfo = React.useCallback((rowIndex: number, colKey: string) => {
@@ -828,21 +910,26 @@ export function ReactTabletify<T extends Record<string, any>>({
     const handleKeyDown = (e: KeyboardEvent) => {
       // Only handle if table container or cells are focused
       const activeElement = document.activeElement;
-      if (!tableRef.current || !activeElement) return;
+      if (!tableRef.current) return;
 
       // Check if active element is within the table
-      const isInTable = tableRef.current.contains(activeElement);
-
-      // Don't handle if focus is outside table
-      if (!isInTable) {
+      const isInTable = activeElement ? tableRef.current.contains(activeElement) : false;
+      
+      // For copy/cut/paste operations, also allow if there are selected cells
+      // This ensures copy works even if focus check fails (e.g., on initial page load)
+      const hasSelectedCells = cellSelection.getSelectedCells().length > 0;
+      const isCopyPasteOperation = (e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'v');
+      
+      // Don't handle if focus is outside table (unless it's a copy/paste operation with selected cells)
+      if (!isInTable && !(isCopyPasteOperation && hasSelectedCells)) {
         return;
       }
 
       // Don't handle keyboard shortcuts if user is editing a cell (typing in input)
       // Check if active element is an input, textarea, or contenteditable
-      if (activeElement.tagName === 'INPUT' ||
+      if (activeElement && (activeElement.tagName === 'INPUT' ||
         activeElement.tagName === 'TEXTAREA' ||
-        activeElement.getAttribute('contenteditable') === 'true') {
+        activeElement.getAttribute('contenteditable') === 'true')) {
         // Allow normal typing (including Space) in input fields
         // Only prevent shortcuts that might conflict
         if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'x' || e.key === 'v')) {
@@ -1408,6 +1495,75 @@ export function ReactTabletify<T extends Record<string, any>>({
         handleCellEditCancel();
       };
 
+      // Excel mode: if enableCellSelection is true, always use text input (skip custom editors)
+      if (enableCellSelection) {
+        return (
+          <div className="hh-cell-edit-wrapper">
+            <input
+              ref={editInputRef}
+              type="text"
+              className={`hh-cell-edit-input hh-cell-edit-input-excel ${hasError ? 'hh-cell-edit-input-error' : ''}`}
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={() => {
+                const saved = handleCellEditSave(item, column.key, index);
+                // If validation failed, keep editing mode and focus back
+                if (saved === false && editInputRef.current) {
+                  setTimeout(() => {
+                    if (editInputRef.current) {
+                      editInputRef.current.focus();
+                    }
+                  }, 0);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  const saved = handleCellEditSave(item, column.key, index);
+                  // If validation failed, keep focus
+                  if (saved === false && editInputRef.current) {
+                    editInputRef.current.focus();
+                  }
+                } else if (e.key === 'Escape') {
+                  e.preventDefault();
+                  handleCellEditCancel();
+                }
+                // Allow all other keys including Space, Delete, Backspace, etc.
+                // Only stop propagation for navigation keys to prevent table-level handlers
+                if (e.key === 'ArrowUp' || e.key === 'ArrowDown' ||
+                  e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+                  e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
+                  e.stopPropagation();
+                }
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                // Allow normal text selection when clicking on input
+                // Don't force selection
+              }}
+              onFocus={(e) => {
+                // Focus cursor at the end of the value when input gets focus
+                const input = e.target as HTMLInputElement;
+                if (input) {
+                  // Use setTimeout to ensure selection happens after focus
+                  setTimeout(() => {
+                    const length = input.value.length;
+                    input.setSelectionRange(length, length);
+                  }, 0);
+                }
+              }}
+              onMouseDown={(e) => {
+                // Prevent default to allow selection
+                e.stopPropagation();
+              }}
+            />
+            {hasError && (
+              <div className="hh-cell-edit-error-message">{validationError}</div>
+            )}
+          </div>
+        );
+      }
+
       // PRIORITY 1: If column has custom edit renderer (onRenderEditCell), use it
       // This is for custom editors from external libraries (datepicker, etc.)
       if (column.onRenderEditCell && typeof column.onRenderEditCell === 'function') {
@@ -1621,76 +1777,6 @@ export function ReactTabletify<T extends Record<string, any>>({
                 <CloseIcon width={12} height={12} />
               </button>
             </div>
-            {hasError && (
-              <div className="hh-cell-edit-error-message">{validationError}</div>
-            )}
-          </div>
-        );
-      }
-
-      // PRIORITY 4: Default input (existing logic)
-      // Excel-like mode: no buttons, auto-save on blur
-      if (enableCellSelection) {
-        return (
-          <div className="hh-cell-edit-wrapper">
-            <input
-              ref={editInputRef}
-              type="text"
-              className={`hh-cell-edit-input hh-cell-edit-input-excel ${hasError ? 'hh-cell-edit-input-error' : ''}`}
-              value={editValue}
-              onChange={(e) => setEditValue(e.target.value)}
-              onBlur={() => {
-                const saved = handleCellEditSave(item, column.key, index);
-                // If validation failed, keep editing mode and focus back
-                if (saved === false && editInputRef.current) {
-                  setTimeout(() => {
-                    if (editInputRef.current) {
-                      editInputRef.current.focus();
-                    }
-                  }, 0);
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  const saved = handleCellEditSave(item, column.key, index);
-                  // If validation failed, keep focus
-                  if (saved === false && editInputRef.current) {
-                    editInputRef.current.focus();
-                  }
-                } else if (e.key === 'Escape') {
-                  e.preventDefault();
-                  handleCellEditCancel();
-                }
-                // Allow all other keys including Space, Delete, Backspace, etc.
-                // Only stop propagation for navigation keys to prevent table-level handlers
-                if (e.key === 'ArrowUp' || e.key === 'ArrowDown' ||
-                  e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
-                  e.key === 'Tab' || e.key === 'Home' || e.key === 'End') {
-                  e.stopPropagation();
-                }
-              }}
-              onClick={(e) => {
-                e.stopPropagation();
-                // Allow normal text selection when clicking on input
-                // Don't force selection
-              }}
-              onFocus={(e) => {
-                // Focus cursor at the end of the value when input gets focus
-                const input = e.target as HTMLInputElement;
-                if (input) {
-                  // Use setTimeout to ensure selection happens after focus
-                  setTimeout(() => {
-                    const length = input.value.length;
-                    input.setSelectionRange(length, length);
-                  }, 0);
-                }
-              }}
-              onMouseDown={(e) => {
-                // Prevent default to allow selection
-                e.stopPropagation();
-              }}
-            />
             {hasError && (
               <div className="hh-cell-edit-error-message">{validationError}</div>
             )}

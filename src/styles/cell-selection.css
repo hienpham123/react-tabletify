@@ -3,17 +3,16 @@
 /* Selected cell - single cell selection */
 .hh-cell-selected {
   background-color: var(--hh-cell-selection-background, rgba(0, 120, 212, 0.1)) !important;
-  border: 1px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
+  border: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
   outline: none !important;
 }
 
 /* Focused cell - cell with keyboard focus (for arrow key navigation) */
+/* Removed border/outline - only show range border, not individual cell focus border */
 .hh-cell-focused {
-  outline: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
-  outline-offset: -1px !important;
+  /* No border/outline - range selection will show the border */
+  outline: none !important;
   z-index: 1;
-  /* Ensure border-top is not too thick - use the same color as row border */
-  border-top: 1px solid var(--hh-color-row-border, #f1f1f1) !important;
 }
 
 /* Remove outline when cell is being edited (input has its own border) */
@@ -82,7 +81,7 @@ th:has(.hh-cell-edit-input-excel.hh-cell-edit-input-error) {
 
 /* Copied cells - dashed border */
 .hh-cell-copied.hh-cell-selected {
-  border: 1px dashed var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
+  border: 2px dashed var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
 }
 
 /* Range selection - cells inside range */
@@ -121,54 +120,54 @@ th:has(.hh-cell-edit-input-excel.hh-cell-edit-input-error) {
 /* Only apply border-bottom, NOT border-left or border-right */
 /* Only show border when there's an active selection (not just when copied) */
 .hh-table.enable-cell-selection tbody tr.hh-row-above-range td[data-in-range-column="true"] {
-  border-bottom: 1px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
+  border-bottom: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
 
 }
 
 /* Add border-bottom to header cells when range starts from first row - only for cells in columns that are in range */
 /* Only apply border-bottom, NOT border-left or border-right */
 .hh-table.enable-cell-selection thead th[data-in-range-column="true"] {
-  border-bottom: 1px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
+  border-bottom: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
   border-left: 1px solid var(--hh-color-row-border, #f1f1f1) !important;
   border-right: 1px solid var(--hh-color-row-border, #f1f1f1) !important;
 }
 
 /* Bottom row of range - all cells in bottom row get bottom border */
 .hh-table.enable-cell-selection td.hh-cell-in-range.hh-cell-range-bottom {
-  border-bottom: 1px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
+  border-bottom: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
 }
 
 /* Left column of range - all cells in left column get left border */
 .hh-table.enable-cell-selection td.hh-cell-in-range.hh-cell-range-left {
-  border-left: 1px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
+  border-left: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
 }
 
 /* Right column of range - all cells in right column get right border */
 .hh-table.enable-cell-selection td.hh-cell-in-range.hh-cell-range-right {
-  border-right: 1px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
+  border-right: 2px solid var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
 }
 
 /* Copied range - dashed borders */
 .hh-table.enable-cell-selection td.hh-cell-copied.hh-cell-in-range.hh-cell-range-bottom {
-  border-bottom: 1px dashed var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
+  border-bottom: 2px dashed var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
 }
 
 .hh-table.enable-cell-selection td.hh-cell-copied.hh-cell-in-range.hh-cell-range-left {
-  border-left: 1px dashed var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
+  border-left: 2px dashed var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
 }
 
 .hh-table.enable-cell-selection td.hh-cell-copied.hh-cell-in-range.hh-cell-range-right {
-  border-right: 1px dashed var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
+  border-right: 2px dashed var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
 }
 
 /* Copied range - dashed border for row above */
 .hh-table.enable-cell-selection tbody tr.hh-row-above-range td.hh-cell-copied[data-in-range-column="true"] {
-  border-bottom: 1px dashed var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
+  border-bottom: 2px dashed var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
 }
 
 /* Copied range - dashed border for header */
 .hh-table.enable-cell-selection thead th.hh-cell-copied[data-in-range-column="true"] {
-  border-bottom: 1px dashed var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
+  border-bottom: 2px dashed var(--hh-color-focus-border, var(--hh-color-primary, #107c10)) !important;
 }
 
 /* Cell selection cursor */
