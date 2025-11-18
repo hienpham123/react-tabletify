@@ -2217,6 +2217,12 @@ export function ReactTabletify<T extends Record<string, any>>({
                   handleToggleColumnVisibility(col.key);
                 }
               }}
+              onHideColumn={(col) => {
+                // Skip row number column
+                if (String(col.key) === '__rowNumber__') return;
+                // Hide column by toggling visibility
+                handleToggleColumnVisibility(col.key);
+              }}
               onGroupBy={(col) => {
                 // Skip row number column
                 if (String(col.key) === '__rowNumber__') return;

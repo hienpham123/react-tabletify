@@ -114,11 +114,11 @@ export function useColumnManagement<T extends Record<string, any>>(
 
   /**
    * Filter visible columns
+   * Always filter by visibleColumns to support "Hide this column" feature
    */
   const filteredColumns = React.useMemo(() => {
-    if (!enableColumnVisibility) return columns;
     return columns.filter(col => visibleColumns.has(col.key));
-  }, [columns, visibleColumns, enableColumnVisibility]);
+  }, [columns, visibleColumns]);
 
   /**
    * Apply column order

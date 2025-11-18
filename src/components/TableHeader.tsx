@@ -40,6 +40,7 @@ interface TableHeaderProps<T extends Record<string, any>> {
   onPinRight: (column: Column<T>) => void;
   onUnpin: (column: Column<T>) => void;
   onToggleVisibility: (column: Column<T>) => void;
+  onHideColumn?: (column: Column<T>) => void;
   onGroupBy: (column: Column<T>) => void;
   currentGroupBy?: keyof T;
   enableColumnVisibility: boolean;
@@ -96,6 +97,7 @@ export function TableHeader<T extends Record<string, any>>({
   onPinRight,
   onUnpin,
   onToggleVisibility,
+  onHideColumn,
   onGroupBy,
   currentGroupBy,
   enableColumnVisibility,
@@ -235,6 +237,10 @@ export function TableHeader<T extends Record<string, any>>({
                   dismissCallout();
                 }
               }}
+              onHideColumn={onHideColumn ? () => {
+                onHideColumn(col);
+                dismissCallout();
+              } : undefined}
               onGroupBy={() => {
                 if (col.groupable !== false) {
                   onGroupBy(col);

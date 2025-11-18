@@ -11,6 +11,7 @@ interface HeaderCalloutProps {
     onPinRight?: () => void;
     onUnpin?: () => void;
     onToggleVisibility?: () => void;
+    onHideColumn?: () => void;
     onGroupBy?: () => void;
     isGrouped?: boolean;
     onColumnSettings?: boolean;
@@ -42,6 +43,7 @@ export function HeaderCallout({
     onPinRight,
     onUnpin,
     onToggleVisibility,
+    onHideColumn,
     onGroupBy,
     isGrouped = false,
     onColumnSettings,
@@ -279,6 +281,21 @@ export function HeaderCallout({
                                             className="hh-callout-submenu-item"
                                         >
                                             <span className="hh-callout-text">{visible ? 'Hide column' : 'Show column'}</span>
+                                        </button>
+                                    </>
+                                )}
+                                {onHideColumn && (
+                                    <>
+                                        {(onPinLeft || onPinRight || onUnpin || (enableColumnVisibility && onToggleVisibility)) && <hr className="hh-callout-divider" />}
+                                        <button 
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                onHideColumn();
+                                            }} 
+                                            className="hh-callout-submenu-item"
+                                        >
+                                            <span className="hh-callout-text">Hide this column</span>
                                         </button>
                                     </>
                                 )}

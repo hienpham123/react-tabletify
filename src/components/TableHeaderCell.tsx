@@ -40,6 +40,7 @@ interface TableHeaderCellProps<T extends Record<string, any>> {
   onPinRight: () => void;
   onUnpin: () => void;
   onToggleVisibility: () => void;
+  onHideColumn?: () => void;
   onGroupBy: () => void;
   isGrouped: boolean;
   enableColumnVisibility: boolean;
@@ -96,6 +97,7 @@ export function TableHeaderCell<T extends Record<string, any>>({
   onPinRight,
   onUnpin,
   onToggleVisibility,
+  onHideColumn,
   onGroupBy,
   isGrouped,
   enableColumnVisibility,
@@ -223,9 +225,10 @@ export function TableHeaderCell<T extends Record<string, any>>({
           onPinRight={onPinRight}
           onUnpin={onUnpin}
           onToggleVisibility={onToggleVisibility}
+          onHideColumn={onHideColumn}
           onGroupBy={onGroupBy}
           isGrouped={isGrouped}
-          onColumnSettings={settingsable ? (!!onUnpin || enableColumnVisibility) : undefined}
+          onColumnSettings={settingsable ? (!!onUnpin || enableColumnVisibility || !!onHideColumn) : undefined}
           onTotalsChange={onTotalsChange}
           totalsValue={totalsValue}
           columnLabel={column.label}

@@ -103,7 +103,7 @@
   position: absolute;
   left: 100%;
   top: 0;
-  margin-left: 4px;
+  margin-left: 2px;
   background: var(--hh-color-surface, #ffffff);
   border: 1px solid var(--hh-color-border, #e1dfdd);
   box-shadow: var(--hh-shadow-callout, 0 3.2px 7.2px rgba(0, 0, 0, 0.132), 0 0.6px 1.8px rgba(0, 0, 0, 0.108));
