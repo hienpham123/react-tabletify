@@ -1,4 +1,5 @@
 import * as React from "react";
+import { flushSync } from "react-dom";
 import { useTable } from "../hooks/useTable";
 import { useColumnManagement } from "../hooks/useColumnManagement";
 import { useRowSelection } from "../hooks/useRowSelection";
@@ -1505,7 +1506,17 @@ export function ReactTabletify<T extends Record<string, any>>({
               className={`hh-cell-edit-input hh-cell-edit-input-excel ${hasError ? 'hh-cell-edit-input-error' : ''}`}
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
-              onBlur={() => {
+              onBlur={(e) => {
+                // Check if focus is moving to another element within the same cell
+                const relatedTarget = e.relatedTarget as HTMLElement | null;
+                const cellElement = e.currentTarget.closest('td, th');
+                
+                // If focus is moving to another element in the same cell, don't cancel
+                if (relatedTarget && cellElement && cellElement.contains(relatedTarget)) {
+                  return;
+                }
+                
+                // Save and exit edit mode
                 const saved = handleCellEditSave(item, column.key, index);
                 // If validation failed, keep editing mode and focus back
                 if (saved === false && editInputRef.current) {
@@ -1514,6 +1525,9 @@ export function ReactTabletify<T extends Record<string, any>>({
                       editInputRef.current.focus();
                     }
                   }, 0);
+                } else {
+                  // Successfully saved or no validation - exit edit mode
+                  handleCellEditCancel();
                 }
               }}
               onKeyDown={(e) => {
@@ -1908,6 +1922,29 @@ export function ReactTabletify<T extends Record<string, any>>({
     return table.paged;
   }, [currentGroupBy, paginatedGroups, table.paged]);
 
+  // Sort handlers - memoized for performance
+  const handleSortAsc = React.useCallback((col: Column<T>) => {
+    // Skip row number column
+    if (String(col.key) === '__rowNumber__') return;
+    if (col.sortable !== false) {
+      // Use flushSync to force immediate update
+      flushSync(() => {
+        table.handleSort(col.key, "asc");
+      });
+    }
+  }, [table]);
+
+  const handleSortDesc = React.useCallback((col: Column<T>) => {
+    // Skip row number column
+    if (String(col.key) === '__rowNumber__') return;
+    if (col.sortable !== false) {
+      // Use flushSync to force immediate update
+      flushSync(() => {
+        table.handleSort(col.key, "desc");
+      });
+    }
+  }, [table]);
+
   /**
    * Keyboard navigation hook
    */
@@ -2142,20 +2179,8 @@ export function ReactTabletify<T extends Record<string, any>>({
               onColumnDragOver={handleColumnDragOver}
               onColumnDrop={handleColumnDrop}
               onResizeStart={handleResizeStart}
-              onSortAsc={(col) => {
-                // Skip row number column
-                if (String(col.key) === '__rowNumber__') return;
-                if (col.sortable !== false) {
-                  table.handleSort(col.key, "asc");
-                }
-              }}
-              onSortDesc={(col) => {
-                // Skip row number column
-                if (String(col.key) === '__rowNumber__') return;
-                if (col.sortable !== false) {
-                  table.handleSort(col.key, "desc");
-                }
-              }}
+              onSortAsc={handleSortAsc}
+              onSortDesc={handleSortDesc}
               onFilter={(col) => {
                 // Skip row number column
                 if (String(col.key) === '__rowNumber__') return;

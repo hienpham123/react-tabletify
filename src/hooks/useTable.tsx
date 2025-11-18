@@ -93,7 +93,7 @@ export function useTable<T extends Record<string, any>>(
     }, [sorted, currentPage, itemsPerPage]);
 
     /** --- 4️⃣ Sort handler --- */
-    const handleSort = (key: keyof T, direction?: "asc" | "desc") => {
+    const handleSort = React.useCallback((key: keyof T, direction?: "asc" | "desc") => {
         if (direction) {
             setSortKey(key);
             setSortDir(direction);
@@ -103,7 +103,7 @@ export function useTable<T extends Record<string, any>>(
             setSortKey(key);
             setSortDir("asc");
         }
-    };
+    }, [sortKey]);
 
     /** --- 5️⃣ Reset page khi search/sort/filter đổi --- */
     React.useEffect(() => {

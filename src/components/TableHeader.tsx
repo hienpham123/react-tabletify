@@ -196,14 +196,14 @@ export function TableHeader<T extends Record<string, any>>({
               isCopied={headerIsCopied}
               onSortAsc={() => {
                 if (col.sortable !== false) {
+                  dismissCallout(); // Dismiss immediately before sort
                   onSortAsc(col);
-                  dismissCallout();
                 }
               }}
               onSortDesc={() => {
                 if (col.sortable !== false) {
+                  dismissCallout(); // Dismiss immediately before sort
                   onSortDesc(col);
-                  dismissCallout();
                 }
               }}
               onFilter={() => {

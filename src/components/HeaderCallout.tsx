@@ -69,7 +69,7 @@ export function HeaderCallout({
     // Calculate initial position - use anchorRef.current if available, otherwise use default
     const initialRect = anchorRef.current?.getBoundingClientRect();
     const [calloutStyle, setCalloutStyle] = React.useState<React.CSSProperties>({
-        top: initialRect ? initialRect.bottom + 6 : 0,
+        top: initialRect ? initialRect.bottom : 0,
         left: initialRect ? initialRect.left : 0,
         position: "fixed",
     });
@@ -100,13 +100,13 @@ export function HeaderCallout({
             // If not enough space below and more space above, open upward
             if (spaceBelow < calloutHeight && spaceAbove > spaceBelow) {
                 setCalloutStyle({
-                    top: anchorRect.top - calloutHeight - 6,
+                    top: anchorRect.top - calloutHeight,
                     left: anchorRect.left,
                     position: "fixed",
                 });
             } else {
                 setCalloutStyle({
-                    top: anchorRect.bottom + 6,
+                    top: anchorRect.bottom,
                     left: anchorRect.left,
                     position: "fixed",
                 });
@@ -152,23 +152,51 @@ export function HeaderCallout({
             >
                 {sortable && (
                     <>
-                        <button onClick={onSortAsc} className="hh-callout-item">
+                        <button 
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onSortAsc();
+                            }} 
+                            className="hh-callout-item"
+                        >
                             <span className="hh-callout-text">Ascending</span>
                         </button>
-                        <button onClick={onSortDesc} className="hh-callout-item">
+                        <button 
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onSortDesc();
+                            }} 
+                            className="hh-callout-item"
+                        >
                             <span className="hh-callout-text">Descending</span>
                         </button>
                     </>
                 )}
                 {sortable && filterable && <hr className="hh-callout-divider" />}
                 {filterable && hasFilter && onClearFilter && (
-                    <button onClick={onClearFilter} className="hh-callout-item">
+                    <button 
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onClearFilter();
+                        }} 
+                        className="hh-callout-item"
+                    >
                         <span className="hh-callout-text">Clear filter</span>
                     </button>
                 )}
                 {filterable && hasFilter && onClearFilter && <hr className="hh-callout-divider" />}
                 {filterable && (
-                    <button onClick={onFilter} className="hh-callout-item">
+                    <button 
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            onFilter();
+                        }} 
+                        className="hh-callout-item"
+                    >
                         <span className="hh-callout-text">Filter by</span>
                     </button>
                 )}
@@ -176,7 +204,11 @@ export function HeaderCallout({
                     <>
                         <hr className="hh-callout-divider" />
                         <button
-                            onClick={onGroupBy}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onGroupBy();
+                            }}
                             className={`hh-callout-item ${isGrouped ? 'hh-callout-item-selected' : ''}`}
                         >
                             <span className="hh-callout-text">Group by {columnLabel}</span>
@@ -200,24 +232,52 @@ export function HeaderCallout({
                                 onMouseLeave={handleSubmenuLeave}
                             >
                                 {pinned === null && onPinLeft && (
-                                    <button onClick={onPinLeft} className="hh-callout-submenu-item">
+                                    <button 
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            onPinLeft();
+                                        }} 
+                                        className="hh-callout-submenu-item"
+                                    >
                                         <span className="hh-callout-text">Pin left</span>
                                     </button>
                                 )}
                                 {pinned === null && onPinRight && (
-                                    <button onClick={onPinRight} className="hh-callout-submenu-item">
+                                    <button 
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            onPinRight();
+                                        }} 
+                                        className="hh-callout-submenu-item"
+                                    >
                                         <span className="hh-callout-text">Pin right</span>
                                     </button>
                                 )}
                                 {pinned !== null && onUnpin && (
-                                    <button onClick={onUnpin} className="hh-callout-submenu-item">
+                                    <button 
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            onUnpin();
+                                        }} 
+                                        className="hh-callout-submenu-item"
+                                    >
                                         <span className="hh-callout-text">Unpin</span>
                                     </button>
                                 )}
                                 {enableColumnVisibility && onToggleVisibility && (
                                     <>
                                         {(onPinLeft || onPinRight || onUnpin) && <hr className="hh-callout-divider" />}
-                                        <button onClick={onToggleVisibility} className="hh-callout-submenu-item">
+                                        <button 
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                onToggleVisibility();
+                                            }} 
+                                            className="hh-callout-submenu-item"
+                                        >
                                             <span className="hh-callout-text">{visible ? 'Hide column' : 'Show column'}</span>
                                         </button>
                                     </>
@@ -241,14 +301,22 @@ export function HeaderCallout({
                                 onMouseLeave={handleSubmenuLeave}
                             >
                                 <button
-                                    onClick={() => onTotalsChange('none')}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onTotalsChange('none');
+                                    }}
                                     className={`hh-callout-submenu-item ${totalsValue === 'none' ? 'hh-callout-item-selected' : ''}`}
                                 >
                                     <span className="hh-callout-text">None</span>
                                     {totalsValue === 'none' && <span className="hh-callout-checkmark">✓</span>}
                                 </button>
                                 <button
-                                    onClick={() => onTotalsChange('count')}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        onTotalsChange('count');
+                                    }}
                                     className={`hh-callout-submenu-item ${totalsValue === 'count' ? 'hh-callout-item-selected' : ''}`}
                                 >
                                     <span className="hh-callout-text">Count</span>

@@ -71,7 +71,7 @@ export const FluentDropdown: React.FC<FluentDropdownProps> = ({
             // Set position first, then open
             const rect = buttonRef.current.getBoundingClientRect();
             setListPosition({
-                top: rect.bottom + window.scrollY + 2,
+                top: rect.bottom + window.scrollY,
                 left: rect.left + window.scrollX,
                 width: rect.width,
             });
@@ -95,13 +95,13 @@ export const FluentDropdown: React.FC<FluentDropdownProps> = ({
                     // If not enough space below and more space above, open upward
                     if (spaceBelow < listHeight && spaceAbove > spaceBelow) {
                         setListPosition({
-                            top: rect.top + window.scrollY - listHeight - 2,
+                            top: rect.top + window.scrollY - listHeight,
                             left: rect.left + window.scrollX,
                             width: rect.width,
                         });
                     } else {
                         setListPosition({
-                            top: rect.bottom + window.scrollY + 2,
+                            top: rect.bottom + window.scrollY,
                             left: rect.left + window.scrollX,
                             width: rect.width,
                         });
@@ -251,7 +251,7 @@ export const FluentDropdown: React.FC<FluentDropdownProps> = ({
             // Calculate position for dropdown list
             const rect = buttonRef.current.getBoundingClientRect();
             setListPosition({
-                top: rect.bottom + window.scrollY + 2,
+                top: rect.bottom + window.scrollY,
                 left: rect.left + window.scrollX,
                 width: rect.width,
             });
